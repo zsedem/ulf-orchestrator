@@ -62,6 +62,10 @@ pub struct LoopState {
     /// Topics seen during the loop's lifetime (for event chain validation).
     pub seen_topics: HashSet<String>,
 
+    /// Topics the agent wrote to JSONL in the most recent iteration.
+    /// Captured before scope enforcement or backpressure filtering.
+    pub last_iteration_topics: Vec<String>,
+
     /// The last event signature emitted (for stale loop detection).
     pub last_emitted_signature: Option<EventSignature>,
 
@@ -92,6 +96,7 @@ impl Default for LoopState {
             last_checkin_at: None,
             last_active_hat_ids: Vec::new(),
             seen_topics: HashSet::new(),
+            last_iteration_topics: Vec::new(),
             last_emitted_signature: None,
             consecutive_same_signature: 0,
             cancellation_requested: false,
