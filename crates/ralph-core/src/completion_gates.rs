@@ -282,6 +282,7 @@ pub fn build_gate_backpressure_payload(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     fn gate_config(name: &str, command: &[&str]) -> CompletionGateConfig {
         CompletionGateConfig {
