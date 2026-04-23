@@ -1,12 +1,12 @@
 # Agent Waves: Fan-out / Fan-in Parallel Hat Execution
 
-Source: https://github.com/mikeyobrien/ralph-orchestrator/issues/210
+Source: https://github.com/mikeyobrien/ulf-orchestrator/issues/210
 
 ## Problem
 
-Ralph's orchestration loop is strictly sequential — one hat executes at a time. For tasks that are embarrassingly parallel (reviewing N files, building N modules, running N analyses), this means N serial round-trips when they could run concurrently. There's no way to express "split this work into pieces, process them in parallel, then combine the results."
+Ulf's orchestration loop is strictly sequential — one hat executes at a time. For tasks that are embarrassingly parallel (reviewing N files, building N modules, running N analyses), this means N serial round-trips when they could run concurrently. There's no way to express "split this work into pieces, process them in parallel, then combine the results."
 
-Ralph already has worktree-based parallel loops for running independent loops concurrently, but that system operates at the loop level. There's no mechanism for intra-loop parallelism.
+Ulf already has worktree-based parallel loops for running independent loops concurrently, but that system operates at the loop level. There's no mechanism for intra-loop parallelism.
 
 ## Proposed Solution
 
@@ -44,5 +44,5 @@ Introduce three primitives inspired by Enterprise Integration Patterns (Splitter
 - Event model — wave metadata fields
 - Config — concurrency, isolation, aggregate config fields
 - Worktree system — reuse for opt-in isolation mode
-- CLI — `ralph wave` subcommand
+- CLI — `ulf wave` subcommand
 - Hat system — context injection of downstream hat descriptions

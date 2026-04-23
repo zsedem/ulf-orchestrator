@@ -1,6 +1,6 @@
-# Building a Web API with Ralph
+# Building a Web API with Ulf
 
-This example demonstrates how to use Ralph Orchestrator to build a complete REST API with database integration.
+This example demonstrates how to use Ulf Orchestrator to build a complete REST API with database integration.
 
 ## Task Description
 
@@ -61,22 +61,22 @@ todo-api/
 <!-- The orchestrator will continue iterations until all requirements are met -->
 ```
 
-## Running Ralph
+## Running Ulf
 
 ```bash
 # Initialize project
-ralph init
+ulf init
 
 # Copy prompt to PROMPT.md
 cp web-api-prompt.md PROMPT.md
 
 # Run with Claude (recommended for complex tasks)
-ralph run --agent claude --max-iterations 50
+ulf run --agent claude --max-iterations 50
 ```
 
 ## Expected Output
 
-Ralph will create the following files:
+Ulf will create the following files:
 
 ### app.py
 
@@ -252,14 +252,14 @@ def test_delete_todo(client):
 ## Monitoring Progress
 
 ```bash
-# Watch Ralph's progress
-ralph status
+# Watch Ulf's progress
+ulf status
 
 # Monitor in real-time
-watch -n 5 'ralph status'
+watch -n 5 'ulf status'
 
 # Check logs
-tail -f .agent/logs/ralph.log
+tail -f .agent/logs/ulf.log
 ```
 
 ## Iteration Examples
@@ -361,7 +361,7 @@ Ensure proper test isolation with fixtures.
 
 ## Verification
 
-After Ralph completes:
+After Ulf completes:
 
 ```bash
 # Install dependencies

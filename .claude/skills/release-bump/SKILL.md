@@ -1,6 +1,6 @@
 ---
 name: release-bump
-description: Use when bumping ralph-orchestrator version for a new release, after fixes are committed and ready to publish
+description: Use when bumping ulf-orchestrator version for a new release, after fixes are committed and ready to publish
 metadata:
   internal: true
 ---
@@ -9,7 +9,7 @@ metadata:
 
 ## Overview
 
-Bump version and trigger release for ralph-orchestrator. All versions live in workspace `Cargo.toml` - individual crates inherit via `version.workspace = true`.
+Bump version and trigger release for ulf-orchestrator. All versions live in workspace `Cargo.toml` - individual crates inherit via `version.workspace = true`.
 
 Confirm the new version with the user. Once the bump commit is pushed, track progress of the release.
 
@@ -32,12 +32,12 @@ Confirm the new version with the user. Once the bump commit is pushed, track pro
 version = "X.Y.Z"
 
 # Lines ~113-118 - internal crate dependencies
-ralph-proto = { version = "X.Y.Z", path = "crates/ralph-proto" }
-ralph-core = { version = "X.Y.Z", path = "crates/ralph-core" }
-ralph-adapters = { version = "X.Y.Z", path = "crates/ralph-adapters" }
-ralph-tui = { version = "X.Y.Z", path = "crates/ralph-tui" }
-ralph-cli = { version = "X.Y.Z", path = "crates/ralph-cli" }
-ralph-bench = { version = "X.Y.Z", path = "crates/ralph-bench" }
+ulf-proto = { version = "X.Y.Z", path = "crates/ulf-proto" }
+ulf-core = { version = "X.Y.Z", path = "crates/ulf-core" }
+ulf-adapters = { version = "X.Y.Z", path = "crates/ulf-adapters" }
+ulf-tui = { version = "X.Y.Z", path = "crates/ulf-tui" }
+ulf-cli = { version = "X.Y.Z", path = "crates/ulf-cli" }
+ulf-bench = { version = "X.Y.Z", path = "crates/ulf-bench" }
 ```
 
 **Tip:** Use Edit tool with `replace_all: true` on `version = "OLD"` → `version = "NEW"` to update all 7 at once.
@@ -50,7 +50,7 @@ Once you push the tag, `.github/workflows/release.yml` triggers and:
 2. Builds binaries for macOS (arm64, x64) and Linux (arm64, x64)
 3. Uploads artifacts to the GitHub Release
 4. Publishes to crates.io (in dependency order)
-5. Publishes to npm as `@ralph-orchestrator/ralph`
+5. Publishes to npm as `@ulf-orchestrator/ulf`
 
 ## Common Mistakes
 

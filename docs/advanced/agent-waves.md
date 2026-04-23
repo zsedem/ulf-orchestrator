@@ -1,6 +1,6 @@
 # Agent Waves
 
-Agent Waves add intra-loop parallelism to Ralph's orchestration. Instead of processing work items one at a time, a hat can dispatch a **wave** of items that run as parallel backend instances — all within a single iteration.
+Agent Waves add intra-loop parallelism to Ulf's orchestration. Instead of processing work items one at a time, a hat can dispatch a **wave** of items that run as parallel backend instances — all within a single iteration.
 
 ## When to Use Waves
 
@@ -16,21 +16,21 @@ Without waves, a hat would process items sequentially across iterations. Waves c
 
 ```mermaid
 flowchart LR
-    D[Coordinator] -->|"ralph wave emit"| W1["🦀 Rust Reviewer"]
+    D[Coordinator] -->|"ulf wave emit"| W1["🦀 Rust Reviewer"]
     D --> W2["⚛️ Frontend Reviewer"]
     D --> W3["📝 Docs Reviewer"]
-    W1 -->|"ralph emit"| A[Synthesizer]
+    W1 -->|"ulf emit"| A[Synthesizer]
     W2 --> A
     W3 --> A
 ```
 
 A wave lifecycle has three phases:
 
-1. **Dispatch** — A hat emits N events as a wave using `ralph wave emit`
+1. **Dispatch** — A hat emits N events as a wave using `ulf wave emit`
 2. **Execute** — The loop runner spawns parallel backend instances (up to the hat's `concurrency` limit)
 3. **Aggregate** — Results merge back into the main event stream for the next hat to consume
 
-Each wave worker runs in isolation with its own events file and environment variables. Workers publish results via `ralph emit`, and the loop runner merges everything back into the main events file.
+Each wave worker runs in isolation with its own events file and environment variables. Workers publish results via `ulf emit`, and the loop runner merges everything back into the main events file.
 
 ## Configuration
 
@@ -75,14 +75,14 @@ hats:
 | `mode` | `wait_for_all` — wait for all workers to complete before triggering |
 | `timeout` | Seconds to wait before timing out the wave |
 
-**Timeout resolution order:** When determining the per-worker timeout, Ralph checks `hat.timeout` first, then `aggregate.timeout`, then falls back to 300 seconds.
+**Timeout resolution order:** When determining the per-worker timeout, Ulf checks `hat.timeout` first, then `aggregate.timeout`, then falls back to 300 seconds.
 
 ## Wave Dispatch
 
-Hats dispatch waves using the `ralph wave emit` CLI command:
+Hats dispatch waves using the `ulf wave emit` CLI command:
 
 ```bash
-ralph wave emit <topic> --payloads "item1" "item2" "item3"
+ulf wave emit <topic> --payloads "item1" "item2" "item3"
 ```
 
 Each payload becomes a separate event tagged with a shared `wave_id`. The loop runner detects these tagged events and spawns parallel workers.
@@ -100,7 +100,7 @@ hats:
       describes the reviewer's role and focus area:
 
       ```bash
-      ralph wave emit review.perspective --payloads \
+      ulf wave emit review.perspective --payloads \
         "ROLE: Rust Reviewer. Focus on ownership, error handling, unsafe, performance." \
         "ROLE: Frontend Reviewer. Focus on React patterns, a11y, state management." \
         "ROLE: Docs Reviewer. Focus on README accuracy, doc comments, examples."
@@ -109,7 +109,7 @@ hats:
 
 ### Context Injection
 
-When a hat's `publishes` target a wave-capable hat (one with `concurrency > 1`), Ralph automatically injects a **Wave Dispatch** section into the hat's prompt. This section shows the available topics, target hat, and usage syntax — so the dispatching hat knows how to emit waves without hardcoding instructions.
+When a hat's `publishes` target a wave-capable hat (one with `concurrency > 1`), Ulf automatically injects a **Wave Dispatch** section into the hat's prompt. This section shows the available topics, target hat, and usage syntax — so the dispatching hat knows how to emit waves without hardcoding instructions.
 
 ## Worker Isolation
 
@@ -117,15 +117,15 @@ Each wave worker runs with:
 
 | Environment Variable | Purpose |
 |---------------------|---------|
-| `RALPH_WAVE_WORKER=1` | Marks this process as a wave worker |
-| `RALPH_WAVE_ID` | Shared wave correlation ID |
-| `RALPH_WAVE_INDEX` | 0-based index of this worker |
-| `RALPH_EVENTS_FILE` | Per-worker events file path |
+| `ULF_WAVE_WORKER=1` | Marks this process as a wave worker |
+| `ULF_WAVE_ID` | Shared wave correlation ID |
+| `ULF_WAVE_INDEX` | 0-based index of this worker |
+| `ULF_EVENTS_FILE` | Per-worker events file path |
 
-Workers publish results via standard `ralph emit`:
+Workers publish results via standard `ulf emit`:
 
 ```bash
-ralph emit review.done "## Rust Review\n\n### Critical\n- Unbounded clone in hot loop at src/handler.rs:42"
+ulf emit review.done "## Rust Review\n\n### Critical\n- Unbounded clone in hot loop at src/handler.rs:42"
 ```
 
 The loop runner collects results from each worker's events file and merges them into the main events file.
@@ -134,8 +134,8 @@ The loop runner collects results from each worker's events file and merges them 
 
 Wave workers cannot dispatch their own waves. This is enforced at two levels:
 
-- **Hard guard** — `ralph wave emit` checks `RALPH_WAVE_WORKER` env var and refuses to run
-- **Soft guard** — Worker prompts explicitly prohibit `ralph wave emit`
+- **Hard guard** — `ulf wave emit` checks `ULF_WAVE_WORKER` env var and refuses to run
+- **Soft guard** — Worker prompts explicitly prohibit `ulf wave emit`
 
 ## Concurrency Control
 
@@ -191,7 +191,7 @@ hats:
 
 ## Built-in Wave Presets
 
-One wave-enabled preset ships with Ralph:
+One wave-enabled preset ships with Ulf:
 
 | Preset | File | Pattern | Workers | Concurrency |
 |--------|------|---------|---------|-------------|
@@ -199,12 +199,12 @@ One wave-enabled preset ships with Ralph:
 
 ```bash
 # Parallel code review
-ralph run -c ralph.yml -H presets/wave-review.yml -p "Review the authentication module"
+ulf run -c ulf.yml -H presets/wave-review.yml -p "Review the authentication module"
 ```
 
 ## Diagnostics
 
-Wave execution emits structured diagnostics when `RALPH_DIAGNOSTICS=1`:
+Wave execution emits structured diagnostics when `ULF_DIAGNOSTICS=1`:
 
 | Event | Fields |
 |-------|--------|
@@ -217,7 +217,7 @@ Wave IDs follow the format `w-<hex-nanos>-<pid>-<seq>` (e.g., `w-1a2b3c4d-12345-
 
 ```bash
 # View wave diagnostics
-jq 'select(.type | startswith("Wave"))' .ralph/diagnostics/*/orchestration.jsonl
+jq 'select(.type | startswith("Wave"))' .ulf/diagnostics/*/orchestration.jsonl
 ```
 
 ## Current Limitations

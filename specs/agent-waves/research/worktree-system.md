@@ -6,44 +6,44 @@ Existing parallel loop infrastructure uses git worktrees for full filesystem iso
 
 ## Creation & Removal
 
-**File:** `crates/ralph-core/src/worktree.rs`
+**File:** `crates/ulf-core/src/worktree.rs`
 
-- `create_worktree(repo_root, loop_id, config)` — creates `.worktrees/{loop_id}/`, runs `git worktree add -b ralph/{loop_id}`
+- `create_worktree(repo_root, loop_id, config)` — creates `.worktrees/{loop_id}/`, runs `git worktree add -b ulf/{loop_id}`
 - `remove_worktree(repo_root, path)` — `git worktree remove --force`, deletes branch, prunes refs
 - `sync_working_directory_to_worktree()` — copies untracked + unstaged modified files, preserves symlinks
 
 ## Isolation Strategy
 
 **Isolated per worktree:**
-- `.ralph/events.jsonl` — local event log
-- `.ralph/agent/tasks.jsonl` — local task tracking
-- `.ralph/agent/scratchpad.md` — local scratchpad
-- `.ralph/diagnostics/` — local diagnostics
+- `.ulf/events.jsonl` — local event log
+- `.ulf/agent/tasks.jsonl` — local task tracking
+- `.ulf/agent/scratchpad.md` — local scratchpad
+- `.ulf/diagnostics/` — local diagnostics
 
-**Shared via symlinks** (`crates/ralph-core/src/loop_context.rs:558-575`):
-- `.ralph/agent/memories.md` → main repo
-- `.ralph/specs/` → main repo
-- `.ralph/tasks/` → main repo
+**Shared via symlinks** (`crates/ulf-core/src/loop_context.rs:558-575`):
+- `.ulf/agent/memories.md` → main repo
+- `.ulf/specs/` → main repo
+- `.ulf/tasks/` → main repo
 
 **Shared files (single copy):**
-- `.ralph/loop.lock` — primary loop coordination
-- `.ralph/loops.json` — loop registry
-- `.ralph/merge-queue.jsonl` — merge queue
+- `.ulf/loop.lock` — primary loop coordination
+- `.ulf/loops.json` — loop registry
+- `.ulf/merge-queue.jsonl` — merge queue
 
 ## Coordination Primitives
 
-### Loop Lock (`crates/ralph-core/src/loop_lock.rs`)
-- `flock()` on `.ralph/loop.lock`
+### Loop Lock (`crates/ulf-core/src/loop_lock.rs`)
+- `flock()` on `.ulf/loop.lock`
 - Non-blocking acquisition
 - Metadata: PID, start time, prompt
 
-### Loop Registry (`crates/ralph-core/src/loop_registry.rs`)
-- `.ralph/loops.json`
+### Loop Registry (`crates/ulf-core/src/loop_registry.rs`)
+- `.ulf/loops.json`
 - Tracks: ID, PID, start time, prompt, worktree_path
 - File locking via `flock()` for concurrent access
 - Stale/zombie detection (PID alive but worktree gone)
 
-### Merge Queue (`crates/ralph-core/src/merge_queue.rs`)
+### Merge Queue (`crates/ulf-core/src/merge_queue.rs`)
 - Event-sourced: Queued → Merging → Merged | NeedsReview | Discarded
 - Append-only JSONL with `flock()` for exclusive writes
 - FIFO ordering for pending merges
@@ -62,5 +62,5 @@ Existing parallel loop infrastructure uses git worktrees for full filesystem iso
 
 - Current system assumes **one primary loop per repo** (loop.lock)
 - Registry keyed by PID — waves need per-wave-instance keys
-- Branch naming `ralph/{loop_id}` — may need `ralph/wave/{wave-id}/{index}`
+- Branch naming `ulf/{loop_id}` — may need `ulf/wave/{wave-id}/{index}`
 - Worktree creation overhead is real — should only be opt-in for write-heavy waves

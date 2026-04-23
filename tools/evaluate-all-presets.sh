@@ -32,7 +32,7 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 BACKEND=${1:-claude}
-MODE=${2:-${RALPH_PRESET_TASK_VARIANT:-full}}
+MODE=${2:-${ULF_PRESET_TASK_VARIANT:-full}}
 SUITE_ID="$(date +%Y%m%d_%H%M%S)_${MODE}"
 RESULTS_DIR=".eval/results/${SUITE_ID}"
 mkdir -p "$RESULTS_DIR"

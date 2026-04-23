@@ -1,6 +1,6 @@
 # Examples
 
-Practical examples showing Ralph in action.
+Practical examples showing Ulf in action.
 
 ## In This Section
 
@@ -11,7 +11,7 @@ Practical examples showing Ralph in action.
 | [Automated PDD Design](pdd-design.md) | Example-only design workflow with simulated requirements interview |
 | [Spec-Driven Development](spec-driven.md) | Example-only workflow pattern, not a shipped builtin |
 | [Multi-Hat Workflow](multi-hat.md) | Complex coordination between hats |
-| [Debugging](debugging.md) | Using Ralph to investigate bugs |
+| [Debugging](debugging.md) | Using Ulf to investigate bugs |
 
 ## Quick Examples
 
@@ -20,14 +20,14 @@ Practical examples showing Ralph in action.
 Simple loop until completion:
 
 ```bash
-ralph init --backend claude
+ulf init --backend claude
 
 cat > PROMPT.md << 'EOF'
 Write a function that calculates factorial.
 Include tests.
 EOF
 
-ralph run
+ulf run
 ```
 
 ### Hat-Based Mode
@@ -35,7 +35,7 @@ ralph run
 Using a built-in hat collection:
 
 ```bash
-ralph init --backend claude
+ulf init --backend claude
 
 cat > PROMPT.md << 'EOF'
 Implement a URL validator function.
@@ -46,7 +46,7 @@ Must handle:
 - Port numbers
 EOF
 
-ralph run -c ralph.yml -H builtin:code-assist
+ulf run -c ulf.yml -H builtin:code-assist
 ```
 
 ### Inline Prompts
@@ -54,7 +54,7 @@ ralph run -c ralph.yml -H builtin:code-assist
 Skip the prompt file:
 
 ```bash
-ralph run -p "Add input validation to the signup form"
+ulf run -p "Add input validation to the signup form"
 ```
 
 ### Custom Configuration
@@ -62,7 +62,7 @@ ralph run -p "Add input validation to the signup form"
 Override defaults:
 
 ```bash
-ralph run --max-iterations 50 -p "Refactor the authentication module"
+ulf run --max-iterations 50 -p "Refactor the authentication module"
 ```
 
 ## Example Workflows
@@ -71,7 +71,7 @@ ralph run --max-iterations 50 -p "Refactor the authentication module"
 
 ```bash
 # Initialize core config
-ralph init --backend claude
+ulf init --backend claude
 
 # Create detailed prompt
 cat > PROMPT.md << 'EOF'
@@ -86,22 +86,22 @@ Use React components.
 Follow existing UI patterns.
 EOF
 
-# Run Ralph with the default implementation hats
-ralph run -c ralph.yml -H builtin:code-assist
+# Run Ulf with the default implementation hats
+ulf run -c ulf.yml -H builtin:code-assist
 ```
 
 ### Bug Investigation
 
 ```bash
 # Use debug hat collection
-ralph run -c ralph.yml -H builtin:debug -p "Users report login fails on Safari. Error: 'Invalid token'. Investigate and fix."
+ulf run -c ulf.yml -H builtin:debug -p "Users report login fails on Safari. Error: 'Invalid token'. Investigate and fix."
 ```
 
 ### Code Review
 
 ```bash
 # Use review hat collection
-ralph run -c ralph.yml -H builtin:review -p "Review the changes in src/api/auth.rs for security issues"
+ulf run -c ulf.yml -H builtin:review -p "Review the changes in src/api/auth.rs for security issues"
 ```
 
 ## Full Examples

@@ -65,8 +65,8 @@ tmux -V
 
 ## Built-in Criteria
 
-### `ralph-header`
-Validates Ralph TUI header component:
+### `ulf-header`
+Validates Ulf TUI header component:
 - Iteration counter in `[iter N]` or `[iter N/M]` format
 - Elapsed time in `MM:SS` format
 - Hat indicator with emoji and name
@@ -74,14 +74,14 @@ Validates Ralph TUI header component:
 - Optional scroll mode indicator `[SCROLL]`
 - Optional idle countdown `idle: Ns`
 
-### `ralph-footer`
-Validates Ralph TUI footer component:
+### `ulf-footer`
+Validates Ulf TUI footer component:
 - Activity indicator (`◉ active`, `◯ idle`, or `■ done`)
 - Last event topic display
 - Search mode display when active
 
-### `ralph-full`
-Validates complete Ralph TUI layout:
+### `ulf-full`
+Validates complete Ulf TUI layout:
 - Header section at top (3 lines)
 - Terminal content area (variable height)
 - Footer section at bottom (3 lines)
@@ -229,32 +229,32 @@ Screenshot saved: {path_if_saved}
 
 ## Examples
 
-### Example 1: Validate Ralph Header from File
+### Example 1: Validate Ulf Header from File
 
 **Input:**
 ```
-/tui-validate file:test_output.txt criteria:ralph-header
+/tui-validate file:test_output.txt criteria:ulf-header
 ```
 
 **Process:**
 1. Read `test_output.txt` containing ANSI output
 2. Capture with freeze: `freeze test_output.txt -o /tmp/capture.svg`
 3. Extract text content
-4. Apply `ralph-header` criteria via LLM judge
+4. Apply `ulf-header` criteria via LLM judge
 5. Report PASS/FAIL with details
 
 ### Example 2: Validate Live TUI in tmux
 
 **Input:**
 ```
-/tui-validate tmux:ralph-session criteria:ralph-full save_screenshot:true
+/tui-validate tmux:ulf-session criteria:ulf-full save_screenshot:true
 ```
 
 **Process:**
-1. Capture tmux pane: `tmux capture-pane -pet ralph-session | freeze -o ralph-session.svg`
-2. Also capture text: `tmux capture-pane -pet ralph-session > /tmp/text.txt`
-3. Apply `ralph-full` criteria checking header, content, and footer
-4. Save screenshot to `ralph-session.svg`
+1. Capture tmux pane: `tmux capture-pane -pet ulf-session | freeze -o ulf-session.svg`
+2. Also capture text: `tmux capture-pane -pet ulf-session > /tmp/text.txt`
+3. Apply `ulf-full` criteria checking header, content, and footer
+4. Save screenshot to `ulf-session.svg`
 5. Report validation result
 
 ### Example 3: Custom Criteria Validation
@@ -274,7 +274,7 @@ Screenshot saved: {path_if_saved}
 
 **Input:**
 ```
-/tui-validate buffer:"[iter 3/10] 04:32 | 🔨 Builder | ▶ auto" criteria:ralph-header output_format:text
+/tui-validate buffer:"[iter 3/10] 04:32 | 🔨 Builder | ▶ auto" criteria:ulf-header output_format:text
 ```
 
 **Process:**
@@ -284,11 +284,11 @@ Screenshot saved: {path_if_saved}
 
 ## Criteria Definitions
 
-### ralph-header (Full Definition)
+### ulf-header (Full Definition)
 
 ```yaml
-name: ralph-header
-description: Ralph TUI header component validation
+name: ulf-header
+description: Ulf TUI header component validation
 requirements:
   - name: iteration_counter
     description: Shows iteration in [iter N] or [iter N/M] format
@@ -321,11 +321,11 @@ requirements:
     pattern: 'idle: \d+s'
 ```
 
-### ralph-footer (Full Definition)
+### ulf-footer (Full Definition)
 
 ```yaml
-name: ralph-footer
-description: Ralph TUI footer component validation
+name: ulf-footer
+description: Ulf TUI footer component validation
 requirements:
   - name: activity_indicator
     description: Shows current activity state
@@ -343,16 +343,16 @@ requirements:
     pattern: 'Search: .+ \d+/\d+'
 ```
 
-### ralph-full (Full Definition)
+### ulf-full (Full Definition)
 
 ```yaml
-name: ralph-full
-description: Complete Ralph TUI layout validation
+name: ulf-full
+description: Complete Ulf TUI layout validation
 requirements:
   - name: header_section
     description: Header at top with iteration, time, hat, and mode
     required: true
-    references: ralph-header
+    references: ulf-header
 
   - name: content_section
     description: Main terminal content area
@@ -364,7 +364,7 @@ requirements:
   - name: footer_section
     description: Footer at bottom with activity status
     required: true
-    references: ralph-footer
+    references: ulf-footer
 
   - name: visual_hierarchy
     description: Clear visual separation between sections
@@ -423,7 +423,7 @@ fn validate_header_rendering() {
     std::fs::write("/tmp/header_test.txt", &output).unwrap();
 
     // 3. Run tui-validate skill (via CLI or programmatic)
-    // /tui-validate file:/tmp/header_test.txt criteria:ralph-header
+    // /tui-validate file:/tmp/header_test.txt criteria:ulf-header
 
     // 4. Assert validation passed
 }

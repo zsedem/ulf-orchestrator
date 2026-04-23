@@ -2,7 +2,7 @@
 
 ## Overview
 
-Agent Waves introduce intra-loop parallelism to Ralph's orchestration loop. Today, Ralph executes one hat per iteration, sequentially. Waves allow a dispatcher hat to fan out work to multiple concurrent backend instances, collect results, and aggregate them — all within a single orchestration run.
+Agent Waves introduce intra-loop parallelism to Ulf's orchestration loop. Today, Ulf executes one hat per iteration, sequentially. Waves allow a dispatcher hat to fan out work to multiple concurrent backend instances, collect results, and aggregate them — all within a single orchestration run.
 
 This is a general-purpose parallel execution primitive. Use cases include deep research (parallel topic exploration), multi-perspective analysis, parallel code review, scatter-gather for any domain, and multi-agent debate patterns.
 
@@ -11,7 +11,7 @@ Waves are built on three primitives inspired by Enterprise Integration Patterns:
 2. **Concurrent hat execution** — the loop runner spawns multiple backends in parallel
 3. **Aggregator gate** — a hat that buffers results and activates only when all correlated results arrive
 
-Source: https://github.com/mikeyobrien/ralph-orchestrator/issues/210
+Source: https://github.com/mikeyobrien/ulf-orchestrator/issues/210
 
 ### Why not just spawn subagents?
 
@@ -21,18 +21,18 @@ An agent could spawn N backends in a single step and collect results — no new 
 
 2. **Fresh context for synthesis.** When N workers each produce substantial output, an in-context approach forces the dispatching agent to hold all results in one context window. Waves route results to a dedicated aggregator hat that activates in a fresh iteration — purpose-built instructions, no context pressure from the dispatch phase.
 
-The concurrent execution is the real value. The event plumbing (per-worker files, env vars, correlation metadata) is what makes it work correctly within Ralph's existing architecture.
+The concurrent execution is the real value. The event plumbing (per-worker files, env vars, correlation metadata) is what makes it work correctly within Ulf's existing architecture.
 
 ---
 
 ## Architectural Impact
 
-Today, `next_hat()` always returns "ralph" in multi-hat mode. Custom hats never get their own backend process — they are personas that Ralph wears during coordination. Wave workers are the **first case where hats execute directly** with their own backend process, outside Ralph's coordination context.
+Today, `next_hat()` always returns "ulf" in multi-hat mode. Custom hats never get their own backend process — they are personas that Ulf wears during coordination. Wave workers are the **first case where hats execute directly** with their own backend process, outside Ulf's coordination context.
 
-This is a deliberate, bounded exception to the Hatless Ralph model:
+This is a deliberate, bounded exception to the Hatless Ulf model:
 
-- **Why it's safe**: Wave workers have no coordination role. They receive a single task payload, execute with their hat's instructions, emit a result event, and exit. They cannot emit waves (hard-blocked via env var), have no access to Ralph's HATS table, scratchpad, or objective, and cannot influence hat selection.
-- **What's preserved**: Ralph still owns all coordination — hat selection, event routing, aggregation, and loop control. The loop runner manages the wave lifecycle entirely; the event loop remains wave-agnostic.
+- **Why it's safe**: Wave workers have no coordination role. They receive a single task payload, execute with their hat's instructions, emit a result event, and exit. They cannot emit waves (hard-blocked via env var), have no access to Ulf's HATS table, scratchpad, or objective, and cannot influence hat selection.
+- **What's preserved**: Ulf still owns all coordination — hat selection, event routing, aggregation, and loop control. The loop runner manages the wave lifecycle entirely; the event loop remains wave-agnostic.
 - **Bounded scope**: Workers are structurally isolated. Each gets a per-worker events file, a fresh backend process, and env vars that identify it as a wave worker. The loop runner collects results and merges them back into the main event stream only after the wave completes.
 
 ---
@@ -43,9 +43,9 @@ This is a deliberate, bounded exception to the Hatless Ralph model:
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Execution model | Ralph dispatches, loop runner executes (Q1:B) | Preserves Hatless Ralph — Ralph decides WHAT to parallelize, loop runner handles HOW |
+| Execution model | Ulf dispatches, loop runner executes (Q1:B) | Preserves Hatless Ulf — Ulf decides WHAT to parallelize, loop runner handles HOW |
 | Instance capability | Full hat execution, no nested waves (Q2:A) | Agents are smart; let them do the work. Guardrails are structural, not capability-based |
-| Aggregation | Ralph as aggregator with `wait_for_all` gate (Q3:A) | Aggregator is just another hat. Only new thing is the gate |
+| Aggregation | Ulf as aggregator with `wait_for_all` gate (Q3:A) | Aggregator is just another hat. Only new thing is the gate |
 | Dispatch mechanism | CLI tools + context injection for NL dispatch (Q4:C) | Same mechanism — CLI tools are the plumbing, context injection enables adaptive dispatch |
 | Isolation | Shared workspace only (Q5:A) | Zero overhead, sufficient for read-heavy/write-disjoint workloads |
 | Failure handling | Best-effort, hardcoded (Q6:B) | Wave continues on failure. Aggregator gets partial results + failure metadata |
@@ -55,7 +55,7 @@ This is a deliberate, bounded exception to the Hatless Ralph model:
 ### v1 Scope
 
 **Included:**
-- Wave CLI tool (`ralph wave emit` — atomic batch emission)
+- Wave CLI tool (`ulf wave emit` — atomic batch emission)
 - Event correlation metadata (`wave_id`, `wave_index`, `wave_total`)
 - Concurrent backend spawning in loop runner (respecting `concurrency` limit)
 - `aggregate.mode: wait_for_all` with configurable timeout (default 300s)
@@ -63,12 +63,12 @@ This is a deliberate, bounded exception to the Hatless Ralph model:
 - Best-effort failure handling with structured failure metadata
 - Per-instance activation and cost accounting
 - Per-worker events files (merged by loop runner after collection)
-- Worker env var injection (`RALPH_WAVE_WORKER`, `RALPH_WAVE_ID`, `RALPH_WAVE_INDEX`, `RALPH_EVENTS_FILE`)
+- Worker env var injection (`ULF_WAVE_WORKER`, `ULF_WAVE_ID`, `ULF_WAVE_INDEX`, `ULF_EVENTS_FILE`)
 - Shared workspace (no filesystem isolation)
 - No nested waves
 
 **Deferred to v2+:**
-- `ralph wave start`/`ralph wave end` (incremental wave emission)
+- `ulf wave start`/`ulf wave end` (incremental wave emission)
 - Nested waves
 - Additional aggregation modes (`first_n`, `quorum`, `external_event`)
 - Configurable failure modes (`on_failure: fail_fast`)
@@ -84,7 +84,7 @@ This is a deliberate, bounded exception to the Hatless Ralph model:
 
 ```mermaid
 graph TD
-    S1[Hat Selection] --> E1[Ralph executes iteration<br/>wearing hat persona]
+    S1[Hat Selection] --> E1[Ulf executes iteration<br/>wearing hat persona]
     E1 --> P1[Process events from JSONL]
     P1 --> N1[Next hat selected<br/>based on pending events]
     N1 --> S1
@@ -94,7 +94,7 @@ graph TD
 
 ```mermaid
 graph TD
-    S2[Hat Selection] --> E2[Ralph executes iteration<br/>wearing dispatcher persona]
+    S2[Hat Selection] --> E2[Ulf executes iteration<br/>wearing dispatcher persona]
     E2 --> P2[Process events from JSONL<br/>wave events detected]
     P2 --> Spawn[Enter wave execution mode]
 
@@ -111,7 +111,7 @@ graph TD
     W5 --> Collect
 
     Collect --> Merge[Loop runner merges results<br/>into main events file]
-    Merge --> Agg[Ralph activates as<br/>aggregator persona]
+    Merge --> Agg[Ulf activates as<br/>aggregator persona]
 
     Agg --> Next[Resume normal iteration loop]
 ```
@@ -120,12 +120,12 @@ graph TD
 
 ```mermaid
 sequenceDiagram
-    participant R as Ralph (Dispatcher)
+    participant R as Ulf (Dispatcher)
     participant LR as Loop Runner
     participant W1 as Worker 1
     participant W2 as Worker 2
     participant W3 as Worker 3
-    participant RA as Ralph (Aggregator)
+    participant RA as Ulf (Aggregator)
 
     R->>LR: Emit wave events (wave_id=w-abc, total=3)
     Note over R: Iteration ends normally
@@ -157,8 +157,8 @@ graph TB
     end
 
     subgraph "CLI Layer"
-        WBE[ralph wave emit]
-        RE[ralph emit]
+        WBE[ulf wave emit]
+        RE[ulf emit]
     end
 
     subgraph "Event Layer"
@@ -179,7 +179,7 @@ graph TB
     end
 
     subgraph "Prompt Layer"
-        HR[HatlessRalph<br/>+ context injection]
+        HR[HatlessUlf<br/>+ context injection]
     end
 
     HC --> LR
@@ -202,7 +202,7 @@ graph TB
 
 ### 1. Event Model Extensions
 
-**File:** `crates/ralph-proto/src/event.rs`
+**File:** `crates/ulf-proto/src/event.rs`
 
 Add optional wave metadata to the `Event` struct:
 
@@ -235,7 +235,7 @@ impl Event {
 }
 ```
 
-**File:** `crates/ralph-core/src/event_logger.rs`
+**File:** `crates/ulf-core/src/event_logger.rs`
 
 Extend `EventRecord` with optional wave fields:
 
@@ -251,13 +251,13 @@ pub struct EventRecord {
 }
 ```
 
-**File:** `crates/ralph-core/src/event_reader.rs`
+**File:** `crates/ulf-core/src/event_reader.rs`
 
-Update the JSONL deserializer to parse wave fields. Use `#[serde(default)]` so existing events without wave fields parse correctly. The existing `deserialize_flexible_payload` function handles string/object/null payloads — no changes needed there, but the `Event` struct in `event_reader.rs` (distinct from `ralph-proto`'s `Event`) must gain the optional wave fields.
+Update the JSONL deserializer to parse wave fields. Use `#[serde(default)]` so existing events without wave fields parse correctly. The existing `deserialize_flexible_payload` function handles string/object/null payloads — no changes needed there, but the `Event` struct in `event_reader.rs` (distinct from `ulf-proto`'s `Event`) must gain the optional wave fields.
 
 ### 2. HatConfig Extensions
 
-**File:** `crates/ralph-core/src/config.rs`
+**File:** `crates/ulf-core/src/config.rs`
 
 ```rust
 pub struct HatConfig {
@@ -294,7 +294,7 @@ pub enum AggregateMode {
 }
 ```
 
-**Validation** (in `RalphConfig::validate()`):
+**Validation** (in `UlfConfig::validate()`):
 - `concurrency` must be >= 1
 - If `aggregate` is set, `mode` must be `wait_for_all`
 - Warn if `concurrency` > 1 but no downstream hat has `aggregate` configured (likely misconfiguration)
@@ -302,7 +302,7 @@ pub enum AggregateMode {
 
 ### 3. WaveTracker
 
-**New file:** `crates/ralph-core/src/wave_tracker.rs`
+**New file:** `crates/ulf-core/src/wave_tracker.rs`
 
 Central state machine for tracking active waves.
 
@@ -394,9 +394,9 @@ pub enum WaveProgress {
 
 ### 4. Wave CLI Tool
 
-**New file:** `crates/ralph-cli/src/wave.rs`
+**New file:** `crates/ulf-cli/src/wave.rs`
 
-Top-level command (like `ralph emit`):
+Top-level command (like `ulf emit`):
 
 ```rust
 #[derive(Parser, Debug)]
@@ -421,32 +421,32 @@ pub struct WaveBatchEmitArgs {
 }
 ```
 
-**`ralph wave emit <topic> --payloads "a" "b" "c"`:**
+**`ulf wave emit <topic> --payloads "a" "b" "c"`:**
 Atomic batch emission — no state file needed:
-1. Check `RALPH_WAVE_WORKER` env var — if set, exit with error (nested wave prevention)
+1. Check `ULF_WAVE_WORKER` env var — if set, exit with error (nested wave prevention)
 2. Generate wave ID (timestamp-based hex: `w-{:08x}` from nanos mod `0xFFFF_FFFF`)
-3. Resolve events file from `.ralph/current-events` marker (falling back to `.ralph/events.jsonl`)
+3. Resolve events file from `.ulf/current-events` marker (falling back to `.ulf/events.jsonl`)
 4. Write N events to JSONL, each with `wave_id`, `wave_index: 0..N-1`, `wave_total: N`
 5. Print wave ID to stdout
 
-v1 only supports batch emission. Incremental emission (`ralph wave start`/`ralph wave end`) is deferred to v2 — the batch command covers the common case and avoids state file complexity.
+v1 only supports batch emission. Incremental emission (`ulf wave start`/`ulf wave end`) is deferred to v2 — the batch command covers the common case and avoids state file complexity.
 
-**`ralph emit` (unchanged):**
-No modifications to `ralph emit` in v1. When a wave worker needs to emit result events, the worker's env vars (`RALPH_WAVE_ID`, `RALPH_WAVE_INDEX`) are read by `ralph emit` to auto-tag the event with wave correlation metadata. The worker's `RALPH_EVENTS_FILE` env var directs output to its per-worker events file.
+**`ulf emit` (unchanged):**
+No modifications to `ulf emit` in v1. When a wave worker needs to emit result events, the worker's env vars (`ULF_WAVE_ID`, `ULF_WAVE_INDEX`) are read by `ulf emit` to auto-tag the event with wave correlation metadata. The worker's `ULF_EVENTS_FILE` env var directs output to its per-worker events file.
 
 ```rust
 // In emit_command():
 fn resolve_wave_metadata() -> Option<(String, u32)> {
-    let wave_id = std::env::var("RALPH_WAVE_ID").ok()?;
-    let wave_index = std::env::var("RALPH_WAVE_INDEX").ok()?.parse().ok()?;
+    let wave_id = std::env::var("ULF_WAVE_ID").ok()?;
+    let wave_index = std::env::var("ULF_WAVE_INDEX").ok()?.parse().ok()?;
     Some((wave_id, wave_index))
 }
 
 fn resolve_events_file(args: &EmitArgs) -> PathBuf {
-    // 1. RALPH_EVENTS_FILE env var (set for wave workers)
-    // 2. .ralph/current-events marker (existing behavior)
+    // 1. ULF_EVENTS_FILE env var (set for wave workers)
+    // 2. .ulf/current-events marker (existing behavior)
     // 3. args.file fallback (existing behavior)
-    if let Ok(path) = std::env::var("RALPH_EVENTS_FILE") {
+    if let Ok(path) = std::env::var("ULF_EVENTS_FILE") {
         return PathBuf::from(path);
     }
     // ... existing resolution logic ...
@@ -457,22 +457,22 @@ When wave metadata is present, the emitted event includes `wave_id` and `wave_in
 
 ### 5. Loop Runner Changes
 
-**File:** `crates/ralph-cli/src/loop_runner.rs`
+**File:** `crates/ulf-cli/src/loop_runner.rs`
 
 The main loop gains a new execution phase after processing events from a normal iteration. The loop runner **owns the entire wave lifecycle** — the event loop remains wave-agnostic.
 
 ```
 Main loop iteration:
-  1. Hat selection → Ralph (dispatcher persona)
+  1. Hat selection → Ulf (dispatcher persona)
   2. Build prompt → include HATS table with downstream descriptions
-  3. Execute backend → Ralph runs, emits wave events via CLI
+  3. Execute backend → Ulf runs, emits wave events via CLI
   4. Process output
   5. Read events from JSONL
   6. *** NEW: Detect wave events ***
   7. If wave events detected:
      a. Separate wave events from non-wave events
      b. Resolve target hat from wave event topics (via hat registry)
-     c. Create per-worker events files (.ralph/wave-{wave_id}-{index}.jsonl)
+     c. Create per-worker events files (.ulf/wave-{wave_id}-{index}.jsonl)
      d. Spawn concurrent backends (up to concurrency limit)
      e. Collect results with aggregate timeout
      f. Read result events from each per-worker events file
@@ -515,7 +515,7 @@ async fn execute_wave(
 
     for (index, event) in wave.events.iter().enumerate() {
         // Create per-worker events file
-        let worker_events_file = self.ralph_dir
+        let worker_events_file = self.ulf_dir
             .join(format!("wave-{}-{}.jsonl", wave.wave_id, index));
 
         let permit = semaphore.clone().acquire_owned().await?;
@@ -549,7 +549,7 @@ Each wave instance gets:
 - The worker hat's instructions as system context
 - The specific wave event payload as the prompt/task
 - Full tool access (same as normal hat execution)
-- No Ralph coordination context (no HATS table, no scratchpad, no objective)
+- No Ulf coordination context (no HATS table, no scratchpad, no objective)
 - Environment variables for wave context and isolation:
 
 ```rust
@@ -559,18 +559,18 @@ fn build_wave_instance_env(
     worker_events_file: &Path,
 ) -> Vec<(String, String)> {
     vec![
-        ("RALPH_WAVE_WORKER".into(), "1".into()),
-        ("RALPH_WAVE_ID".into(), wave_id.into()),
-        ("RALPH_WAVE_INDEX".into(), index.to_string()),
-        ("RALPH_EVENTS_FILE".into(), worker_events_file.display().to_string()),
+        ("ULF_WAVE_WORKER".into(), "1".into()),
+        ("ULF_WAVE_ID".into(), wave_id.into()),
+        ("ULF_WAVE_INDEX".into(), index.to_string()),
+        ("ULF_EVENTS_FILE".into(), worker_events_file.display().to_string()),
     ]
 }
 ```
 
 These env vars are set on the spawned backend process and serve three purposes:
-1. `RALPH_WAVE_WORKER` — hard-blocks nested `ralph wave emit` calls
-2. `RALPH_WAVE_ID` + `RALPH_WAVE_INDEX` — auto-tags events emitted by `ralph emit` with wave correlation metadata
-3. `RALPH_EVENTS_FILE` — directs `ralph emit` output to the per-worker events file, avoiding concurrent writes to the main events file
+1. `ULF_WAVE_WORKER` — hard-blocks nested `ulf wave emit` calls
+2. `ULF_WAVE_ID` + `ULF_WAVE_INDEX` — auto-tags events emitted by `ulf emit` with wave correlation metadata
+3. `ULF_EVENTS_FILE` — directs `ulf emit` output to the per-worker events file, avoiding concurrent writes to the main events file
 
 **Cost tracking:**
 Each `WaveInstanceResult` includes cost and token data extracted from the backend output:
@@ -590,9 +590,9 @@ The loop runner accumulates costs across all instances and feeds them into the g
 
 ### 6. Wave Worker Prompt Builder
 
-**New file:** `crates/ralph-core/src/wave_prompt.rs`
+**New file:** `crates/ulf-core/src/wave_prompt.rs`
 
-Builds the prompt for a wave worker instance. Simpler than Ralph's full prompt:
+Builds the prompt for a wave worker instance. Simpler than Ulf's full prompt:
 
 ```rust
 pub fn build_wave_worker_prompt(
@@ -605,7 +605,7 @@ pub fn build_wave_worker_prompt(
     // 2. Wave context metadata (wave_id, index, total)
     // 3. Event payload (the specific work item)
     // 4. Event writing guide (how to emit result events)
-    // 5. Nested wave guard ("Do NOT use `ralph wave` commands")
+    // 5. Nested wave guard ("Do NOT use `ulf wave` commands")
 }
 ```
 
@@ -622,7 +622,7 @@ The worker's events file path and wave metadata are communicated via env vars (s
 
 ### 7. Context Injection for NL Dispatch
 
-**File:** `crates/ralph-core/src/hatless_ralph.rs`
+**File:** `crates/ulf-core/src/hatless_ulf.rs`
 
 Enhance the existing HATS table generation to include richer downstream context. When building the prompt for a hat that has `publishes` topics:
 
@@ -635,7 +635,7 @@ Enhance the existing HATS table generation to include richer downstream context.
 ```
 ## Available Downstream Hats
 
-When you emit events, they activate downstream hats. Use `ralph wave`
+When you emit events, they activate downstream hats. Use `ulf wave`
 tools to fan out work in parallel.
 
 | Topic | Activates | Description | Concurrent |
@@ -645,7 +645,7 @@ tools to fan out work in parallel.
 | review.maintain | Maintainability Reviewer | Reviews clarity, naming, duplication, coverage | up to 3 |
 
 Emit multiple events as a wave to process them in parallel:
-  ralph wave emit <topic> --payloads "<payload1>" "<payload2>" ...
+  ulf wave emit <topic> --payloads "<payload1>" "<payload2>" ...
 ```
 
 This context is injected only when:
@@ -654,7 +654,7 @@ This context is injected only when:
 
 ### 8. Aggregator Gate
 
-**Owned by:** the loop runner (`crates/ralph-cli/src/loop_runner.rs`)
+**Owned by:** the loop runner (`crates/ulf-cli/src/loop_runner.rs`)
 
 The aggregator gate is implicit in the loop runner's wave lifecycle. The loop runner collects **all** wave results (or times out), then writes them to the main events file in a single batch. The event loop never sees partial wave results — by the time it processes events on the next iteration, all results are present.
 
@@ -664,7 +664,7 @@ This means:
 - The `aggregate` config on the hat is used only by the **loop runner** to determine timeout duration
 - The `aggregate.mode: wait_for_all` is the loop runner's collection strategy, not an event loop filter
 
-When all results are merged, Ralph activates as the aggregator persona and sees them as pending events in a single prompt:
+When all results are merged, Ulf activates as the aggregator persona and sees them as pending events in a single prompt:
 
 ```
 ## PENDING EVENTS
@@ -692,14 +692,14 @@ Wave worker instances must not emit further waves. Enforced at two levels:
 
 **Soft enforcement (prompt):** Wave worker prompts include:
 ```
-IMPORTANT: Do NOT use `ralph wave start`, `ralph wave end`, or
-`ralph wave emit` commands. You are a wave worker instance —
+IMPORTANT: Do NOT use `ulf wave start`, `ulf wave end`, or
+`ulf wave emit` commands. You are a wave worker instance —
 nested waves are not supported.
 ```
 
-**Hard enforcement (CLI):** `ralph wave emit` checks for the `RALPH_WAVE_WORKER` environment variable set by the loop runner on all wave worker processes:
+**Hard enforcement (CLI):** `ulf wave emit` checks for the `ULF_WAVE_WORKER` environment variable set by the loop runner on all wave worker processes:
 ```rust
-if std::env::var("RALPH_WAVE_WORKER").is_ok() {
+if std::env::var("ULF_WAVE_WORKER").is_ok() {
     eprintln!("Error: nested waves are not supported. This instance is already a wave worker.");
     std::process::exit(1);
 }
@@ -723,7 +723,7 @@ Emitted by dispatcher (written to main events file):
 }
 ```
 
-Emitted by worker (written to per-worker events file, e.g., `.ralph/wave-w-a3f7b2c1-0.jsonl`):
+Emitted by worker (written to per-worker events file, e.g., `.ulf/wave-w-a3f7b2c1-0.jsonl`):
 ```json
 {
   "topic": "review.result",
@@ -734,7 +734,7 @@ Emitted by worker (written to per-worker events file, e.g., `.ralph/wave-w-a3f7b
 }
 ```
 
-The `wave_id` and `wave_index` are auto-tagged by `ralph emit` from the `RALPH_WAVE_ID` and `RALPH_WAVE_INDEX` env vars. `wave_total` is omitted on worker events — the loop runner already knows the expected total from the dispatch events.
+The `wave_id` and `wave_index` are auto-tagged by `ulf emit` from the `ULF_WAVE_ID` and `ULF_WAVE_INDEX` env vars. `wave_total` is omitted on worker events — the loop runner already knows the expected total from the dispatch events.
 
 ### Hat Config (YAML)
 
@@ -818,7 +818,7 @@ When `aggregate.timeout` fires:
 
 ### Nested Wave Attempt
 
-Hard-blocked via `RALPH_WAVE_WORKER` env var check. CLI exits with error, no event emitted. The wave instance's iteration counts as a failure.
+Hard-blocked via `ULF_WAVE_WORKER` env var check. CLI exits with error, no event emitted. The wave instance's iteration counts as a failure.
 
 ### Invalid Wave Configuration
 
@@ -844,15 +844,15 @@ If all instances fail or timeout:
 
 ## Relationship to Parallel Loops
 
-Ralph has an existing parallel loops feature that runs independent orchestration loops in git worktrees. Waves and parallel loops are complementary, not overlapping — they solve different problems at different granularities.
+Ulf has an existing parallel loops feature that runs independent orchestration loops in git worktrees. Waves and parallel loops are complementary, not overlapping — they solve different problems at different granularities.
 
 | Dimension | Parallel Loops (existing) | Agent Waves |
 |-----------|--------------------------|-------------|
 | **Granularity** | Entire orchestration runs | Single hat activations within a run |
-| **Initiated by** | User (CLI: `ralph run -p "..."`) | Ralph (NL dispatch / `ralph wave emit`) |
-| **What runs** | Full hat sequence (Ralph picks hats) | Specific hat with specific payload |
+| **Initiated by** | User (CLI: `ulf run -p "..."`) | Ulf (NL dispatch / `ulf wave emit`) |
+| **What runs** | Full hat sequence (Ulf picks hats) | Specific hat with specific payload |
 | **Isolation** | Always git worktree (separate branch) | Shared workspace |
-| **On completion** | Merge queue → merge-ralph | Aggregator hat fires when all results arrive |
+| **On completion** | Merge queue → merge-ulf | Aggregator hat fires when all results arrive |
 | **Lifecycle** | Minutes to hours | Seconds to minutes |
 | **Configuration** | `features.parallel: true` (orchestrator-level) | `concurrency` / `aggregate` (hat-level) |
 
@@ -862,7 +862,7 @@ Worktree isolation in parallel loops is load-bearing — independent orchestrati
 
 Waves fill the lightweight case: intra-loop fan-out where instances are read-heavy or write-disjoint. The dispatcher controls what each worker sees, and shared workspace has zero overhead.
 
-A "parallel loops without worktrees" option would give the danger of shared-workspace concurrent writes without the guardrails waves provide (targeted single-hat activations, aggregation, Ralph deciding what's safe to parallelize).
+A "parallel loops without worktrees" option would give the danger of shared-workspace concurrent writes without the guardrails waves provide (targeted single-hat activations, aggregation, Ulf deciding what's safe to parallelize).
 
 ### Worktree isolation is not needed for v1
 
@@ -888,7 +888,7 @@ hats:
 
 This is deferred until waves prove out in practice. The migration path would be: ship waves v1 (shared workspace) → validate the orchestration model → add `isolation: worktree` → deprecate parallel loops as a separate feature.
 
-The remaining gap is ad-hoc user initiation (`ralph run` in a second terminal). This could be addressed with something like `ralph run -p "task" --join <loop-id>` to attach as a wave instance to an existing loop, but that's a UX question for later.
+The remaining gap is ad-hoc user initiation (`ulf run` in a second terminal). This could be addressed with something like `ulf run -p "task" --join <loop-id>` to attach as a wave instance to an existing loop, but that's a UX question for later.
 
 ---
 
@@ -1069,7 +1069,7 @@ Without this, a dispatcher fanning out to 4 hats each with `concurrency: 3` coul
 
 ```
 Given a hat collection with a dispatcher, worker (concurrency: 3), and aggregator
-When the dispatcher emits 5 wave events using `ralph wave emit <topic> --payloads ...`
+When the dispatcher emits 5 wave events using `ulf wave emit <topic> --payloads ...`
 Then the loop runner spawns worker backends with max 3 concurrent
 And each worker receives the hat's full instructions plus its specific event payload
 And each worker has full tool access
@@ -1118,7 +1118,7 @@ And global cost tracking accumulates all instance costs
 
 ```
 Given a dispatcher hat whose publishes target 3 different wave-capable hats
-When Ralph builds the dispatcher's prompt
+When Ulf builds the dispatcher's prompt
 Then the prompt includes a "Available Downstream Hats" section
 And each downstream hat's topic, name, description, and concurrency are listed
 And wave emission instructions are included
@@ -1127,8 +1127,8 @@ And wave emission instructions are included
 ### Nested Wave Prevention
 
 ```
-Given a wave worker instance (RALPH_WAVE_WORKER=1)
-When the worker attempts `ralph wave emit`
+Given a wave worker instance (ULF_WAVE_WORKER=1)
+When the worker attempts `ulf wave emit`
 Then the command fails with an error message
 And the worker's iteration counts as a failure
 ```
@@ -1137,8 +1137,8 @@ And the worker's iteration counts as a failure
 
 ```
 Given a wave with 3 worker instances
-When workers emit result events via `ralph emit`
-Then each worker writes to its own events file (.ralph/wave-{wave_id}-{index}.jsonl)
+When workers emit result events via `ulf emit`
+Then each worker writes to its own events file (.ulf/wave-{wave_id}-{index}.jsonl)
 And the main events file is not written to during wave execution
 And after wave completion the loop runner merges all per-worker results into the main events file
 And per-worker files are cleaned up
@@ -1149,14 +1149,14 @@ And per-worker files are cleaned up
 ```
 Given a hat collection with no concurrency or aggregate config
 When the orchestration loop runs
-Then behavior is identical to pre-wave Ralph (sequential, one hat per iteration)
+Then behavior is identical to pre-wave Ulf (sequential, one hat per iteration)
 And events without wave metadata are processed normally
 ```
 
 ### Wave Emission
 
 ```
-Given an agent running `ralph wave emit research.topic --payloads "AI safety" "quantum computing" "climate modeling"`
+Given an agent running `ulf wave emit research.topic --payloads "AI safety" "quantum computing" "climate modeling"`
 When the command executes
 Then 3 events are written to the events file
 And each has the same wave_id with wave_index 0, 1, 2 and wave_total 3
@@ -1167,7 +1167,7 @@ And the wave_id is printed to stdout
 
 ## Testing Strategy
 
-### Unit Tests (ralph-core, ralph-proto)
+### Unit Tests (ulf-core, ulf-proto)
 
 - **Event model**: wave metadata serialization/deserialization, backwards compatibility with events missing wave fields
 - **WaveTracker**: state machine transitions, timeout detection, result collection, failure recording
@@ -1176,14 +1176,14 @@ And the wave_id is printed to stdout
 - **Context injection**: downstream hat description generation, wave instruction formatting
 - **EventReader**: parsing wave-annotated JSONL, mixed wave/non-wave events
 
-### Integration Tests (ralph-core)
+### Integration Tests (ulf-core)
 
 - **Wave lifecycle**: dispatcher emits → workers execute → aggregator collects (using mock backends)
 - **Concurrency limiting**: N instances with concurrency M, verify max M concurrent
 - **Timeout handling**: wave with slow instances, verify aggregator fires after timeout with partial results
 - **Failure propagation**: instance failures recorded, aggregator receives failure metadata
 - **Activation accounting**: verify per-instance counting against max_activations
-- **Nested wave prevention**: worker attempts `ralph wave emit`, verify hard block
+- **Nested wave prevention**: worker attempts `ulf wave emit`, verify hard block
 
 ### Smoke Tests (replay-based)
 
@@ -1191,18 +1191,18 @@ And the wave_id is printed to stdout
 - **Scatter-gather**: recorded fixture with multiple different worker hats
 - **Partial failure**: recorded fixture with some workers failing
 
-### E2E Tests (ralph-e2e)
+### E2E Tests (ulf-e2e)
 
 - **Mock mode**: full wave lifecycle with mock backend
 - **Live mode** (optional): actual API calls for a simple 2-3 instance wave
 
 ### CLI Tests
 
-- **`ralph wave emit`**: batch emission produces correct JSONL with wave metadata
-- **`ralph emit` with wave env vars**: auto-tags events with `wave_id` and `wave_index`
-- **`ralph emit` with `RALPH_EVENTS_FILE`**: writes to specified file instead of default
-- **`ralph emit` without wave env vars**: unchanged behavior (backwards compatible)
-- **Nested prevention**: `RALPH_WAVE_WORKER=1 ralph wave emit` fails
+- **`ulf wave emit`**: batch emission produces correct JSONL with wave metadata
+- **`ulf emit` with wave env vars**: auto-tags events with `wave_id` and `wave_index`
+- **`ulf emit` with `ULF_EVENTS_FILE`**: writes to specified file instead of default
+- **`ulf emit` without wave env vars**: unchanged behavior (backwards compatible)
+- **Nested prevention**: `ULF_WAVE_WORKER=1 ulf wave emit` fails
 
 ---
 
@@ -1215,7 +1215,7 @@ And the wave_id is printed to stdout
 | `tokio::sync::Semaphore` for concurrency | Already using tokio throughout; semaphore is the standard pattern for limiting concurrent async tasks |
 | Timestamp-based wave IDs (`w-{:08x}`) | Simple, collision-resistant within a process; avoids uuid dependency |
 | Per-worker events files | Avoids concurrent writes to the main events file; `EventReader` is position-tracking and not concurrent-safe |
-| Environment variables for worker context | Transparent plumbing — `ralph emit` reads env vars, workers don't need to know the mechanics |
+| Environment variables for worker context | Transparent plumbing — `ulf emit` reads env vars, workers don't need to know the mechanics |
 | Serde optional fields for wave metadata | Backwards compatible; existing events without wave fields parse correctly |
 
 ### B. Research Findings
@@ -1226,7 +1226,7 @@ Key findings from codebase research (full details in `research/` directory):
 
 2. **Loop runner** is strictly sequential with one backend per iteration. The main loop is a `loop {}` at ~line 788, processing one hat per cycle. Wave execution inserts a new async phase between event processing and the next normal iteration.
 
-3. **Hatless Ralph** is the constant coordinator — `next_hat()` always returns "ralph" in multi-hat mode. Custom hats are personas, not independent executors. Wave workers are the **first case where hats execute directly** with their own backend process, outside Ralph's coordination. See "Architectural Impact" section for why this is safe.
+3. **Hatless Ulf** is the constant coordinator — `next_hat()` always returns "ulf" in multi-hat mode. Custom hats are personas, not independent executors. Wave workers are the **first case where hats execute directly** with their own backend process, outside Ulf's coordination. See "Architectural Impact" section for why this is safe.
 
 4. **HATS table** already resolves `publishes` → downstream hats with descriptions and Mermaid flowcharts. Context injection for NL dispatch extends this existing mechanism.
 
@@ -1236,10 +1236,10 @@ Key findings from codebase research (full details in `research/` directory):
 
 | Alternative | Why Rejected |
 |-------------|-------------|
-| Break Hatless Ralph model entirely (Q1:A) | Creates two execution paths, loses Ralph's coordination coherence |
+| Break Hatless Ulf model entirely (Q1:A) | Creates two execution paths, loses Ulf's coordination coherence |
 | Loop-runner-only parallelism (Q1:C) | Kills NL-driven adaptive dispatch, the key differentiator from static config |
 | Lightweight wave instances (Q2:B) | Violates "agents are smart, let them do the work" — prescribes capability limits |
-| Dedicated aggregator backend (Q3:B) | Premature optimization — Ralph-as-aggregator handles common cases, dedicated backend is v2 |
+| Dedicated aggregator backend (Q3:B) | Premature optimization — Ulf-as-aggregator handles common cases, dedicated backend is v2 |
 | Worktree isolation for waves in v1 (Q5:B) | Deferred — not needed for v1. Could eventually unify waves and parallel loops (see "Relationship to Parallel Loops") |
 | Fail-fast failure mode (Q6:A) | Partial results are almost always useful; one failure shouldn't waste the whole wave |
 | Wave = one activation (Q7:B) | Hides real resource usage from users; breaks max_activations budget contract |
@@ -1247,7 +1247,7 @@ Key findings from codebase research (full details in `research/` directory):
 ### D. Future Extensions (v2+)
 
 - **Worktree isolation** (`isolation: worktree`): per-wave-instance worktree for write-heavy parallel work. Could unify waves and parallel loops into a single parallelism primitive — see "Relationship to Parallel Loops" section
-- **Incremental wave emission**: `ralph wave start`/`ralph wave end` for dynamic wave sizing (when the dispatcher doesn't know the count upfront)
+- **Incremental wave emission**: `ulf wave start`/`ulf wave end` for dynamic wave sizing (when the dispatcher doesn't know the count upfront)
 - **Nested waves**: wave workers emitting sub-waves for hierarchical decomposition
 - **Additional aggregation modes**: `first_n` (activate after N results), `quorum` (majority), `external_event` (wait for external signal)
 - **Configurable failure modes**: `on_failure: fail_fast | best_effort`

@@ -144,8 +144,8 @@ run_non_blocking_check() {
 }
 
 run_mock_e2e_smoke() {
-  run_cargo build -p ralph-e2e
-  ./target/debug/ralph-e2e --mock --skip-analysis
+  run_cargo build -p ulf-e2e
+  ./target/debug/ulf-e2e --mock --skip-analysis
 }
 
 if [[ "$RUN_SYNC" -eq 1 ]]; then

@@ -28,7 +28,7 @@
 
 **Integration with previous work**: This is the foundation — all subsequent steps build on these definitions.
 
-**Demo**: `cargo test -p ralph-adapters test_roo_backend` passes. The `roo()` and `roo_interactive()` constructors return correct `CliBackend` configurations.
+**Demo**: `cargo test -p ulf-adapters test_roo_backend` passes. The `roo()` and `roo_interactive()` constructors return correct `CliBackend` configurations.
 
 ---
 
@@ -51,7 +51,7 @@
 
 **Integration with previous work**: Uses `roo()` and `roo_interactive()` from Step 1.
 
-**Demo**: `cargo test -p ralph-adapters from_name_roo` and `cargo test -p ralph-adapters from_config_roo` both pass. Running `ralph run -b roo --dry-run` (if available) shows the correct command would be spawned.
+**Demo**: `cargo test -p ulf-adapters from_name_roo` and `cargo test -p ulf-adapters from_config_roo` both pass. Running `ulf run -b roo --dry-run` (if available) shows the correct command would be spawned.
 
 ---
 
@@ -79,7 +79,7 @@
 
 **Integration with previous work**: Modifies `build_command()` which uses `roo()` backend from Step 1.
 
-**Demo**: `cargo test -p ralph-adapters test_roo_uses_prompt_file` passes. All prompts use `--prompt-file`.
+**Demo**: `cargo test -p ulf-adapters test_roo_uses_prompt_file` passes. All prompts use `--prompt-file`.
 
 ---
 
@@ -100,7 +100,7 @@
 
 **Integration with previous work**: Independent of Steps 1-3. Uses only `auto_detect.rs`.
 
-**Demo**: `cargo test -p ralph-adapters detection_command_roo` passes. The error message for missing backends includes roo.
+**Demo**: `cargo test -p ulf-adapters detection_command_roo` passes. The error message for missing backends includes roo.
 
 ---
 
@@ -120,7 +120,7 @@
 
 **Integration with previous work**: Uses the backend name registered in Steps 1-2.
 
-**Demo**: `cat presets/minimal/roo.yml` shows a valid configuration. `ralph run --preset roo -- --provider bedrock ...` would use roo as the backend.
+**Demo**: `cat presets/minimal/roo.yml` shows a valid configuration. `ulf run --preset roo -- --provider bedrock ...` would use roo as the backend.
 
 ---
 
@@ -129,15 +129,15 @@
 **Objective**: Update code documentation to reflect roo as a supported backend.
 
 **Implementation guidance**:
-- In `crates/ralph-adapters/src/lib.rs`, update the crate-level doc comment to include `- Roo (Roo Code)` in the list of supported backends
+- In `crates/ulf-adapters/src/lib.rs`, update the crate-level doc comment to include `- Roo (Roo Code)` in the list of supported backends
 - Ensure all new public methods have doc comments explaining their purpose
 
 **Test requirements**:
-- `cargo doc -p ralph-adapters --no-deps` completes without warnings
+- `cargo doc -p ulf-adapters --no-deps` completes without warnings
 
 **Integration with previous work**: References all work from Steps 1-5.
 
-**Demo**: `cargo doc` builds cleanly. The ralph-adapters documentation lists Roo as a supported backend.
+**Demo**: `cargo doc` builds cleanly. The ulf-adapters documentation lists Roo as a supported backend.
 
 ---
 
@@ -146,14 +146,14 @@
 **Objective**: Verify the complete implementation works end-to-end.
 
 **Validation checklist**:
-- [ ] `cargo test -p ralph-adapters` — All tests pass (existing + new roo tests)
+- [ ] `cargo test -p ulf-adapters` — All tests pass (existing + new roo tests)
 - [ ] `cargo test` — Full project test suite passes (no regressions)
 - [ ] `cargo build` — Clean build with no warnings
-- [ ] `cargo doc -p ralph-adapters --no-deps` — Documentation builds cleanly
+- [ ] `cargo doc -p ulf-adapters --no-deps` — Documentation builds cleanly
 - [ ] YAML validation: `presets/minimal/roo.yml` is valid
-- [ ] Manual E2E (if roo is configured): `ralph run -b roo -- --provider bedrock --aws-profile roo-bedrock --aws-region us-east-1 --model anthropic.claude-sonnet-4-6 --max-tokens 64000 -p "Create hello.txt with Hello World"` completes at least one iteration
+- [ ] Manual E2E (if roo is configured): `ulf run -b roo -- --provider bedrock --aws-profile roo-bedrock --aws-region us-east-1 --model anthropic.claude-sonnet-4-6 --max-tokens 64000 -p "Create hello.txt with Hello World"` completes at least one iteration
 
 **Demo**: Full end-to-end demonstration:
-1. Show `cargo test -p ralph-adapters` with all roo tests passing
+1. Show `cargo test -p ulf-adapters` with all roo tests passing
 2. Show `presets/minimal/roo.yml` contents
-3. Show `ralph run -b roo` starting and executing an iteration with roo backend
+3. Show `ulf run -b roo` starting and executing an iteration with roo backend

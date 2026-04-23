@@ -34,7 +34,7 @@ This skill finds and displays all code tasks (`.code-task.md` files) in the repo
   - `json` - JSON array for programmatic use
   - `summary` - Counts by status only
 
-- **tasks_dir** (optional, default: ".ralph/tasks/"): Directory to search for tasks
+- **tasks_dir** (optional, default: ".ulf/tasks/"): Directory to search for tasks
 
 ## Usage Examples
 
@@ -95,7 +95,7 @@ Display the output to the user. For table format, the output includes:
 
 Based on the results, suggest relevant actions:
 
-- If there are pending tasks: "Run `/code-assist .ralph/tasks/<task-name>.code-task.md` to start a task"
+- If there are pending tasks: "Run `/code-assist .ulf/tasks/<task-name>.code-task.md` to start a task"
 - If there are in_progress tasks: "There are tasks already in progress - consider completing those first"
 - If all tasks are completed: "All tasks are done! Use `/code-task-generator` to create new tasks"
 
@@ -156,14 +156,14 @@ Tasks without frontmatter are shown as `pending` with null dates.
 
 - **code-task-generator**: Creates new tasks with frontmatter
 - **code-assist**: Updates task status when starting/completing work
-- **ralph-code-assist**: Runs tasks through Ralph orchestrator
+- **ulf-code-assist**: Runs tasks through Ulf orchestrator
 
 ## Troubleshooting
 
 ### No Tasks Found
 
 If no tasks are displayed:
-- Verify the tasks directory exists: `ls .ralph/tasks/`
+- Verify the tasks directory exists: `ls .ulf/tasks/`
 - Check file extension is `.code-task.md`
 - Try specifying directory: `/find-code-tasks tasks_dir:./`
 

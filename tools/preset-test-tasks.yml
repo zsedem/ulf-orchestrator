@@ -42,7 +42,7 @@ test_tasks:
     5. Fix only the root cause, add a regression test, and verify with repeated stress runs plus one nearby adversarial case.
 
   research: |
-    Research how Ralph validates and exercises real application behavior in multiple waves.
+    Research how Ulf validates and exercises real application behavior in multiple waves.
     Specifically answer:
     1. What browser, terminal, or E2E harnesses already exist in this repo?
     2. Where are they used today?
@@ -103,7 +103,7 @@ smoke_test_tasks:
     5. Re-run repeated stress checks plus one nearby adversarial case.
 
   research: |
-    Research how Ralph injects verification guidance and where real harness testing already exists.
+    Research how Ulf injects verification guidance and where real harness testing already exists.
     Requirements:
     1. Cite file:line evidence
     2. Identify the main browser, terminal, or CLI harness options
@@ -111,10 +111,10 @@ smoke_test_tasks:
     4. Save the answer to `.eval-sandbox/research/summary.md`
 
   review: |
-    Review Ralph's runtime verification guidance critically using at least two waves.
+    Review Ulf's runtime verification guidance critically using at least two waves.
     Scope:
-    1. Inspect `crates/ralph-core/src/instructions.rs`
-    2. Inspect `crates/ralph-core/src/hatless_ralph.rs`
+    1. Inspect `crates/ulf-core/src/instructions.rs`
+    2. Inspect `crates/ulf-core/src/hatless_ulf.rs`
     3. Inspect at least one second high-risk area you identify from the first pass
     4. Identify any correctness or completeness gaps
     5. Save findings to `.eval-sandbox/review/findings.md`

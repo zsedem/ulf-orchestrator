@@ -2,7 +2,7 @@
 
 ## HatConfig Schema
 
-**File:** `crates/ralph-core/src/config.rs:1229-1310`
+**File:** `crates/ulf-core/src/config.rs:1229-1310`
 
 ```rust
 pub struct HatConfig {
@@ -22,26 +22,26 @@ pub struct HatConfig {
 
 New fields needed for waves: `concurrency`, `aggregate`, `isolation`.
 
-## Hatless Ralph Architecture
+## Hatless Ulf Architecture
 
-**File:** `crates/ralph-core/src/hatless_ralph.rs`
+**File:** `crates/ulf-core/src/hatless_ulf.rs`
 
-Key insight: **Ralph is always the executor**. Custom hats define topology (pub/sub contracts) that Ralph uses for coordination context, but Ralph handles all iterations.
+Key insight: **Ulf is always the executor**. Custom hats define topology (pub/sub contracts) that Ulf uses for coordination context, but Ulf handles all iterations.
 
-- Solo mode (no custom hats): Ralph runs directly
-- Multi-hat mode: Ralph always executes, custom hats are "personas" with filtered instructions
+- Solo mode (no custom hats): Ulf runs directly
+- Multi-hat mode: Ulf always executes, custom hats are "personas" with filtered instructions
 
 ## Hat Selection & Activation
 
-**File:** `crates/ralph-core/src/event_loop/mod.rs:658-672`
+**File:** `crates/ulf-core/src/event_loop/mod.rs:658-672`
 
 - `next_hat()` returns first hat with pending events
-- In multi-hat mode, always returns "ralph"
+- In multi-hat mode, always returns "ulf"
 - `HatRegistry::get_for_topic()` matches events to hats
 
 ## Prompt Building
 
-**File:** `crates/ralph-core/src/hatless_ralph.rs:258-309`
+**File:** `crates/ulf-core/src/hatless_ulf.rs:258-309`
 
 Injection order:
 1. Core prompt (guardrails, orientation, scratchpad)
@@ -56,7 +56,7 @@ Injection order:
 
 ## HATS Table & Context Injection
 
-**File:** `crates/ralph-core/src/hatless_ralph.rs:596-711`
+**File:** `crates/ulf-core/src/hatless_ulf.rs:596-711`
 
 Already generates a topology table:
 ```
@@ -78,8 +78,8 @@ Also generates Mermaid flowchart of event flow.
 
 ## Where New Config Fields Go
 
-1. **HatConfig struct** — `crates/ralph-core/src/config.rs:1229-1310`
-2. **Hat proto** — `crates/ralph-proto/src/hat.rs:43-63`
-3. **HatTopology** — `crates/ralph-core/src/hatless_ralph.rs:101-150`
-4. **Prompt injection** — `crates/ralph-core/src/hatless_ralph.rs:596-711`
-5. **Validation** — `crates/ralph-core/src/config.rs:366-494` (`RalphConfig::validate()`)
+1. **HatConfig struct** — `crates/ulf-core/src/config.rs:1229-1310`
+2. **Hat proto** — `crates/ulf-proto/src/hat.rs:43-63`
+3. **HatTopology** — `crates/ulf-core/src/hatless_ulf.rs:101-150`
+4. **Prompt injection** — `crates/ulf-core/src/hatless_ulf.rs:596-711`
+5. **Validation** — `crates/ulf-core/src/config.rs:366-494` (`UlfConfig::validate()`)

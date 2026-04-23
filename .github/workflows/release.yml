@@ -298,7 +298,7 @@ jobs:
       - name: Publish crates to crates.io
         run: |
           # Publish crates in dependency order with delays for registry indexing
-          # Order: ralph-proto -> ralph-telegram -> ralph-core -> ralph-api -> ralph-adapters, ralph-tui -> ralph-cli
+          # Order: ulf-proto -> ulf-telegram -> ulf-core -> ulf-api -> ulf-adapters, ulf-tui -> ulf-cli
 
           publish_crate() {
             local crate=$1
@@ -318,13 +318,13 @@ jobs:
             sleep 30
           }
 
-          publish_crate ralph-proto
-          publish_crate ralph-telegram
-          publish_crate ralph-core
-          publish_crate ralph-api
-          publish_crate ralph-adapters
-          publish_crate ralph-tui
-          publish_crate ralph-cli
+          publish_crate ulf-proto
+          publish_crate ulf-telegram
+          publish_crate ulf-core
+          publish_crate ulf-api
+          publish_crate ulf-adapters
+          publish_crate ulf-tui
+          publish_crate ulf-cli
 
           echo "All crates published!"
 
@@ -361,20 +361,20 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Publish npm packages
         run: |
-          # Publish ralph-cli only (ralph-bench is internal tooling)
+          # Publish ulf-cli only (ulf-bench is internal tooling)
           # Uses OIDC trusted publishing (no NPM_TOKEN needed)
-          pkg="target/distrib/ralph-cli-npm-package.tar.gz"
+          pkg="target/distrib/ulf-cli-npm-package.tar.gz"
 
           if [ -f "$pkg" ]; then
             echo "Publishing $pkg with provenance..."
             npm publish "$pkg" --access public --provenance
             echo "npm package published successfully!"
           else
-            echo "Warning: ralph-cli npm package not found"
+            echo "Warning: ulf-cli npm package not found"
             exit 1
           fi
 
-  # Smoke test: verify `cargo install ralph-cli` works from crates.io
+  # Smoke test: verify `cargo install ulf-cli` works from crates.io
   smoke-test-install:
     needs:
       - plan
@@ -384,20 +384,20 @@ jobs:
     steps:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-      - name: Install ralph-cli from crates.io
+      - name: Install ulf-cli from crates.io
         run: |
           VERSION="${{ needs.plan.outputs.tag }}"
           VERSION="${VERSION#v}"
-          echo "Installing ralph-cli@${VERSION} from crates.io..."
+          echo "Installing ulf-cli@${VERSION} from crates.io..."
 
           # Retry up to 3 times — crates.io index propagation can lag
           for attempt in 1 2 3; do
-            if cargo install ralph-cli --version "${VERSION}" --locked 2>&1; then
+            if cargo install ulf-cli --version "${VERSION}" --locked 2>&1; then
               echo "Install succeeded on attempt $attempt"
               break
             fi
             if [ "$attempt" -eq 3 ]; then
-              echo "::error::cargo install ralph-cli@${VERSION} failed after 3 attempts"
+              echo "::error::cargo install ulf-cli@${VERSION} failed after 3 attempts"
               exit 1
             fi
             echo "Attempt $attempt failed, waiting 30s for index propagation..."
@@ -405,8 +405,8 @@ jobs:
           done
       - name: Verify binary runs
         run: |
-          ralph --version
-          ralph --help > /dev/null
+          ulf --version
+          ulf --help > /dev/null
 
   announce:
     needs:

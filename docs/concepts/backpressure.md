@@ -1,6 +1,6 @@
 # Backpressure
 
-Backpressure is Ralph's mechanism for enforcing quality gates. Instead of prescribing how to do something, you define gates that reject incomplete work.
+Backpressure is Ulf's mechanism for enforcing quality gates. Instead of prescribing how to do something, you define gates that reject incomplete work.
 
 ## The Concept
 
@@ -49,7 +49,7 @@ hats:
 
       Include evidence in your event:
       ```
-      ralph emit "build.done" "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass, mutants: pass (82%)"
+      ulf emit "build.done" "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass, mutants: pass (82%)"
       ```
 ```
 
@@ -59,10 +59,10 @@ Events carry evidence of backpressure satisfaction:
 
 ```bash
 # Good: Evidence included
-ralph emit "build.done" "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass, mutants: pass (82%)"
+ulf emit "build.done" "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass, mutants: pass (82%)"
 
 # Bad: No evidence
-ralph emit "build.done" "I think it works"
+ulf emit "build.done" "I think it works"
 ```
 
 ### Verification by Other Hats
@@ -80,9 +80,9 @@ hats:
       3. Reject if backpressure not satisfied
 
       If verified:
-        ralph emit "review.approved" "evidence verified"
+        ulf emit "review.approved" "evidence verified"
       If not:
-        ralph emit "review.rejected" "tests actually failing"
+        ulf emit "review.rejected" "tests actually failing"
 ```
 
 ## Types of Backpressure
@@ -111,18 +111,18 @@ just mutants-baseline
 This command is scoped to hooks-critical modules and expands to:
 
 ```bash
-cargo mutants --file crates/ralph-core/src/hooks/executor.rs --file crates/ralph-core/src/hooks/engine.rs --file crates/ralph-core/src/preflight.rs --file crates/ralph-cli/src/loop_runner.rs
+cargo mutants --file crates/ulf-core/src/hooks/executor.rs --file crates/ulf-core/src/hooks/engine.rs --file crates/ulf-core/src/preflight.rs --file crates/ulf-cli/src/loop_runner.rs
 ```
 
 Mutation target scope:
-- `crates/ralph-core/src/hooks/executor.rs`
-- `crates/ralph-core/src/hooks/engine.rs`
-- `crates/ralph-core/src/preflight.rs`
-- `crates/ralph-cli/src/loop_runner.rs` (hook disposition + suspend control path)
+- `crates/ulf-core/src/hooks/executor.rs`
+- `crates/ulf-core/src/hooks/engine.rs`
+- `crates/ulf-core/src/preflight.rs`
+- `crates/ulf-cli/src/loop_runner.rs` (hook disposition + suspend control path)
 
 Global mutation quality parsing remains anchored at **>=70%** via
 `QualityReport::MUTATION_THRESHOLD` in
-`crates/ralph-core/src/event_parser.rs`.
+`crates/ulf-core/src/event_parser.rs`.
 
 For the scoped hooks rollout, baseline calibration is documented in
 `docs/06-analysis/hooks-mutation-baseline-2026-03-01.md` and sets an initial
@@ -138,7 +138,7 @@ just mutants-hooks-gate
 `mutants-hooks-gate` runs `scripts/hooks-mutation-gate.sh` and:
 
 - enforces `>= HOOKS_MUTATION_THRESHOLD` operational score,
-- hard-fails on any `MISS` in `crates/ralph-cli/src/loop_runner.rs:3467-3560,3623-3635`,
+- hard-fails on any `MISS` in `crates/ulf-cli/src/loop_runner.rs:3467-3560,3623-3635`,
 - reports `TIMEOUT` + `unviable` classes separately,
 - writes actionable artifacts to `.artifacts/hooks-mutation/` for CI upload.
 
@@ -248,7 +248,7 @@ Gate rules:
   Fix the issue and emit LOOP_COMPLETE again.
   ```
 
-This is **hard corrective backpressure**: instead of trusting the agent to run checks, Ralph enforces them automatically at the boundary of loop completion.
+This is **hard corrective backpressure**: instead of trusting the agent to run checks, Ulf enforces them automatically at the boundary of loop completion.
 
 ## Backpressure Flow
 
@@ -272,7 +272,7 @@ Everything must pass:
 
 ```bash
 cargo test && cargo clippy && cargo fmt --check && \
-  ralph emit "build.done" "all checks pass"
+  ulf emit "build.done" "all checks pass"
 ```
 
 ### Gradual Gates
@@ -297,7 +297,7 @@ instructions: |
 
   Exception: If a test is flaky (fails intermittently),
   document it and proceed. Add a memory:
-  ralph tools memory add "Flaky test: test_network_timeout" -t fix
+  ulf tools memory add "Flaky test: test_network_timeout" -t fix
 ```
 
 ## Anti-Patterns
@@ -314,7 +314,7 @@ instructions: |
 
 ```yaml
 # Bad: Evidence not verified
-ralph emit "build.done" "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass"  # Didn't actually run tests
+ulf emit "build.done" "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass"  # Didn't actually run tests
 ```
 
 ### Too Many Gates

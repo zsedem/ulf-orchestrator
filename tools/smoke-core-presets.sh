@@ -8,5 +8,5 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND=${1:-claude}
 
-export RALPH_PRESET_TASK_VARIANT=smoke
+export ULF_PRESET_TASK_VARIANT=smoke
 exec "$SCRIPT_DIR/evaluate-all-presets.sh" "$BACKEND" smoke

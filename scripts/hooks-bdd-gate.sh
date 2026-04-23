@@ -44,7 +44,7 @@ rm -rf "$ARTIFACT_DIR"
 mkdir -p "$ARTIFACT_DIR"
 
 hooks_bdd_cmd=(
-    cargo run -p ralph-e2e -- --hooks-bdd --mock --quiet
+    cargo run -p ulf-e2e -- --hooks-bdd --mock --quiet
 )
 
 set +e
@@ -123,7 +123,7 @@ if [[ "${#fail_reasons[@]}" -gt 0 ]]; then
 fi
 
 timestamp_utc="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-command_string="cargo run -p ralph-e2e -- --hooks-bdd --mock --quiet"
+command_string="cargo run -p ulf-e2e -- --hooks-bdd --mock --quiet"
 
 pass_ids_json="$(json_array_from_args "${pass_ids[@]}")"
 fail_ids_json="$(json_array_from_args "${fail_ids[@]}")"
@@ -158,7 +158,7 @@ EOF
     echo "- Command: \`${command_string}\`"
     echo "- Exit code: ${hooks_bdd_exit}"
     echo "- Summary: ${summary_line:-<missing>}"
-    echo "- Traceability matrix: \`crates/ralph-e2e/features/hooks/TRACEABILITY.md\`"
+    echo "- Traceability matrix: \`crates/ulf-e2e/features/hooks/TRACEABILITY.md\`"
     echo
     echo "## Scenario counts"
     echo

@@ -9,15 +9,15 @@
 | Crate names and versions | ✅ Consistent | All crates at v2.6.0, npm at 2.3.0 |
 | Architecture descriptions | ✅ Consistent | EventBus, hat system, and loop patterns described consistently |
 | File path references | ✅ Consistent | All paths relative to workspace root |
-| Terminology | ✅ Consistent | "Hat", "Topic", "Event", "HatlessRalph" used uniformly |
+| Terminology | ✅ Consistent | "Hat", "Topic", "Event", "HatlessUlf" used uniformly |
 | Backend list | ✅ Consistent | Claude, Kiro, Gemini, Codex, Amp, Pi listed consistently |
 | Configuration format | ✅ Consistent | v1/v2 normalization documented in architecture and data_models |
 
 ### Potential Ambiguities
 
-1. **"Task" has dual meaning**: The word "task" refers to both runtime work tracking items (`Task` in `ralph-core/src/task.rs`) and code task files (`.code-task.md`). The CLI disambiguates: `ralph tools task` for runtime tasks, `ralph code-task` for code task generation.
+1. **"Task" has dual meaning**: The word "task" refers to both runtime work tracking items (`Task` in `ulf-core/src/task.rs`) and code task files (`.code-task.md`). The CLI disambiguates: `ulf tools task` for runtime tasks, `ulf code-task` for code task generation.
 
-2. **"Web" packages**: There are two web stacks — the Node.js legacy backend (`backend/ralph-web-server/`) and the new Rust API server (`crates/ralph-api/`). The Node.js backend uses tRPC/SQLite while the Rust API uses Axum. Both coexist.
+2. **"Web" packages**: There are two web stacks — the Node.js legacy backend (`backend/ulf-web-server/`) and the new Rust API server (`crates/ulf-api/`). The Node.js backend uses tRPC/SQLite while the Rust API uses Axum. Both coexist.
 
 ---
 
@@ -40,12 +40,12 @@
 
 | Area | Gap | Recommendation |
 |------|-----|----------------|
-| **ralph-api routes** | Individual API endpoint signatures not fully enumerated | Read `crates/ralph-api/src/loop_domain.rs` etc. for specific routes |
-| **Web dashboard pages** | React component props and state management not detailed | Read `frontend/ralph-web/src/pages/` for page-level implementation |
-| **Node.js backend internals** | tRPC router procedures and SQLite schema not fully mapped | Read `backend/ralph-web-server/src/api/trpc.ts` and `db/schema.ts` |
+| **ulf-api routes** | Individual API endpoint signatures not fully enumerated | Read `crates/ulf-api/src/loop_domain.rs` etc. for specific routes |
+| **Web dashboard pages** | React component props and state management not detailed | Read `frontend/ulf-web/src/pages/` for page-level implementation |
+| **Node.js backend internals** | tRPC router procedures and SQLite schema not fully mapped | Read `backend/ulf-web-server/src/api/trpc.ts` and `db/schema.ts` |
 | **Preset YAML schema** | Hat collection YAML structure (presets/) not formally documented | Read `presets/README.md` and `presets/COLLECTION.md` |
-| **Diagnostics system** | Diagnostic collector modules listed but output format not detailed | Read `crates/ralph-core/src/diagnostics/` modules |
-| **Skills system** | Skill frontmatter schema and discovery algorithm not detailed | Read `crates/ralph-core/src/skill.rs` and `skill_registry.rs` |
+| **Diagnostics system** | Diagnostic collector modules listed but output format not detailed | Read `crates/ulf-core/src/diagnostics/` modules |
+| **Skills system** | Skill frontmatter schema and discovery algorithm not detailed | Read `crates/ulf-core/src/skill.rs` and `skill_registry.rs` |
 
 ### Language Support Limitations
 
@@ -62,7 +62,7 @@
 
 1. **No action needed for primary documentation** — architecture, components, interfaces, data models, and workflows are comprehensive for AI assistant context.
 
-2. **Future enhancement**: Add detailed API route documentation for `ralph-api` if web dashboard development increases.
+2. **Future enhancement**: Add detailed API route documentation for `ulf-api` if web dashboard development increases.
 
 3. **Future enhancement**: Document the preset YAML schema formally if custom hat collection authoring becomes a common user activity.
 

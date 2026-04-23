@@ -1,0 +1,28 @@
+[package]
+name = "ulf-bench"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+description = "Benchmark harness for Ulf Orchestrator"
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "ulf-bench"
+path = "src/main.rs"
+
+[dependencies]
+ulf-proto.workspace = true
+ulf-core.workspace = true
+ulf-adapters.workspace = true
+
+tokio.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde.workspace = true
+serde_json.workspace = true

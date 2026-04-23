@@ -1,10 +1,10 @@
-# Contributing to Ralph Orchestrator
+# Contributing to Ulf Orchestrator
 
-Thank you for your interest in contributing to Ralph Orchestrator! This guide will help you get started with contributing to the project.
+Thank you for your interest in contributing to Ulf Orchestrator! This guide will help you get started with contributing to the project.
 
 ## Code of Conduct
 
-By participating in this project, you agree to abide by our [Code of Conduct](https://github.com/mikeyobrien/ralph-orchestrator/blob/main/CODE_OF_CONDUCT.md). Please read it before contributing.
+By participating in this project, you agree to abide by our [Code of Conduct](https://github.com/mikeyobrien/ulf-orchestrator/blob/main/CODE_OF_CONDUCT.md). Please read it before contributing.
 
 ## Ways to Contribute
 
@@ -26,7 +26,7 @@ Found a bug? Help us fix it:
 Brief description of the bug
 
 ## Steps to Reproduce
-1. Run command: `python ralph_orchestrator.py ...`
+1. Run command: `python ulf_orchestrator.py ...`
 2. See error
 
 ## Expected Behavior
@@ -38,7 +38,7 @@ What actually happens
 ## Environment
 - OS: [e.g., Ubuntu 22.04]
 - Python: [e.g., 3.10.5]
-- Ralph Version: [e.g., 1.0.0]
+- Ulf Version: [e.g., 1.0.0]
 - AI Agent: [e.g., claude]
 
 ## Logs
@@ -77,8 +77,8 @@ Ready to code? Follow these steps:
 
 ```bash
 # Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/ralph-orchestrator.git
-cd ralph-orchestrator
+git clone https://github.com/YOUR_USERNAME/ulf-orchestrator.git
+cd ulf-orchestrator
 
 # Create a virtual environment
 python -m venv venv
@@ -116,16 +116,16 @@ pre-commit install
    pytest test_orchestrator.py::test_function
 
    # Check coverage
-   pytest --cov=ralph_orchestrator --cov-report=html
+   pytest --cov=ulf_orchestrator --cov-report=html
    ```
 
 4. **Format code**
    ```bash
    # Format with black
-   black ralph_orchestrator.py
+   black ulf_orchestrator.py
 
    # Lint with ruff
-   ruff check ralph_orchestrator.py
+   ruff check ulf_orchestrator.py
    ```
 
 5. **Commit changes**
@@ -264,9 +264,9 @@ Brief description of changes
 ## Project Structure
 
 ```
-ralph-orchestrator/
-├── ralph_orchestrator.py   # Main orchestrator
-├── ralph                   # CLI wrapper
+ulf-orchestrator/
+├── ulf_orchestrator.py   # Main orchestrator
+├── ulf                   # CLI wrapper
 ├── tests/                  # Test files
 │   ├── test_orchestrator.py
 │   ├── test_integration.py
@@ -289,7 +289,7 @@ ralph-orchestrator/
 pytest
 
 # With coverage
-pytest --cov=ralph_orchestrator
+pytest --cov=ulf_orchestrator
 
 # Specific test file
 pytest test_orchestrator.py
@@ -345,9 +345,9 @@ mkdocs build
 
 ### For Contributors
 
-- 💬 [Discord Server](https://discord.gg/ralph-orchestrator)
-- 📧 [Email Maintainers](mailto:maintainers@ralph-orchestrator.dev)
-- 🗣️ [GitHub Discussions](https://github.com/mikeyobrien/ralph-orchestrator/discussions)
+- 💬 [Discord Server](https://discord.gg/ulf-orchestrator)
+- 📧 [Email Maintainers](mailto:maintainers@ulf-orchestrator.dev)
+- 🗣️ [GitHub Discussions](https://github.com/mikeyobrien/ulf-orchestrator/discussions)
 
 ### Resources
 
@@ -360,7 +360,7 @@ mkdocs build
 
 Contributors are recognized in:
 
-- [CONTRIBUTORS.md](https://github.com/mikeyobrien/ralph-orchestrator/blob/main/CONTRIBUTORS.md)
+- [CONTRIBUTORS.md](https://github.com/mikeyobrien/ulf-orchestrator/blob/main/CONTRIBUTORS.md)
 - Release notes
 - Documentation credits
 
@@ -370,4 +370,4 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-Thank you for contributing to Ralph Orchestrator! 🎉
+Thank you for contributing to Ulf Orchestrator! 🎉

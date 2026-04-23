@@ -1,6 +1,6 @@
 # AI Agents Guide
 
-Ralph Orchestrator supports multiple AI agents, each with unique capabilities and cost structures. This guide helps you choose and configure the right agent for your task.
+Ulf Orchestrator supports multiple AI agents, each with unique capabilities and cost structures. This guide helps you choose and configure the right agent for your task.
 
 ## Supported Agents
 
@@ -29,7 +29,7 @@ npm install -g @anthropic-ai/claude-cli
 
 **Usage:**
 ```bash
-python ralph_orchestrator.py --agent claude
+python ulf_orchestrator.py --agent claude
 ```
 
 **Cost:**
@@ -65,10 +65,10 @@ pip install q-cli
 
 **Usage:**
 ```bash
-python ralph_orchestrator.py --agent q
+python ulf_orchestrator.py --agent q
 
 # Short form
-python ralph_orchestrator.py -a q
+python ulf_orchestrator.py -a q
 ```
 
 **Operational Features:**
@@ -109,7 +109,7 @@ pip install google-generativeai
 
 **Usage:**
 ```bash
-python ralph_orchestrator.py --agent gemini
+python ulf_orchestrator.py --agent gemini
 ```
 
 **Cost:**
@@ -147,13 +147,13 @@ npm install -g @google/gemini-cli
 **Usage:**
 ```bash
 # Basic ACP usage with Gemini
-python ralph_orchestrator.py --agent acp --acp-agent gemini
+python ulf_orchestrator.py --agent acp --acp-agent gemini
 
 # With specific permission mode
-python ralph_orchestrator.py --agent acp --acp-agent gemini --acp-permission-mode auto_approve
+python ulf_orchestrator.py --agent acp --acp-agent gemini --acp-permission-mode auto_approve
 
 # Using allowlist mode
-python ralph_orchestrator.py --agent acp --acp-permission-mode allowlist
+python ulf_orchestrator.py --agent acp --acp-permission-mode allowlist
 ```
 
 **Permission Modes:**
@@ -165,7 +165,7 @@ python ralph_orchestrator.py --agent acp --acp-permission-mode allowlist
 | `allowlist` | Only approve matching patterns | Production with specific tools |
 | `interactive` | Prompt user for each request | Development, manual oversight |
 
-**Configuration (ralph.yml):**
+**Configuration (ulf.yml):**
 ```yaml
 adapters:
   acp:
@@ -183,9 +183,9 @@ adapters:
 
 **Environment Variables:**
 ```bash
-export RALPH_ACP_AGENT=gemini
-export RALPH_ACP_PERMISSION_MODE=auto_approve
-export RALPH_ACP_TIMEOUT=300
+export ULF_ACP_AGENT=gemini
+export ULF_ACP_PERMISSION_MODE=auto_approve
+export ULF_ACP_TIMEOUT=300
 ```
 
 **Supported Operations:**
@@ -208,10 +208,10 @@ export RALPH_ACP_TIMEOUT=300
 
 ## Auto-Detection
 
-Ralph Orchestrator can automatically detect and use available agents:
+Ulf Orchestrator can automatically detect and use available agents:
 
 ```bash
-python ralph_orchestrator.py --agent auto
+python ulf_orchestrator.py --agent auto
 ```
 
 **Detection Order:**
@@ -278,15 +278,15 @@ graph TD
 
 ```bash
 # Standard Claude usage
-python ralph_orchestrator.py --agent claude
+python ulf_orchestrator.py --agent claude
 
 # With specific model
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent claude \
   --agent-args "--model claude-3-sonnet-20240229"
 
 # With custom parameters
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent claude \
   --agent-args "--temperature 0.7 --max-tokens 4096"
 ```
@@ -295,15 +295,15 @@ python ralph_orchestrator.py \
 
 ```bash
 # Standard Q usage
-python ralph_orchestrator.py --agent q
+python ulf_orchestrator.py --agent q
 
 # With custom parameters
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent q \
   --agent-args "--context-length 50000"
 
 # Production configuration with enhanced settings
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent q \
   --max-iterations 100 \
   --retry-delay 2 \
@@ -311,7 +311,7 @@ python ralph_orchestrator.py \
   --verbose
 
 # High-concurrency configuration
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent q \
   --agent-args "--async --timeout 300" \
   --max-iterations 200
@@ -333,10 +333,10 @@ export QCHAT_MAX_RETRIES=5
 
 ```bash
 # Standard Gemini usage
-python ralph_orchestrator.py --agent gemini
+python ulf_orchestrator.py --agent gemini
 
 # With specific model
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent gemini \
   --agent-args "--model gemini-pro"
 ```
@@ -345,16 +345,16 @@ python ralph_orchestrator.py \
 
 ```bash
 # Standard ACP usage with Gemini
-python ralph_orchestrator.py --agent acp --acp-agent gemini
+python ulf_orchestrator.py --agent acp --acp-agent gemini
 
 # With custom permission mode
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent acp \
   --acp-agent gemini \
   --acp-permission-mode allowlist
 
 # Production configuration
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent acp \
   --acp-agent gemini \
   --acp-permission-mode auto_approve \
@@ -363,7 +363,7 @@ python ralph_orchestrator.py \
   --verbose
 ```
 
-**Configuration File (ralph.yml):**
+**Configuration File (ulf.yml):**
 ```yaml
 adapters:
   acp:
@@ -379,13 +379,13 @@ adapters:
 **Environment Variables:**
 ```bash
 # Override agent command
-export RALPH_ACP_AGENT=gemini
+export ULF_ACP_AGENT=gemini
 
 # Override permission mode
-export RALPH_ACP_PERMISSION_MODE=auto_approve
+export ULF_ACP_PERMISSION_MODE=auto_approve
 
 # Override timeout
-export RALPH_ACP_TIMEOUT=300
+export ULF_ACP_TIMEOUT=300
 ```
 
 ## Agent-Specific Features
@@ -399,7 +399,7 @@ export RALPH_ACP_TIMEOUT=300
 
 ```bash
 # Leverage Claude's long context
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent claude \
   --context-window 200000 \
   --context-threshold 0.9
@@ -417,26 +417,26 @@ python ralph_orchestrator.py \
 **Operational Capabilities:**
 ```bash
 # Quick iterations with Q
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent q \
   --max-iterations 100 \
   --retry-delay 1
 
 # Async execution with timeout
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent q \
   --agent-args "--async --timeout 300" \
   --checkpoint-interval 10
 
 # Stress testing configuration
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent q \
   --max-iterations 500 \
   --metrics-interval 10 \
   --verbose
 
 # Long-running batch processing
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent q \
   --checkpoint-interval 5 \
   --max-cost 50.0 \
@@ -458,7 +458,7 @@ python ralph_orchestrator.py \
 
 ```bash
 # Data processing with Gemini
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent gemini \
   --prompt data_analysis.md
 ```
@@ -475,19 +475,19 @@ python ralph_orchestrator.py \
 **Permission Mode Examples:**
 ```bash
 # Auto-approve all requests (CI/CD)
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent acp \
   --acp-agent gemini \
   --acp-permission-mode auto_approve
 
 # Deny all requests (testing)
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent acp \
   --acp-agent gemini \
   --acp-permission-mode deny_all
 
 # Interactive approval (development)
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent acp \
   --acp-agent gemini \
   --acp-permission-mode interactive
@@ -495,7 +495,7 @@ python ralph_orchestrator.py \
 
 **Allowlist Pattern Examples:**
 ```yaml
-# ralph.yml
+# ulf.yml
 adapters:
   acp:
     tool_permissions:
@@ -532,13 +532,13 @@ Process with different agents for different phases:
 
 ```bash
 # Phase 1: Research with Claude
-python ralph_orchestrator.py --agent claude --prompt research.md
+python ulf_orchestrator.py --agent claude --prompt research.md
 
 # Phase 2: Implementation with Q
-python ralph_orchestrator.py --agent q --prompt implement.md
+python ulf_orchestrator.py --agent q --prompt implement.md
 
 # Phase 3: Documentation with Claude
-python ralph_orchestrator.py --agent claude --prompt document.md
+python ulf_orchestrator.py --agent claude --prompt document.md
 ```
 
 ### Cost Optimization
@@ -547,10 +547,10 @@ Start with cheaper agents, escalate if needed:
 
 ```bash
 # Try Q first
-python ralph_orchestrator.py --agent q --max-cost 2.0
+python ulf_orchestrator.py --agent q --max-cost 2.0
 
 # If unsuccessful, try Claude
-python ralph_orchestrator.py --agent claude --max-cost 20.0
+python ulf_orchestrator.py --agent claude --max-cost 20.0
 ```
 
 ## Agent Performance Tuning
@@ -559,14 +559,14 @@ python ralph_orchestrator.py --agent claude --max-cost 20.0
 
 ```bash
 # Optimized for quality
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent claude \
   --max-iterations 50 \
   --checkpoint-interval 5 \
   --context-window 200000
 
 # Optimized for speed
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent claude \
   --max-iterations 20 \
   --retry-delay 1
@@ -576,7 +576,7 @@ python ralph_orchestrator.py \
 
 ```bash
 # Maximum efficiency
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent q \
   --max-iterations 200 \
   --checkpoint-interval 20 \
@@ -587,7 +587,7 @@ python ralph_orchestrator.py \
 
 ```bash
 # Data-heavy tasks
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent gemini \
   --context-window 128000 \
   --max-tokens 500000
@@ -603,19 +603,19 @@ python ralph_orchestrator.py \
    which claude  # or q, gemini
    
    # Use auto-detection
-   python ralph_orchestrator.py --agent auto --dry-run
+   python ulf_orchestrator.py --agent auto --dry-run
    ```
 
 2. **Rate Limiting**
    ```bash
    # Increase retry delay
-   python ralph_orchestrator.py --retry-delay 10
+   python ulf_orchestrator.py --retry-delay 10
    ```
 
 3. **Context Overflow**
    ```bash
    # Adjust context settings
-   python ralph_orchestrator.py \
+   python ulf_orchestrator.py \
      --context-window 100000 \
      --context-threshold 0.7
    ```
@@ -623,17 +623,17 @@ python ralph_orchestrator.py \
 4. **Poor Output Quality**
    ```bash
    # Switch to higher-quality agent
-   python ralph_orchestrator.py --agent claude
+   python ulf_orchestrator.py --agent claude
    ```
 
 ### Agent Diagnostics
 
 ```bash
 # Test agent availability
-python ralph_orchestrator.py --agent auto --dry-run --verbose
+python ulf_orchestrator.py --agent auto --dry-run --verbose
 
 # Check agent performance
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent claude \
   --max-iterations 1 \
   --verbose \
@@ -646,13 +646,13 @@ python ralph_orchestrator.py \
 
 ```bash
 # Low budget: Use Q
-python ralph_orchestrator.py --agent q --max-cost 5.0
+python ulf_orchestrator.py --agent q --max-cost 5.0
 
 # Medium budget: Use Gemini
-python ralph_orchestrator.py --agent gemini --max-cost 25.0
+python ulf_orchestrator.py --agent gemini --max-cost 25.0
 
 # High budget: Use Claude
-python ralph_orchestrator.py --agent claude --max-cost 100.0
+python ulf_orchestrator.py --agent claude --max-cost 100.0
 ```
 
 ### Cost Tracking
@@ -661,7 +661,7 @@ Monitor costs per agent:
 
 ```bash
 # Enable detailed metrics
-python ralph_orchestrator.py \
+python ulf_orchestrator.py \
   --agent claude \
   --metrics-interval 1 \
   --verbose
@@ -669,13 +669,13 @@ python ralph_orchestrator.py \
 
 ## Event Format (v2.0+)
 
-Ralph v2.0 uses JSONL (JSON Lines) for event communication between agents and the orchestrator.
+Ulf v2.0 uses JSONL (JSON Lines) for event communication between agents and the orchestrator.
 
 Events are **routing signals**, not data transport. Keep payloads brief.
 
 ### Writing Events
 
-Agents write events to the run's events file (`.ralph/events-YYYYMMDD-HHMMSS.jsonl`):
+Agents write events to the run's events file (`.ulf/events-YYYYMMDD-HHMMSS.jsonl`):
 
 ```json
 {"topic":"build.done","payload":"tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass","ts":"2026-01-14T19:30:00Z"}
@@ -710,18 +710,18 @@ For detailed output, write to your scratchpad file and emit a brief event.
 ### Example: Builder Hat
 
 ```bash
-# Preferred: Use ralph emit for safe JSON formatting
-ralph emit build.done "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass"
+# Preferred: Use ulf emit for safe JSON formatting
+ulf emit build.done "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass"
 
 # Structured object payload
-ralph emit review.done --json '{"status":"approved","files":3}'
+ulf emit review.done --json '{"status":"approved","files":3}'
 ```
 
 ### Reading Events
 
-Ralph reads new events from the run's events file after each agent execution. Events trigger hat transitions based on configured triggers.
+Ulf reads new events from the run's events file after each agent execution. Events trigger hat transitions based on configured triggers.
 
-Each run creates a unique timestamped events file (e.g., `.ralph/events-20260120-193202.jsonl`) to prevent stale events from polluting new runs. The `ralph emit` command automatically writes to the correct file.
+Each run creates a unique timestamped events file (e.g., `.ulf/events-20260120-193202.jsonl`) to prevent stale events from polluting new runs. The `ulf emit` command automatically writes to the correct file.
 
 ### Legacy XML Format (v1.x)
 
@@ -732,7 +732,7 @@ tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass
 </event>
 ```
 
-This format is no longer supported in v2.0. See [Migration Guide](../migration/v2-hatless-ralph.md).
+This format is no longer supported in v2.0. See [Migration Guide](../migration/v2-hatless-ulf.md).
 
 ## Best Practices
 
@@ -747,7 +747,7 @@ This format is no longer supported in v2.0. See [Migration Guide](../migration/v
 Test with few iterations first:
 
 ```bash
-python ralph_orchestrator.py --agent auto --max-iterations 5
+python ulf_orchestrator.py --agent auto --max-iterations 5
 ```
 
 ### 3. Monitor Performance
@@ -755,7 +755,7 @@ python ralph_orchestrator.py --agent auto --max-iterations 5
 Track metrics for optimization:
 
 ```bash
-python ralph_orchestrator.py --metrics-interval 5 --verbose
+python ulf_orchestrator.py --metrics-interval 5 --verbose
 ```
 
 ### 4. Use Auto-Detection
@@ -763,7 +763,7 @@ python ralph_orchestrator.py --metrics-interval 5 --verbose
 Let the system choose when unsure:
 
 ```bash
-python ralph_orchestrator.py --agent auto
+python ulf_orchestrator.py --agent auto
 ```
 
 ### 5. Consider Costs
@@ -779,4 +779,4 @@ Balance quality with budget:
 - Master [Prompt Engineering](prompts.md) for better results
 - Learn about [Cost Management](cost-management.md)
 - Explore [Configuration](configuration.md) options
-- Read the [v2.0 Migration Guide](../migration/v2-hatless-ralph.md)
+- Read the [v2.0 Migration Guide](../migration/v2-hatless-ulf.md)

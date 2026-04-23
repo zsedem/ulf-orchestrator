@@ -1,6 +1,6 @@
 # Development Setup
 
-Set up your environment for Ralph development.
+Set up your environment for Ulf development.
 
 ## Prerequisites
 
@@ -19,8 +19,8 @@ Set up your environment for Ralph development.
 
 ```bash
 # Clone
-git clone https://github.com/mikeyobrien/ralph-orchestrator.git
-cd ralph-orchestrator
+git clone https://github.com/mikeyobrien/ulf-orchestrator.git
+cd ulf-orchestrator
 
 # Build
 cargo build
@@ -49,7 +49,7 @@ This installs pre-commit hooks that mirror CI Rust checks:
 cargo test
 
 # Run smoke tests
-cargo test -p ralph-core smoke_runner
+cargo test -p ulf-core smoke_runner
 
 # Check formatting
 cargo fmt --check
@@ -61,15 +61,15 @@ cargo clippy --all-targets --all-features
 ## Project Structure
 
 ```
-ralph-orchestrator/
+ulf-orchestrator/
 ├── crates/                    # Cargo workspace crates
-│   ├── ralph-proto/           # Protocol types
-│   ├── ralph-core/            # Orchestration engine
-│   ├── ralph-adapters/        # CLI backends
-│   ├── ralph-tui/             # Terminal UI
-│   ├── ralph-cli/             # Binary entry point
-│   ├── ralph-e2e/             # E2E testing
-│   └── ralph-bench/           # Benchmarking
+│   ├── ulf-proto/           # Protocol types
+│   ├── ulf-core/            # Orchestration engine
+│   ├── ulf-adapters/        # CLI backends
+│   ├── ulf-tui/             # Terminal UI
+│   ├── ulf-cli/             # Binary entry point
+│   ├── ulf-e2e/             # E2E testing
+│   └── ulf-bench/           # Benchmarking
 ├── presets/                   # Hat collection presets
 ├── specs/                     # Development specs
 ├── tasks/                     # Code tasks
@@ -119,17 +119,17 @@ git push origin feature/my-feature
 # Open PR on GitHub
 ```
 
-## Running Ralph Locally
+## Running Ulf Locally
 
 ```bash
 # From source
-cargo run --bin ralph -- run -p "test prompt"
+cargo run --bin ulf -- run -p "test prompt"
 
 # With release build
-cargo run --release --bin ralph -- run -p "test prompt"
+cargo run --release --bin ulf -- run -p "test prompt"
 
 # Direct binary
-./target/release/ralph run -p "test prompt"
+./target/release/ulf run -p "test prompt"
 ```
 
 ## Testing with Fixtures
@@ -138,10 +138,10 @@ Smoke tests use JSONL fixtures:
 
 ```bash
 # Run smoke tests
-cargo test -p ralph-core smoke_runner
+cargo test -p ulf-core smoke_runner
 
 # Record a new fixture
-cargo run --bin ralph -- run --record-session fixture.jsonl -p "your prompt"
+cargo run --bin ulf -- run --record-session fixture.jsonl -p "your prompt"
 ```
 
 ## E2E Testing
@@ -150,10 +150,10 @@ Requires a live AI backend:
 
 ```bash
 # Run E2E tests
-cargo run -p ralph-e2e -- claude
+cargo run -p ulf-e2e -- claude
 
 # Debug mode
-cargo run -p ralph-e2e -- claude --keep-workspace --verbose
+cargo run -p ulf-e2e -- claude --keep-workspace --verbose
 ```
 
 ## Debugging
@@ -161,13 +161,13 @@ cargo run -p ralph-e2e -- claude --keep-workspace --verbose
 ### Enable Diagnostics
 
 ```bash
-RALPH_DIAGNOSTICS=1 cargo run --bin ralph -- run -p "test"
+ULF_DIAGNOSTICS=1 cargo run --bin ulf -- run -p "test"
 ```
 
 ### Debug Logging
 
 ```bash
-RUST_LOG=debug cargo run --bin ralph -- run -p "test"
+RUST_LOG=debug cargo run --bin ulf -- run -p "test"
 ```
 
 ### GDB/LLDB
@@ -177,7 +177,7 @@ RUST_LOG=debug cargo run --bin ralph -- run -p "test"
 cargo build
 
 # Debug
-lldb ./target/debug/ralph -- run -p "test"
+lldb ./target/debug/ulf -- run -p "test"
 ```
 
 ## IDE Setup

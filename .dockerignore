@@ -65,7 +65,7 @@ tmp/
 # Agent workspace (will be mounted as volume)
 workspace/
 .agent/
-.ralph/
+.ulf/
 
 # CI/CD
 .gitlab-ci.yml

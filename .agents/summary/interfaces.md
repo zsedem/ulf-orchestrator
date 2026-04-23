@@ -2,7 +2,7 @@
 
 ## Rust Trait Interfaces
 
-### RobotService (`ralph-proto`)
+### RobotService (`ulf-proto`)
 
 The core abstraction for human-in-the-loop communication. Implemented by `TelegramService`.
 
@@ -17,7 +17,7 @@ pub trait RobotService: Send + Sync {
 }
 ```
 
-### DaemonAdapter (`ralph-proto`)
+### DaemonAdapter (`ulf-proto`)
 
 Abstraction for persistent bot daemons that listen for messages and start loops on demand.
 
@@ -28,7 +28,7 @@ pub trait DaemonAdapter: Send + Sync {
 }
 ```
 
-### FrameCapture (`ralph-proto`)
+### FrameCapture (`ulf-proto`)
 
 Interface for capturing rendered terminal output for recording/replay.
 
@@ -39,7 +39,7 @@ pub trait FrameCapture: Send + Sync {
 }
 ```
 
-### HookExecutorContract (`ralph-core`)
+### HookExecutorContract (`ulf-core`)
 
 Interface for executing hook commands, enabling test substitution.
 
@@ -55,7 +55,7 @@ pub trait HookExecutorContract: Send + Sync {
 
 The RPC protocol enables IPC between the orchestration loop and frontends. Transport is newline-delimited JSON.
 
-### Commands (stdin → Ralph)
+### Commands (stdin → Ulf)
 
 | Command | Fields | Purpose |
 |---------|--------|---------|
@@ -69,7 +69,7 @@ The RPC protocol enables IPC between the orchestration loop and frontends. Trans
 | `set_hat` | `hat` | Force hat change |
 | `extension_ui_response` | `request_id`, `response` | Respond to UI prompt |
 
-### Events (Ralph → stdout)
+### Events (Ulf → stdout)
 
 | Event | Key Fields | Purpose |
 |-------|-----------|---------|
@@ -94,23 +94,23 @@ The RPC protocol enables IPC between the orchestration loop and frontends. Trans
 
 ```mermaid
 graph LR
-    RALPH["ralph"] --> RUN["run"]
-    RALPH --> INIT["init"]
-    RALPH --> PLAN["plan"]
-    RALPH --> CT["code-task"]
-    RALPH --> TOOLS["tools"]
-    RALPH --> LOOPS["loops"]
-    RALPH --> HATS["hats"]
-    RALPH --> EVENTS["events"]
-    RALPH --> CLEAN["clean"]
-    RALPH --> EMIT["emit"]
-    RALPH --> BOT["bot"]
-    RALPH --> WEB["web"]
-    RALPH --> TUI_CMD["tui"]
-    RALPH --> HOOKS["hooks"]
-    RALPH --> PREFLIGHT["preflight"]
-    RALPH --> DOCTOR["doctor"]
-    RALPH --> COMPS["completions"]
+    ULF["ulf"] --> RUN["run"]
+    ULF --> INIT["init"]
+    ULF --> PLAN["plan"]
+    ULF --> CT["code-task"]
+    ULF --> TOOLS["tools"]
+    ULF --> LOOPS["loops"]
+    ULF --> HATS["hats"]
+    ULF --> EVENTS["events"]
+    ULF --> CLEAN["clean"]
+    ULF --> EMIT["emit"]
+    ULF --> BOT["bot"]
+    ULF --> WEB["web"]
+    ULF --> TUI_CMD["tui"]
+    ULF --> HOOKS["hooks"]
+    ULF --> PREFLIGHT["preflight"]
+    ULF --> DOCTOR["doctor"]
+    ULF --> COMPS["completions"]
     
     TOOLS --> T_EMIT["emit"]
     TOOLS --> T_TASK["task"]
@@ -121,23 +121,23 @@ graph LR
 
 | Command | Description |
 |---------|-------------|
-| `ralph run` | Run the orchestration loop (default) |
-| `ralph init` | Initialize `ralph.yml` configuration |
-| `ralph plan` | Start a PDD planning session |
-| `ralph code-task` | Generate code task files |
-| `ralph tools` | Agent-facing runtime tools |
-| `ralph loops` | Manage parallel loops |
-| `ralph hats` | Manage configured hats |
-| `ralph events` | View event history |
-| `ralph clean` | Clean up `.ralph/` artifacts |
-| `ralph emit` | Emit events to events file |
-| `ralph bot` | Telegram bot management |
-| `ralph web` | Launch web dashboard |
-| `ralph tui` | Attach TUI to running ralph-api |
-| `ralph hooks` | Validate hooks configuration |
-| `ralph preflight` | Run environment validation |
-| `ralph doctor` | First-run diagnostics |
-| `ralph completions` | Generate shell completions |
+| `ulf run` | Run the orchestration loop (default) |
+| `ulf init` | Initialize `ulf.yml` configuration |
+| `ulf plan` | Start a PDD planning session |
+| `ulf code-task` | Generate code task files |
+| `ulf tools` | Agent-facing runtime tools |
+| `ulf loops` | Manage parallel loops |
+| `ulf hats` | Manage configured hats |
+| `ulf events` | View event history |
+| `ulf clean` | Clean up `.ulf/` artifacts |
+| `ulf emit` | Emit events to events file |
+| `ulf bot` | Telegram bot management |
+| `ulf web` | Launch web dashboard |
+| `ulf tui` | Attach TUI to running ulf-api |
+| `ulf hooks` | Validate hooks configuration |
+| `ulf preflight` | Run environment validation |
+| `ulf doctor` | First-run diagnostics |
+| `ulf completions` | Generate shell completions |
 
 ---
 
@@ -194,7 +194,7 @@ Hook failure modes: `warn` (continue), `block` (stop), `suspend` (pause and awai
 
 ---
 
-## REST/WebSocket API (ralph-api)
+## REST/WebSocket API (ulf-api)
 
 The Axum-based API server exposes:
 

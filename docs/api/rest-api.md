@@ -181,8 +181,8 @@ Get a specific hat by its key.
 List all available presets from all sources.
 
 Presets are returned in priority order:
-1. **builtin** — Shipped with Ralph (from `presets/` directory)
-2. **directory** — User-created (from `.ralph/hats/`)
+1. **builtin** — Shipped with Ulf (from `presets/` directory)
+2. **directory** — User-created (from `.ulf/hats/`)
 3. **collection** — Database collections (created via Builder)
 
 **Response** `200 OK`
@@ -198,7 +198,7 @@ Presets are returned in priority order:
     "id": "my-custom",
     "name": "my-custom",
     "source": "directory",
-    "path": ".ralph/hats/my-custom.yml"
+    "path": ".ulf/hats/my-custom.yml"
   },
   {
     "id": "uuid-abc-123",
@@ -225,7 +225,7 @@ All error responses follow this structure:
 ## Running the Legacy Server
 
 ```bash
-ralph web --legacy-node-api  # Launch deprecated Node backend + frontend
+ulf web --legacy-node-api  # Launch deprecated Node backend + frontend
 npm run dev:legacy-server    # Node backend only
 ```
 

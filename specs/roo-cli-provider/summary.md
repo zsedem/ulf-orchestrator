@@ -8,7 +8,7 @@
 ├── idea-honing.md                         # Q&A requirements clarification (10 questions)
 ├── research/
 │   ├── roo-cli-interface.md               # Roo CLI flags, stream-json format, examples
-│   ├── ralph-adapter-system.md            # How Ralph's adapter system works
+│   ├── ulf-adapter-system.md            # How Ulf's adapter system works
 │   └── text-vs-stream-json.md             # Analysis of text vs stream-json impact
 ├── design/
 │   └── detailed-design.md                 # Complete design document
@@ -45,9 +45,9 @@ The implementation consists of **7 incremental steps**, each producing working, 
 
 | File | Changes |
 |------|---------|
-| `crates/ralph-adapters/src/cli_backend.rs` | Add `roo()`, `roo_interactive()`, registration points, tests |
-| `crates/ralph-adapters/src/auto_detect.rs` | Add to priority, error message, tests |
-| `crates/ralph-adapters/src/lib.rs` | Update doc comment |
+| `crates/ulf-adapters/src/cli_backend.rs` | Add `roo()`, `roo_interactive()`, registration points, tests |
+| `crates/ulf-adapters/src/auto_detect.rs` | Add to priority, error message, tests |
+| `crates/ulf-adapters/src/lib.rs` | Update doc comment |
 | `presets/minimal/roo.yml` | New file |
 
 ## Estimated Effort

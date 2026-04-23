@@ -5,7 +5,7 @@
 
 ## Overview
 
-Ralph Orchestrator follows Rust community conventions with project-specific additions.
+Ulf Orchestrator follows Rust community conventions with project-specific additions.
 
 ## Rust Style
 

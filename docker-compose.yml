@@ -1,28 +1,28 @@
 version: '3.8'
 
 services:
-  # Main Ralph Orchestrator service
-  ralph:
+  # Main Ulf Orchestrator service
+  ulf:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ralph-orchestrator:local
-    container_name: ralph-orchestrator
+    image: ulf-orchestrator:local
+    container_name: ulf-orchestrator
     environment:
       # AI Agent API Keys (set in .env file)
       - CLAUDE_API_KEY=${CLAUDE_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - Q_API_KEY=${Q_API_KEY}
       
-      # Ralph Configuration
-      - RALPH_AGENT=${RALPH_AGENT:-auto}
-      - RALPH_MAX_ITERATIONS=${RALPH_MAX_ITERATIONS:-100}
-      - RALPH_MAX_RUNTIME=${RALPH_MAX_RUNTIME:-14400}
-      - RALPH_MAX_TOKENS=${RALPH_MAX_TOKENS:-1000000}
-      - RALPH_MAX_COST=${RALPH_MAX_COST:-50.0}
-      - RALPH_CHECKPOINT_INTERVAL=${RALPH_CHECKPOINT_INTERVAL:-5}
-      - RALPH_VERBOSE=${RALPH_VERBOSE:-false}
-      - RALPH_ENABLE_METRICS=${RALPH_ENABLE_METRICS:-true}
+      # Ulf Configuration
+      - ULF_AGENT=${ULF_AGENT:-auto}
+      - ULF_MAX_ITERATIONS=${ULF_MAX_ITERATIONS:-100}
+      - ULF_MAX_RUNTIME=${ULF_MAX_RUNTIME:-14400}
+      - ULF_MAX_TOKENS=${ULF_MAX_TOKENS:-1000000}
+      - ULF_MAX_COST=${ULF_MAX_COST:-50.0}
+      - ULF_CHECKPOINT_INTERVAL=${ULF_CHECKPOINT_INTERVAL:-5}
+      - ULF_VERBOSE=${ULF_VERBOSE:-false}
+      - ULF_ENABLE_METRICS=${ULF_ENABLE_METRICS:-true}
       
       # Logging
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -32,16 +32,16 @@ services:
       # Mount prompts directory (read-only)
       - ./prompts:/prompts:ro
       # Mount agent state directory
-      - ralph-agent:/app/.agent
+      - ulf-agent:/app/.agent
       # Mount cache directory
-      - ralph-cache:/app/.cache
+      - ulf-cache:/app/.cache
       # Mount git directory if needed
       - ./.git:/workspace/.git
     networks:
-      - ralph-network
+      - ulf-network
     restart: unless-stopped
     command: 
-      - "--agent=${RALPH_AGENT:-auto}"
+      - "--agent=${ULF_AGENT:-auto}"
       - "--prompt=/workspace/PROMPT.md"
       - "--verbose"
     depends_on:
@@ -56,12 +56,12 @@ services:
   # Redis for caching and state management
   redis:
     image: redis:7-alpine
-    container_name: ralph-redis
+    container_name: ulf-redis
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data
     networks:
-      - ralph-network
+      - ulf-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -72,19 +72,19 @@ services:
   # PostgreSQL for persistent storage (optional)
   postgres:
     image: postgres:15-alpine
-    container_name: ralph-postgres
+    container_name: ulf-postgres
     environment:
-      - POSTGRES_DB=ralph_orchestrator
-      - POSTGRES_USER=ralph
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-ralph_secret}
+      - POSTGRES_DB=ulf_orchestrator
+      - POSTGRES_USER=ulf
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-ulf_secret}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
-      - ralph-network
+      - ulf-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ralph"]
+      test: ["CMD-SHELL", "pg_isready -U ulf"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -94,7 +94,7 @@ services:
   # Prometheus for metrics collection
   prometheus:
     image: prom/prometheus:latest
-    container_name: ralph-prometheus
+    container_name: ulf-prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -104,7 +104,7 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     networks:
-      - ralph-network
+      - ulf-network
     ports:
       - "9090:9090"
     restart: unless-stopped
@@ -114,7 +114,7 @@ services:
   # Grafana for visualization
   grafana:
     image: grafana/grafana:latest
-    container_name: ralph-grafana
+    container_name: ulf-grafana
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
@@ -124,7 +124,7 @@ services:
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
     networks:
-      - ralph-network
+      - ulf-network
     ports:
       - "3000:3000"
     restart: unless-stopped
@@ -136,11 +136,11 @@ services:
   # Documentation server (development)
   docs:
     image: squidfunk/mkdocs-material:latest
-    container_name: ralph-docs
+    container_name: ulf-docs
     volumes:
       - .:/docs
     networks:
-      - ralph-network
+      - ulf-network
     ports:
       - "8000:8000"
     command: serve --dev-addr=0.0.0.0:8000
@@ -149,9 +149,9 @@ services:
 
 # Volumes for persistent data
 volumes:
-  ralph-agent:
+  ulf-agent:
     driver: local
-  ralph-cache:
+  ulf-cache:
     driver: local
   redis-data:
     driver: local
@@ -164,7 +164,7 @@ volumes:
 
 # Networks
 networks:
-  ralph-network:
+  ulf-network:
     driver: bridge
     ipam:
       config:

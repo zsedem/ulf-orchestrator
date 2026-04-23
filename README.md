@@ -1,39 +1,39 @@
 <!-- 2026-01-28 -->
-# Ralph Orchestrator
+# Ulf Orchestrator
 
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.75+-orange)](https://www.rust-lang.org/)
-[![Build](https://img.shields.io/github/actions/workflow/status/mikeyobrien/ralph-orchestrator/ci.yml?branch=main&label=CI)](https://github.com/mikeyobrien/ralph-orchestrator/actions)
-[![Coverage](https://img.shields.io/endpoint?url=https://mikeyobrien.github.io/ralph-orchestrator/badges/coverage.json)](CONTRIBUTING.md#coverage)
+[![Build](https://img.shields.io/github/actions/workflow/status/mikeyobrien/ulf-orchestrator/ci.yml?branch=main&label=CI)](https://github.com/mikeyobrien/ulf-orchestrator/actions)
+[![Coverage](https://img.shields.io/endpoint?url=https://mikeyobrien.github.io/ulf-orchestrator/badges/coverage.json)](CONTRIBUTING.md#coverage)
 [![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](https://mikeyobrien.github.io/ralph-orchestrator/)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](https://mikeyobrien.github.io/ulf-orchestrator/)
 [![Discord](https://img.shields.io/discord/1482421188700667906?label=Discord&logo=discord&logoColor=white)](https://discord.gg/XWUyeUNffh)
 
 A hat-based orchestration framework that keeps AI agents in a loop until the task is done.
 
-> "Me fail English? That's unpossible!" - Ralph Wiggum
+> "Me fail English? That's unpossible!" - Ulf Wiggum
 
-**[Documentation](https://mikeyobrien.github.io/ralph-orchestrator/)** | **[Getting Started](https://mikeyobrien.github.io/ralph-orchestrator/getting-started/quick-start/)** | **[Presets](https://mikeyobrien.github.io/ralph-orchestrator/guide/presets/)**
+**[Documentation](https://mikeyobrien.github.io/ulf-orchestrator/)** | **[Getting Started](https://mikeyobrien.github.io/ulf-orchestrator/getting-started/quick-start/)** | **[Presets](https://mikeyobrien.github.io/ulf-orchestrator/guide/presets/)**
 
 ## Installation
 
 ### Via npm (Recommended)
 
 ```bash
-npm install -g @ralph-orchestrator/ralph-cli
+npm install -g @ulf-orchestrator/ulf-cli
 ```
 
 ### Via GitHub Releases installer
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/mikeyobrien/ralph-orchestrator/releases/latest/download/ralph-cli-installer.sh | sh
+  https://github.com/mikeyobrien/ulf-orchestrator/releases/latest/download/ulf-cli-installer.sh | sh
 ```
 
 ### Via Cargo
 
 ```bash
-cargo install ralph-cli
+cargo install ulf-cli
 ```
 
 > Homebrew is not currently published from this repository's automated release flow. Prefer npm, Cargo, or the GitHub Releases installer.
@@ -41,23 +41,23 @@ cargo install ralph-cli
 ## Quick Start
 
 ```bash
-# 1. Initialize Ralph with your preferred backend
-ralph init --backend claude
+# 1. Initialize Ulf with your preferred backend
+ulf init --backend claude
 
 # 2. Plan your feature (interactive PDD session)
-ralph plan "Add user authentication with JWT"
+ulf plan "Add user authentication with JWT"
 # Creates: specs/user-authentication/requirements.md, design.md, implementation-plan.md
 
 # 3. Implement the feature
-ralph run -p "Implement the feature in specs/user-authentication/"
+ulf run -p "Implement the feature in specs/user-authentication/"
 ```
 
-Ralph iterates until it outputs `LOOP_COMPLETE` or hits the iteration limit.
+Ulf iterates until it outputs `LOOP_COMPLETE` or hits the iteration limit.
 
 For simpler tasks, skip planning and run directly:
 
 ```bash
-ralph run -p "Add input validation to the /users endpoint"
+ulf run -p "Add input validation to the /users endpoint"
 ```
 
 ## Web Dashboard (Alpha)
@@ -66,39 +66,39 @@ ralph run -p "Add input validation to the /users endpoint"
 
 <img width="1513" height="1128" alt="image" src="https://github.com/user-attachments/assets/ce5f072f-3d81-44d8-8f2f-88b42b33a3be" />
 
-Ralph includes a web dashboard for monitoring and managing orchestration loops.
+Ulf includes a web dashboard for monitoring and managing orchestration loops.
 
 ```bash
-ralph web                              # starts Rust RPC API + frontend + opens browser
-ralph web --no-open                    # skip browser auto-open
-ralph web --backend-port 4000          # custom RPC API port
-ralph web --frontend-port 8080         # custom frontend port
-ralph web --legacy-node-api            # opt into deprecated Node tRPC backend
+ulf web                              # starts Rust RPC API + frontend + opens browser
+ulf web --no-open                    # skip browser auto-open
+ulf web --backend-port 4000          # custom RPC API port
+ulf web --frontend-port 8080         # custom frontend port
+ulf web --legacy-node-api            # opt into deprecated Node tRPC backend
 ```
 
 ### MCP Server Workspace Scope
 
-`ralph mcp serve` is scoped to a single workspace root per server instance.
+`ulf mcp serve` is scoped to a single workspace root per server instance.
 
 ```bash
-ralph mcp serve --workspace-root /path/to/repo
+ulf mcp serve --workspace-root /path/to/repo
 ```
 
 Precedence is:
 
 1. `--workspace-root`
-2. `RALPH_API_WORKSPACE_ROOT`
+2. `ULF_API_WORKSPACE_ROOT`
 3. current working directory
 
-For multi-repo use, run one MCP server instance per repo/workspace. Ralph's current
+For multi-repo use, run one MCP server instance per repo/workspace. Ulf's current
 control-plane APIs persist config, tasks, loops, planning sessions, and collections
 under a single workspace root, so server-per-workspace is the deterministic model.
 
 **Requirements:**
-- Rust toolchain (for `ralph-api`)
+- Rust toolchain (for `ulf-api`)
 - Node.js >= 18 + npm (for the frontend)
 
-On first run, `ralph web` auto-detects missing `node_modules` and runs `npm install`.
+On first run, `ulf web` auto-detects missing `node_modules` and runs `npm install`.
 
 To set up Node.js:
 
@@ -123,17 +123,17 @@ npm run test             # all frontend/backend workspace tests
 
 ## MCP Server Mode
 
-Ralph can run as an MCP server over stdio for MCP-compatible clients:
+Ulf can run as an MCP server over stdio for MCP-compatible clients:
 
 ```bash
-ralph mcp serve
+ulf mcp serve
 ```
 
 Use this mode from an MCP client configuration rather than an interactive terminal workflow.
 
-## What is Ralph?
+## What is Ulf?
 
-Ralph implements the [Ralph Wiggum technique](https://ghuntley.com/ralph/) — autonomous task completion through continuous iteration. It supports:
+Ulf implements the [Ulf Wiggum technique](https://ghuntley.com/ulf/) — autonomous task completion through continuous iteration. It supports:
 
 - **Multi-Backend Support** — Claude Code, Kiro, Gemini CLI, Codex, Amp, Copilot CLI, OpenCode
 - **Hat System** — Specialized personas coordinating through events
@@ -143,23 +143,23 @@ Ralph implements the [Ralph Wiggum technique](https://ghuntley.com/ralph/) — a
 
 ## RObot (Human-in-the-Loop)
 
-Ralph supports human interaction during orchestration via Telegram. Agents can ask questions and block until answered; humans can send proactive guidance at any time.
+Ulf supports human interaction during orchestration via Telegram. Agents can ask questions and block until answered; humans can send proactive guidance at any time.
 
 Quick onboarding (Telegram):
 
 ```bash
-ralph bot onboard --telegram   # guided setup (token + chat id)
-ralph bot status               # verify config
-ralph bot test                 # send a test message
-ralph run -c ralph.bot.yml -p  "Help the human"
+ulf bot onboard --telegram   # guided setup (token + chat id)
+ulf bot status               # verify config
+ulf bot test                 # send a test message
+ulf run -c ulf.bot.yml -p  "Help the human"
 ```
 
 ```yaml
-# ralph.yml
+# ulf.yml
 RObot:
   enabled: true
   telegram:
-    bot_token: "your-token"  # Or RALPH_TELEGRAM_BOT_TOKEN env var
+    bot_token: "your-token"  # Or ULF_TELEGRAM_BOT_TOKEN env var
 ```
 
 - **Agent questions** — Agents emit `human.interact` events; the loop blocks until a response arrives or times out
@@ -167,19 +167,19 @@ RObot:
 - **Parallel loop routing** — Messages route via reply-to, `@loop-id` prefix, or default to primary
 - **Telegram commands** — `/status`, `/tasks`, `/restart` for real-time loop visibility
 
-See the [Telegram guide](https://mikeyobrien.github.io/ralph-orchestrator/guide/telegram/) for setup instructions.
+See the [Telegram guide](https://mikeyobrien.github.io/ulf-orchestrator/guide/telegram/) for setup instructions.
 
 ## Documentation
 
-Full documentation is available at **[mikeyobrien.github.io/ralph-orchestrator](https://mikeyobrien.github.io/ralph-orchestrator/)**:
+Full documentation is available at **[mikeyobrien.github.io/ulf-orchestrator](https://mikeyobrien.github.io/ulf-orchestrator/)**:
 
-- [Installation](https://mikeyobrien.github.io/ralph-orchestrator/getting-started/installation/)
-- [Quick Start](https://mikeyobrien.github.io/ralph-orchestrator/getting-started/quick-start/)
-- [Configuration](https://mikeyobrien.github.io/ralph-orchestrator/guide/configuration/)
-- [CLI Reference](https://mikeyobrien.github.io/ralph-orchestrator/guide/cli-reference/)
-- [Presets](https://mikeyobrien.github.io/ralph-orchestrator/guide/presets/)
-- [Concepts: Hats & Events](https://mikeyobrien.github.io/ralph-orchestrator/concepts/hats-and-events/)
-- [Architecture](https://mikeyobrien.github.io/ralph-orchestrator/advanced/architecture/)
+- [Installation](https://mikeyobrien.github.io/ulf-orchestrator/getting-started/installation/)
+- [Quick Start](https://mikeyobrien.github.io/ulf-orchestrator/getting-started/quick-start/)
+- [Configuration](https://mikeyobrien.github.io/ulf-orchestrator/guide/configuration/)
+- [CLI Reference](https://mikeyobrien.github.io/ulf-orchestrator/guide/cli-reference/)
+- [Presets](https://mikeyobrien.github.io/ulf-orchestrator/guide/presets/)
+- [Concepts: Hats & Events](https://mikeyobrien.github.io/ulf-orchestrator/concepts/hats-and-events/)
+- [Architecture](https://mikeyobrien.github.io/ulf-orchestrator/advanced/architecture/)
 
 ## Contributing
 
@@ -191,17 +191,17 @@ MIT License — See [LICENSE](LICENSE) for details.
 
 ## 💬 Community & Support
 
-Join the **ralph-orchestrator** community to discuss AI agent patterns, get help with your implementation, or contribute to the roadmap.
+Join the **ulf-orchestrator** community to discuss AI agent patterns, get help with your implementation, or contribute to the roadmap.
 
 * **Discord**: [Join our server](https://discord.gg/XWUyeUNffh) to chat with the maintainers and other users in real-time.
-* **GitHub Issues**: For bug reports and formal feature requests, please use the [Issue Tracker](https://github.com/mikeyobrien/ralph-orchestrator/issues).
+* **GitHub Issues**: For bug reports and formal feature requests, please use the [Issue Tracker](https://github.com/mikeyobrien/ulf-orchestrator/issues).
 
 ## Acknowledgments
 
-- **[Geoffrey Huntley](https://ghuntley.com/ralph/)** — Creator of the Ralph Wiggum technique
+- **[Geoffrey Huntley](https://ghuntley.com/ulf/)** — Creator of the Ulf Wiggum technique
 - **[Strands Agents SOP](https://github.com/strands-agents/agent-sop)** — Agent SOP framework
 - **[ratatui](https://ratatui.rs/)** — Terminal UI framework
 
 ---
 
-*"I'm learnding!" - Ralph Wiggum*
+*"I'm learnding!" - Ulf Wiggum*

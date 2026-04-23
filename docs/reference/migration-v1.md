@@ -1,10 +1,10 @@
 # Migration from v1
 
-Guide for migrating from the Python-based Ralph v1 to the Rust-based v2.
+Guide for migrating from the Python-based Ulf v1 to the Rust-based v2.
 
 ## Overview
 
-Ralph v2 is a complete rewrite in Rust with significant changes:
+Ulf v2 is a complete rewrite in Rust with significant changes:
 
 | Aspect | v1 (Python) | v2 (Rust) |
 |--------|-------------|-----------|
@@ -23,30 +23,30 @@ Remove the old Python version first:
 
 ```bash
 # If installed via pip
-pip uninstall ralph-orchestrator
+pip uninstall ulf-orchestrator
 
 # If installed via pipx
-pipx uninstall ralph-orchestrator
+pipx uninstall ulf-orchestrator
 
 # If installed via uv
-uv tool uninstall ralph-orchestrator
+uv tool uninstall ulf-orchestrator
 
 # Verify removal
-which ralph  # Should return nothing
+which ulf  # Should return nothing
 ```
 
 ## Installing v2
 
 ```bash
 # Via npm (recommended)
-npm install -g @ralph-orchestrator/ralph-cli
+npm install -g @ulf-orchestrator/ulf-cli
 
 # Via GitHub Releases installer
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/mikeyobrien/ralph-orchestrator/releases/latest/download/ralph-cli-installer.sh | sh
+  https://github.com/mikeyobrien/ulf-orchestrator/releases/latest/download/ulf-cli-installer.sh | sh
 
 # Via Cargo
-cargo install ralph-cli
+cargo install ulf-cli
 ```
 
 ## Configuration Changes
@@ -54,7 +54,7 @@ cargo install ralph-cli
 ### v1 Configuration (Python)
 
 ```python
-# ralph_config.py
+# ulf_config.py
 config = {
     "max_iterations": 100,
     "agent": "claude",
@@ -66,7 +66,7 @@ config = {
 ### v2 Configuration (YAML)
 
 ```yaml
-# ralph.yml
+# ulf.yml
 cli:
   backend: "claude"
 
@@ -80,10 +80,10 @@ event_loop:
 
 | v1 Command | v2 Command |
 |------------|------------|
-| `python ralph_orchestrator.py --prompt PROMPT.md` | `ralph run` |
-| `python ralph_orchestrator.py --agent claude` | `ralph run --backend claude` |
-| `python ralph_orchestrator.py --max-iterations 50` | `ralph run --max-iterations 50` |
-| `python ralph_orchestrator.py --dry-run` | `ralph run --dry-run` |
+| `python ulf_orchestrator.py --prompt PROMPT.md` | `ulf run` |
+| `python ulf_orchestrator.py --agent claude` | `ulf run --backend claude` |
+| `python ulf_orchestrator.py --max-iterations 50` | `ulf run --max-iterations 50` |
+| `python ulf_orchestrator.py --dry-run` | `ulf run --dry-run` |
 
 ## New Features in v2
 
@@ -104,8 +104,8 @@ hats:
 Typed communication between hats:
 
 ```bash
-ralph emit "build.done" "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass"
-ralph events  # View history
+ulf emit "build.done" "tests: pass, lint: pass, typecheck: pass, audit: pass, coverage: pass"
+ulf events  # View history
 ```
 
 ### Memories
@@ -113,8 +113,8 @@ ralph events  # View history
 Persistent learning:
 
 ```bash
-ralph tools memory add "Pattern discovered" -t pattern
-ralph tools memory search "pattern"
+ulf tools memory add "Pattern discovered" -t pattern
+ulf tools memory search "pattern"
 ```
 
 ### Tasks
@@ -122,9 +122,9 @@ ralph tools memory search "pattern"
 Runtime tracking:
 
 ```bash
-ralph tools task add "Implement feature"
-ralph tools task list
-ralph tools task close task-123
+ulf tools task add "Implement feature"
+ulf tools task list
+ulf tools task close task-123
 ```
 
 ### Presets
@@ -132,7 +132,7 @@ ralph tools task close task-123
 Pre-configured workflows:
 
 ```bash
-ralph init --preset tdd-red-green
+ulf init --preset tdd-red-green
 ```
 
 ### TUI
@@ -140,8 +140,8 @@ ralph init --preset tdd-red-green
 Rich terminal interface (enabled by default):
 
 ```bash
-ralph run  # TUI mode
-ralph run --no-tui  # Headless mode
+ulf run  # TUI mode
+ulf run --no-tui  # Headless mode
 ```
 
 ## Removed Features
@@ -192,18 +192,18 @@ Description here.
 ### 1. Uninstall v1
 
 ```bash
-pip uninstall ralph-orchestrator
+pip uninstall ulf-orchestrator
 ```
 
 ### 2. Install v2
 
 ```bash
-npm install -g @ralph-orchestrator/ralph-cli
+npm install -g @ulf-orchestrator/ulf-cli
 ```
 
 ### 3. Convert Configuration
 
-Create `ralph.yml` from your old config:
+Create `ulf.yml` from your old config:
 
 ```yaml
 cli:
@@ -235,8 +235,8 @@ rm -rf .agent/metrics .agent/checkpoints .agent/prompts .agent/plans
 ### 6. Test
 
 ```bash
-ralph run --dry-run
-ralph run
+ulf run --dry-run
+ulf run
 ```
 
 ## Getting Help
@@ -244,5 +244,5 @@ ralph run
 If you encounter migration issues:
 
 - Check [Troubleshooting](troubleshooting.md)
-- [Open an issue](https://github.com/mikeyobrien/ralph-orchestrator/issues)
-- Reference v1 code at [v1.2.3](https://github.com/mikeyobrien/ralph-orchestrator/tree/v1.2.3)
+- [Open an issue](https://github.com/mikeyobrien/ulf-orchestrator/issues)
+- Reference v1 code at [v1.2.3](https://github.com/mikeyobrien/ulf-orchestrator/tree/v1.2.3)

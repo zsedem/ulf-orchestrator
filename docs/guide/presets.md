@@ -1,14 +1,14 @@
 # Hat Collections
 
-Built-in hat collections are now intentionally small. Ralph ships a core working set of defaults and documents broader workflow ideas as examples instead of treating every pattern as a supported builtin.
+Built-in hat collections are now intentionally small. Ulf ships a core working set of defaults and documents broader workflow ideas as examples instead of treating every pattern as a supported builtin.
 
 ## Quick Start
 
 ```bash
-ralph init --backend claude
-ralph init --list-presets
+ulf init --backend claude
+ulf init --list-presets
 
-ralph run -c ralph.yml -H builtin:code-assist -p "Add user authentication"
+ulf run -c ulf.yml -H builtin:code-assist -p "Add user authentication"
 ```
 
 ## Supported Builtins
@@ -23,7 +23,7 @@ ralph run -c ralph.yml -H builtin:code-assist -p "Add user authentication"
 
 ## Internal Presets
 
-Ralph also keeps a few internal/testing presets available without advertising them in the normal list:
+Ulf also keeps a few internal/testing presets available without advertising them in the normal list:
 
 - `merge-loop`
 - `hatless-baseline`
@@ -45,7 +45,7 @@ Ralph also keeps a few internal/testing presets available without advertising th
 | `fresh-eyes` | `presets/fresh-eyes.yml` | `builder`, `fresh_eyes_auditor`, `fresh_eyes_gatekeeper` | `fresh_eyes.start` | `LOOP_COMPLETE` | Enforced repeated skeptical self-review passes |
 | `gap-analysis` | `presets/gap-analysis.yml` | `analyzer`, `verifier`, `reporter` | `gap.start` | `GAP_ANALYSIS_COMPLETE` | Spec-vs-implementation auditing |
 | `hatless-baseline` | `presets/hatless-baseline.yml` | _(none)_ | `task.start` | `LOOP_COMPLETE` | Baseline no-hat behavior for comparison |
-| `merge-loop` | `crates/ralph-cli/presets/merge-loop.yml` | `merger`, `resolver`, `tester`, `cleaner`, `failure_handler` | `merge.start` | `MERGE_COMPLETE` | Internal merge/worktree automation |
+| `merge-loop` | `crates/ulf-cli/presets/merge-loop.yml` | `merger`, `resolver`, `tester`, `cleaner`, `failure_handler` | `merge.start` | `MERGE_COMPLETE` | Internal merge/worktree automation |
 | `pdd-to-code-assist` | `presets/pdd-to-code-assist.yml` | `inquisitor`, `architect`, `design_critic`, `explorer`, `planner`, `task_writer`, `builder`, `validator`, `committer` | `design.start` | `LOOP_COMPLETE` | Full idea → plan → implementation pipeline |
 | `pr-review` | `presets/pr-review.yml` | `correctness_reviewer`, `security_reviewer`, `architecture_reviewer`, `synthesizer` | `task.start` (default) | `LOOP_COMPLETE` | Multi-perspective PR review |
 | `refactor` | `presets/refactor.yml` | `refactorer`, `verifier` | `task.start` (default) | `REFACTOR_COMPLETE` | Incremental, verified refactoring |
@@ -62,7 +62,7 @@ Every builtin preset becomes product surface area:
 - It must be tested and kept working.
 - It must appear coherent in API and CLI listings.
 
-Ralph now prefers a small supported set plus documentation examples for more experimental or niche orchestration patterns.
+Ulf now prefers a small supported set plus documentation examples for more experimental or niche orchestration patterns.
 
 ## Examples Instead Of Builtins
 
@@ -76,24 +76,24 @@ Historical workflow ideas such as spec-driven development, red-team review, mob 
 
 ```bash
 # Default implementation workflow
-ralph run -c ralph.yml -H builtin:code-assist -p "Add OAuth login"
+ulf run -c ulf.yml -H builtin:code-assist -p "Add OAuth login"
 
 # Debugging
-ralph run -c ralph.yml -H builtin:debug -p "Investigate why login fails on mobile"
+ulf run -c ulf.yml -H builtin:debug -p "Investigate why login fails on mobile"
 
 # Research
-ralph run -c ralph.yml -H builtin:research -p "Map the authentication architecture"
+ulf run -c ulf.yml -H builtin:research -p "Map the authentication architecture"
 
 # Review
-ralph run -c ralph.yml -H builtin:review -p "Review the changes in src/api/"
+ulf run -c ulf.yml -H builtin:review -p "Review the changes in src/api/"
 
 # Advanced/fun workflow
-ralph run -c ralph.yml -H builtin:pdd-to-code-assist -p "Build a rate limiter"
+ulf run -c ulf.yml -H builtin:pdd-to-code-assist -p "Build a rate limiter"
 ```
 
 ## Common Workflow Patterns
 
-Ralph built-ins usually follow one of these shapes:
+Ulf built-ins usually follow one of these shapes:
 
 ### 1) Linear Pipeline
 A fixed sequence of specialist hats.
@@ -125,14 +125,14 @@ Example: `pdd-to-code-assist`
 ## Split Config vs Single-File Config
 
 Recommended:
-- Keep core/runtime config in `ralph.yml`
+- Keep core/runtime config in `ulf.yml`
 - Select workflow via `-H builtin:<name>`
 
 Backward-compatible single-file mode (still supported):
 
 ```bash
 # Uses one combined preset file as the main config
-ralph run -c presets/feature.yml -p "Add OAuth login"
+ulf run -c presets/feature.yml -p "Add OAuth login"
 ```
 
 ## Creating Your Own Hat Collection
@@ -163,11 +163,11 @@ hats:
 Run it:
 
 ```bash
-ralph run -c ralph.yml -H .ralph/hats/my-workflow.yml
+ulf run -c ulf.yml -H .ulf/hats/my-workflow.yml
 ```
 
 ## Source of Truth and Sync
 
 - Canonical preset files: `presets/*.yml`
-- Embedded CLI mirror: `crates/ralph-cli/presets/*.yml`
+- Embedded CLI mirror: `crates/ulf-cli/presets/*.yml`
 - Sync script: `./scripts/sync-embedded-files.sh`

@@ -1,6 +1,6 @@
 # Telegram Integration
 
-Ralph supports human-in-the-loop communication via Telegram. Agents can ask questions during orchestration, and humans can send proactive guidance at any time — all through a Telegram bot.
+Ulf supports human-in-the-loop communication via Telegram. Agents can ask questions during orchestration, and humans can send proactive guidance at any time — all through a Telegram bot.
 
 ## Setup
 
@@ -10,18 +10,18 @@ Ralph supports human-in-the-loop communication via Telegram. Agents can ask ques
 2. Send `/newbot` and follow the prompts
 3. Copy the bot token (format: `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11`)
 
-### 2. Configure Ralph
+### 2. Configure Ulf
 
 **Option A: Environment variable (recommended)**
 
 ```bash
-export RALPH_TELEGRAM_BOT_TOKEN="your-bot-token"
+export ULF_TELEGRAM_BOT_TOKEN="your-bot-token"
 ```
 
 **Option B: Config file**
 
 ```yaml
-# ralph.yml
+# ulf.yml
 RObot:
   enabled: true
   timeout_seconds: 300
@@ -34,7 +34,7 @@ The environment variable takes precedence over the config file.
 ### 3. Start a Loop
 
 ```bash
-ralph run -p "your prompt"
+ulf run -p "your prompt"
 ```
 
 The bot sends a greeting message on startup. The chat ID is auto-detected from the first message you send to the bot — just send any message to get started.
@@ -47,7 +47,7 @@ RObot:
   timeout_seconds: 300             # How long to block waiting for a response
   checkin_interval_seconds: 120    # Periodic status updates (optional)
   telegram:
-    bot_token: "your-bot-token"    # Or use RALPH_TELEGRAM_BOT_TOKEN env var
+    bot_token: "your-bot-token"    # Or use ULF_TELEGRAM_BOT_TOKEN env var
     api_url: "http://localhost:8081"  # Optional: custom Bot API URL (for testing)
 ```
 
@@ -57,7 +57,7 @@ RObot:
 | `timeout_seconds` | Yes | Seconds to wait for a human reply before continuing |
 | `checkin_interval_seconds` | No | Send periodic "still working" status updates |
 | `telegram.bot_token` | Yes* | Bot token from BotFather (*or set via env var) |
-| `telegram.api_url` | No | Custom Telegram Bot API URL (or `RALPH_TELEGRAM_API_URL` env var) |
+| `telegram.api_url` | No | Custom Telegram Bot API URL (or `ULF_TELEGRAM_API_URL` env var) |
 
 For long-running loops, increase `timeout_seconds` and set `checkin_interval_seconds`:
 
@@ -115,8 +115,8 @@ Examples:
 - Send `focus on tests` → routed to the primary (main) loop
 
 Each loop has its own `events.jsonl`:
-- Primary loop: `.ralph/events.jsonl`
-- Worktree loops: `.worktrees/<loop-id>/.ralph/events.jsonl`
+- Primary loop: `.ulf/events.jsonl`
+- Worktree loops: `.worktrees/<loop-id>/.ulf/events.jsonl`
 
 ## Multimedia Support
 
@@ -143,7 +143,7 @@ The bot reacts to your messages with emoji:
 
 ### Primary Loop Only
 
-The Telegram bot only starts on the **primary loop** (the one holding `.ralph/loop.lock`). Worktree loops route messages through the primary loop's bot.
+The Telegram bot only starts on the **primary loop** (the one holding `.ulf/loop.lock`). Worktree loops route messages through the primary loop's bot.
 
 ## Error Handling
 
@@ -157,7 +157,7 @@ The Telegram bot only starts on the **primary loop** (the one holding `.ralph/lo
 
 ## State File
 
-The bot persists its state to `.ralph/telegram-state.json`:
+The bot persists its state to `.ulf/telegram-state.json`:
 
 ```json
 {
@@ -185,7 +185,7 @@ TelegramService (lifecycle management)
 └── retry_with_backoff (exponential retry for all sends)
 ```
 
-The crate lives at `crates/ralph-telegram/` with these modules:
+The crate lives at `crates/ulf-telegram/` with these modules:
 
 | Module | Purpose |
 |--------|---------|
@@ -199,15 +199,15 @@ The crate lives at `crates/ralph-telegram/` with these modules:
 ## Testing
 
 ```bash
-cargo test -p ralph-telegram          # 33 unit tests (mocked, no network)
-cargo test -p ralph-core human        # 11 integration tests in ralph-core
+cargo test -p ulf-telegram          # 33 unit tests (mocked, no network)
+cargo test -p ulf-core human        # 11 integration tests in ulf-core
 ```
 
 All tests use a `MockBot` implementation of `BotApi` — no Telegram API calls are made during testing.
 
 ## Testing with a Mock Telegram Server
 
-When developing custom hats that use `human.interact`, you can test the full human-in-the-loop flow locally without a real Telegram bot by pointing Ralph at a mock Telegram Bot API server.
+When developing custom hats that use `human.interact`, you can test the full human-in-the-loop flow locally without a real Telegram bot by pointing Ulf at a mock Telegram Bot API server.
 
 ### 1. Start a Mock Server
 
@@ -218,19 +218,19 @@ docker run -d --name telegram-mock -p 8081:8081 \
   ghcr.io/nickolay/telegram-test-api:latest
 ```
 
-### 2. Point Ralph at It
+### 2. Point Ulf at It
 
 **Option A: Environment variable**
 
 ```bash
-export RALPH_TELEGRAM_API_URL="http://localhost:8081"
-export RALPH_TELEGRAM_BOT_TOKEN="test-token"
+export ULF_TELEGRAM_API_URL="http://localhost:8081"
+export ULF_TELEGRAM_BOT_TOKEN="test-token"
 ```
 
 **Option B: Config file**
 
 ```yaml
-# ralph.yml
+# ulf.yml
 RObot:
   enabled: true
   timeout_seconds: 30
@@ -244,7 +244,7 @@ The environment variable takes precedence over the config file value.
 ### 3. Run Your Loop
 
 ```bash
-ralph run -p "your prompt" --max-iterations 5
+ulf run -p "your prompt" --max-iterations 5
 ```
 
 The bot sends all API requests to the mock server instead of `https://api.telegram.org`. You can inspect requests, simulate replies, and verify that your hats emit the right `human.interact` events — all without touching real Telegram.
@@ -253,7 +253,7 @@ The bot sends all API requests to the mock server instead of `https://api.telegr
 
 - **Custom hat development**: Verify that your hats ask the right questions at the right time
 - **CI/CD pipelines**: Run HIL integration tests without network access or bot tokens
-- **Debugging**: Inspect the exact payloads Ralph sends to the Telegram API
+- **Debugging**: Inspect the exact payloads Ulf sends to the Telegram API
 
 ## Troubleshooting
 
@@ -278,4 +278,4 @@ The bot sends all API requests to the mock server instead of `https://api.telegr
 
 - The bot auto-detects your chat ID from the first message you send
 - Send any message to the bot to establish the connection
-- The chat ID is persisted in `.ralph/telegram-state.json`
+- The chat ID is persisted in `.ulf/telegram-state.json`

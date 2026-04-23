@@ -1,4 +1,4 @@
-# Justfile for Ralph Orchestrator development
+# Justfile for Ulf Orchestrator development
 # https://github.com/casey/just
 
 # Default recipe - show available commands
@@ -116,10 +116,10 @@ mutants-baseline:
     @echo "Running mutation baseline on hooks-critical modules..."
     cargo mutants \
       --baseline skip \
-      --file crates/ralph-core/src/hooks/executor.rs \
-      --file crates/ralph-core/src/hooks/engine.rs \
-      --file crates/ralph-core/src/preflight.rs \
-      --file crates/ralph-cli/src/loop_runner.rs \
+      --file crates/ulf-core/src/hooks/executor.rs \
+      --file crates/ulf-core/src/hooks/engine.rs \
+      --file crates/ulf-core/src/preflight.rs \
+      --file crates/ulf-cli/src/loop_runner.rs \
       -o /tmp/hooks-mutants-output \
       --no-times \
       --colors never \

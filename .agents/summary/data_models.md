@@ -1,6 +1,6 @@
 # Data Models
 
-## Core Protocol Types (ralph-proto)
+## Core Protocol Types (ulf-proto)
 
 ### Event
 
@@ -41,15 +41,15 @@ Unique identifier for a hat. Stored as a `String` wrapper with `Display`, `Hash`
 
 ---
 
-## Configuration Types (ralph-core)
+## Configuration Types (ulf-core)
 
-### RalphConfig
+### UlfConfig
 
 Top-level configuration supporting both v1 flat and v2 nested formats.
 
 ```mermaid
 classDiagram
-    class RalphConfig {
+    class UlfConfig {
         +EventLoopConfig event_loop
         +CliConfig cli
         +CoreConfig core
@@ -95,9 +95,9 @@ classDiagram
         +Vec~String~ disallowed_tools
     }
 
-    RalphConfig --> EventLoopConfig
-    RalphConfig --> CliConfig
-    RalphConfig --> HatConfig
+    UlfConfig --> EventLoopConfig
+    UlfConfig --> CliConfig
+    UlfConfig --> HatConfig
 ```
 
 ### HatBackend
@@ -133,7 +133,7 @@ Backend configuration for a hat (supports multiple formats):
 
 ---
 
-## Runtime Data Models (ralph-core)
+## Runtime Data Models (ulf-core)
 
 ### Task
 
@@ -216,7 +216,7 @@ Event-sourced entry in the merge queue.
 
 ### LockMetadata
 
-Contents of `.ralph/loop.lock`.
+Contents of `.ulf/loop.lock`.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -226,7 +226,7 @@ Contents of `.ralph/loop.lock`.
 
 ---
 
-## RPC State Types (ralph-proto)
+## RPC State Types (ulf-proto)
 
 ### RpcState
 
@@ -260,7 +260,7 @@ Snapshot of loop state returned by `get_state`.
 
 ---
 
-## UX Event Types (ralph-proto)
+## UX Event Types (ulf-proto)
 
 Events for terminal/TUI capture and replay:
 
@@ -277,11 +277,11 @@ Events for terminal/TUI capture and replay:
 
 | File | Format | Purpose |
 |------|--------|---------|
-| `.ralph/agent/memories.md` | Structured Markdown | Persistent learning |
-| `.ralph/agent/tasks.jsonl` | JSONL (one Task per line) | Runtime task tracking |
-| `.ralph/events.jsonl` | JSONL (Event records) | Event history per loop |
-| `.ralph/loop.lock` | JSON (LockMetadata) | Primary loop PID lock |
-| `.ralph/loops.json` | JSON (Vec<LoopEntry>) | Loop registry |
-| `.ralph/merge-queue.jsonl` | JSONL (MergeEvent) | Event-sourced merge queue |
-| `.ralph/telegram-state.json` | JSON (TelegramState) | Telegram bot state |
-| `.ralph/agent/scratchpad.md` | Markdown | Legacy shared state (replaced by tasks) |
+| `.ulf/agent/memories.md` | Structured Markdown | Persistent learning |
+| `.ulf/agent/tasks.jsonl` | JSONL (one Task per line) | Runtime task tracking |
+| `.ulf/events.jsonl` | JSONL (Event records) | Event history per loop |
+| `.ulf/loop.lock` | JSON (LockMetadata) | Primary loop PID lock |
+| `.ulf/loops.json` | JSON (Vec<LoopEntry>) | Loop registry |
+| `.ulf/merge-queue.jsonl` | JSONL (MergeEvent) | Event-sourced merge queue |
+| `.ulf/telegram-state.json` | JSON (TelegramState) | Telegram bot state |
+| `.ulf/agent/scratchpad.md` | Markdown | Legacy shared state (replaced by tasks) |

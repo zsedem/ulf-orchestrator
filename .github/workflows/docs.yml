@@ -51,10 +51,10 @@ jobs:
           sudo apt-get install -y libdbus-1-dev pkg-config
           cargo install cargo-llvm-cov --locked
 
-      - name: Build ralph binary for e2e coverage tests
+      - name: Build ulf binary for e2e coverage tests
         if: github.event_name != 'pull_request'
         run: |
-          cargo build -p ralph-cli --bin ralph
+          cargo build -p ulf-cli --bin ulf
           echo "$GITHUB_WORKSPACE/target/debug" >> "$GITHUB_PATH"
 
       - name: Install dependencies

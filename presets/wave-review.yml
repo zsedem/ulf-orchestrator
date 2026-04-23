@@ -7,7 +7,7 @@
 # - Synthesizer: Aggregates findings from all reviewers into final report
 #
 # Usage:
-#   ralph run --hats presets/wave-review.yml --prompt "Review the authentication module"
+#   ulf run --hats presets/wave-review.yml --prompt "Review the authentication module"
 
 event_loop:
   prompt_file: "PROMPT.md"
@@ -44,7 +44,7 @@ hats:
       3. Dispatch specialized reviewers as a wave:
 
       ```bash
-      ralph wave emit review.perspective --payloads \
+      ulf wave emit review.perspective --payloads \
         "ROLE: Rust Reviewer. Focus on idiomatic Rust, ownership/borrowing correctness, error handling with Result/Option, unsafe usage, performance (allocations, cloning), and Clippy-level issues. Review all .rs files in scope." \
         "ROLE: Frontend Reviewer. Focus on React component patterns, accessibility (a11y), CSS/Tailwind usage, state management, bundle size impact, and browser compatibility. Review all frontend code in scope." \
         "ROLE: Documentation Reviewer. Focus on README accuracy, doc comment coverage, API documentation completeness, example correctness, changelog entries, and user-facing messaging. Review all docs and comments in scope."
@@ -55,7 +55,7 @@ hats:
       - Each payload must clearly state the reviewer's ROLE and FOCUS area
       - Tailor the specialties to the code being reviewed
       - You may substitute or add specialties (e.g., Security, Database, API Design) based on what's relevant
-      - IMPORTANT: You MUST use `ralph wave emit` to dispatch reviewers. Do NOT use the Agent tool or any other parallelism mechanism. The wave system handles parallel execution.
+      - IMPORTANT: You MUST use `ulf wave emit` to dispatch reviewers. Do NOT use the Agent tool or any other parallelism mechanism. The wave system handles parallel execution.
 
   reviewer:
     name: "🔍 Reviewer"
@@ -79,7 +79,7 @@ hats:
       ### Output Format
       Publish your findings:
       ```bash
-      ralph emit review.done "## [Your Role]\n\n### Critical\n- ...\n\n### Warnings\n- ...\n\n### Suggestions\n- ..."
+      ulf emit review.done "## [Your Role]\n\n### Critical\n- ...\n\n### Warnings\n- ...\n\n### Suggestions\n- ..."
       ```
 
       ### Constraints
@@ -111,7 +111,7 @@ hats:
       2. Categorize findings by severity (Critical / Warning / Suggestion)
       3. Note where multiple reviewers flagged the same area
       4. Identify cross-cutting themes
-      5. Write the report to `.ralph/agent/review-report.md`
+      5. Write the report to `.ulf/agent/review-report.md`
       6. Publish review.complete
 
       ### Report Format

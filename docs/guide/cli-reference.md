@@ -1,6 +1,6 @@
 # CLI Reference
 
-Complete reference for Ralph's command-line interface.
+Complete reference for Ulf's command-line interface.
 
 ## Global Options
 
@@ -8,7 +8,7 @@ These options are accepted by all commands.
 
 | Option | Description |
 |--------|-------------|
-| `-c, --config <SOURCE>` | Primary config source (can be specified multiple times). Defaults to `ralph.yml`, or `$RALPH_CONFIG` when set. |
+| `-c, --config <SOURCE>` | Primary config source (can be specified multiple times). Defaults to `ulf.yml`, or `$ULF_CONFIG` when set. |
 | `-H, --hats <SOURCE>` | Hat collection source (`file`, `builtin:<name>`, or URL). |
 | `-v, --verbose` | Verbose output |
 | `--color <MODE>` | Color output: `auto`, `always`, `never` |
@@ -17,17 +17,17 @@ These options are accepted by all commands.
 
 ### Core Config Sources (`-c`)
 
-The `-c` flag specifies where to load **core** configuration from. If not provided, `ralph` falls back to:
+The `-c` flag specifies where to load **core** configuration from. If not provided, `ulf` falls back to:
 
-1. `$RALPH_CONFIG` when present
-2. `ralph.yml`
+1. `$ULF_CONFIG` when present
+2. `ulf.yml`
 
 **Core source types:**
 
 | Format | Description |
 |--------|-------------|
-| `ralph.yml` | Local file path |
-| `https://example.com/ralph.core.yml` | Remote URL |
+| `ulf.yml` | Local file path |
+| `https://example.com/ulf.core.yml` | Remote URL |
 | `core.field=value` | Core config override |
 
 > `-c builtin:<name>` is no longer supported. Use `-H builtin:<name>` for hat collections.
@@ -62,26 +62,26 @@ The `-H` flag specifies where to load hat collections from.
 
 ```bash
 # Core only (hatless)
-ralph run -c ralph.yml
+ulf run -c ulf.yml
 
 # Core + built-in hat collection
-ralph run -c ralph.yml -H builtin:code-assist
+ulf run -c ulf.yml -H builtin:code-assist
 
 # Core + file hat collection
-ralph run -c ralph.yml -H hats/review.yml
+ulf run -c ulf.yml -H hats/review.yml
 
 # Core override + hats
-ralph run -c ralph.yml -c core.specs_dir=./my-specs -H builtin:debug
+ulf run -c ulf.yml -c core.specs_dir=./my-specs -H builtin:debug
 ```
 
 ## Commands
 
-### ralph run
+### ulf run
 
 Run the orchestration loop.
 
 ```bash
-ralph run [OPTIONS]
+ulf run [OPTIONS]
 ```
 
 **Options:**
@@ -103,12 +103,12 @@ ralph run [OPTIONS]
 | `-q, --quiet` | Suppress streaming output |
 | `--continue` | Resume from existing state |
 
-### ralph init
+### ulf init
 
-Initialize `ralph.yml`.
+Initialize `ulf.yml`.
 
 ```bash
-ralph init [OPTIONS]
+ulf init [OPTIONS]
 ```
 
 **Options:**
@@ -120,12 +120,12 @@ ralph init [OPTIONS]
 | `--list-presets` | List available built-in hat collections |
 | `--force` | Overwrite existing config |
 
-### ralph preflight
+### ulf preflight
 
 Run the preflight check suite.
 
 ```bash
-ralph preflight [OPTIONS]
+ulf preflight [OPTIONS]
 ```
 
 **Options:**
@@ -151,21 +151,21 @@ Notes:
 
 - `--check` can be repeated (for example: `--check hooks --check config`).
 - `--strict` fails when there are warnings (not just failures).
-- During `ralph run`, auto-preflight uses `features.preflight.skip` to skip checks by these names.
+- During `ulf run`, auto-preflight uses `features.preflight.skip` to skip checks by these names.
 
-### ralph hooks
+### ulf hooks
 
 Validate hooks configuration and command wiring without starting loop execution.
 
 ```bash
-ralph hooks <COMMAND>
+ulf hooks <COMMAND>
 ```
 
 **Subcommands:**
 
 - `validate [--format human|json]`
 
-`ralph hooks validate` behavior:
+`ulf hooks validate` behavior:
 
 - Exit code `0`: validation passed.
 - Exit code `1`: one or more diagnostics (or config load/parse failure).
@@ -174,32 +174,32 @@ ralph hooks <COMMAND>
 
 Try it against the minimal sample hooks config:
 
-- `ralph hooks validate -c examples/hooks/minimal/ralph.hooks.yml`
-- Config: [`examples/hooks/minimal/ralph.hooks.yml`](https://github.com/mikeyobrien/ralph-orchestrator/blob/main/examples/hooks/minimal/ralph.hooks.yml)
-- Scripts: [`examples/hooks/scripts/env-guard.sh`](https://github.com/mikeyobrien/ralph-orchestrator/blob/main/examples/hooks/scripts/env-guard.sh), [`examples/hooks/scripts/notify.sh`](https://github.com/mikeyobrien/ralph-orchestrator/blob/main/examples/hooks/scripts/notify.sh)
+- `ulf hooks validate -c examples/hooks/minimal/ulf.hooks.yml`
+- Config: [`examples/hooks/minimal/ulf.hooks.yml`](https://github.com/mikeyobrien/ulf-orchestrator/blob/main/examples/hooks/minimal/ulf.hooks.yml)
+- Scripts: [`examples/hooks/scripts/env-guard.sh`](https://github.com/mikeyobrien/ulf-orchestrator/blob/main/examples/hooks/scripts/env-guard.sh), [`examples/hooks/scripts/notify.sh`](https://github.com/mikeyobrien/ulf-orchestrator/blob/main/examples/hooks/scripts/notify.sh)
 
-### ralph doctor
+### ulf doctor
 
 Run environment and first-run diagnostic checks.
 
 ```bash
-ralph doctor [OPTIONS]
+ulf doctor [OPTIONS]
 ```
 
-### ralph tutorial
+### ulf tutorial
 
 Run interactive intro walkthrough.
 
 ```bash
-ralph tutorial [OPTIONS]
+ulf tutorial [OPTIONS]
 ```
 
-### ralph plan
+### ulf plan
 
 Start an interactive PDD planning session.
 
 ```bash
-ralph plan [OPTIONS] [IDEA]
+ulf plan [OPTIONS] [IDEA]
 ```
 
 **Options:**
@@ -211,28 +211,28 @@ ralph plan [OPTIONS] [IDEA]
 | `--teams` | Enable Claude Code agent teams mode |
 | `-- <ARGUMENTS>` | Custom backend arguments |
 
-### ralph code-task
+### ulf code-task
 
 Generate code task files from a description or PDD plan.
 
 ```bash
-ralph code-task [OPTIONS] [INPUT]
+ulf code-task [OPTIONS] [INPUT]
 ```
 
-### ralph task
+### ulf task
 
-Deprecated legacy alias for `ralph code-task`.
+Deprecated legacy alias for `ulf code-task`.
 
 ```bash
-ralph task [OPTIONS] [INPUT]
+ulf task [OPTIONS] [INPUT]
 ```
 
-### ralph events
+### ulf events
 
 View event history for the current or selected run.
 
 ```bash
-ralph events [OPTIONS]
+ulf events [OPTIONS]
 ```
 
 **Options:**
@@ -242,12 +242,12 @@ ralph events [OPTIONS]
 | `--file <PATH>` | Use a specific events file |
 | `--clear` | Clear event history |
 
-### ralph emit
+### ulf emit
 
 Emit an event to the current run's events file.
 
 ```bash
-ralph emit <TOPIC> [PAYLOAD] [OPTIONS]
+ulf emit <TOPIC> [PAYLOAD] [OPTIONS]
 ```
 
 **Options:**
@@ -258,14 +258,14 @@ ralph emit <TOPIC> [PAYLOAD] [OPTIONS]
 | `[PAYLOAD]` | Optional payload (string or JSON when `--json` is set) |
 | `-j, --json` | Parse payload as JSON object |
 | `--ts <TIMESTAMP>` | Override event timestamp |
-| `--file <PATH>` | Events file path (`.ralph/events.jsonl`) |
+| `--file <PATH>` | Events file path (`.ulf/events.jsonl`) |
 
-### ralph clean
+### ulf clean
 
-Clean `.ralph/agent` scratchpad and memory state.
+Clean `.ulf/agent` scratchpad and memory state.
 
 ```bash
-ralph clean [OPTIONS]
+ulf clean [OPTIONS]
 ```
 
 **Options:**
@@ -275,12 +275,12 @@ ralph clean [OPTIONS]
 | `--diagnostics` | Clean diagnostics directory |
 | `--dry-run` | Preview deletions |
 
-### ralph loops
+### ulf loops
 
 Manage parallel loops and worktree loop lifecycle.
 
 ```bash
-ralph loops [OPTIONS] [COMMAND]
+ulf loops [OPTIONS] [COMMAND]
 ```
 
 **Subcommands:**
@@ -299,15 +299,15 @@ ralph loops [OPTIONS] [COMMAND]
 - `process`
 - `merge-button-state <loop-id>`
 
-`ralph loops resume <loop-id>` writes a resume signal for suspended loops. It is idempotent:
+`ulf loops resume <loop-id>` writes a resume signal for suspended loops. It is idempotent:
 re-running the command reports that resume was already requested (or that the loop is not suspended).
 
-### ralph hats
+### ulf hats
 
 Manage and inspect configured hats.
 
 ```bash
-ralph hats [OPTIONS] [COMMAND]
+ulf hats [OPTIONS] [COMMAND]
 ```
 
 **Subcommands:**
@@ -317,12 +317,12 @@ ralph hats [OPTIONS] [COMMAND]
 - `validate`
 - `graph [--format unicode|ascii|compact|mermaid] [--backend <backend>]`
 
-### ralph web
+### ulf web
 
 Run the web dashboard.
 
 ```bash
-ralph web [OPTIONS]
+ulf web [OPTIONS]
 ```
 
 **Options:**
@@ -335,26 +335,26 @@ ralph web [OPTIONS]
 | `--legacy-node-api` | Run deprecated Node tRPC backend instead of Rust RPC API |
 | `--no-open` | Do not open browser |
 
-### ralph mcp
+### ulf mcp
 
-Run Ralph as a Model Context Protocol server over `stdio`.
+Run Ulf as a Model Context Protocol server over `stdio`.
 
 ```bash
-ralph mcp serve
+ulf mcp serve
 ```
 
 Notes:
 
 - v1 is tools-only and `stdio`-only.
 - Launch it from an MCP client configuration, not an interactive terminal workflow.
-- The server exposes Ralph control-plane methods as MCP tools, including polling stream tools such as `stream_next`.
+- The server exposes Ulf control-plane methods as MCP tools, including polling stream tools such as `stream_next`.
 
-### ralph bot
+### ulf bot
 
 Manage Telegram bot setup and testing.
 
 ```bash
-ralph bot [OPTIONS] <COMMAND>
+ulf bot [OPTIONS] <COMMAND>
 ```
 
 **Subcommands:**
@@ -365,12 +365,12 @@ ralph bot [OPTIONS] <COMMAND>
 - `token set <TOKEN> [--config <path>]`
 - `daemon`
 
-### ralph wave
+### ulf wave
 
 Dispatch wave events for parallel hat execution.
 
 ```bash
-ralph wave emit <TOPIC> --payloads <ITEM>...
+ulf wave emit <TOPIC> --payloads <ITEM>...
 ```
 
 **Options:**
@@ -382,18 +382,18 @@ ralph wave emit <TOPIC> --payloads <ITEM>...
 
 Each payload becomes an event tagged with a shared `wave_id`. The loop runner spawns parallel backend instances bounded by the target hat's `concurrency` setting.
 
-Blocked when `RALPH_WAVE_WORKER=1` (prevents nested waves).
+Blocked when `ULF_WAVE_WORKER=1` (prevents nested waves).
 
 See [Agent Waves](../advanced/agent-waves.md) for full details.
 
-### ralph tools
+### ulf tools
 
 Runtime tools for memories, tasks, and skills.
 
-#### ralph tools memory
+#### ulf tools memory
 
 ```bash
-ralph tools memory <SUBCOMMAND>
+ulf tools memory <SUBCOMMAND>
 ```
 
 **Subcommands:**
@@ -408,10 +408,10 @@ ralph tools memory <SUBCOMMAND>
 | `delete <ID>` | Delete a memory |
 | `prime` | Prime context memory output |
 
-#### ralph tools task
+#### ulf tools task
 
 ```bash
-ralph tools task <SUBCOMMAND>
+ulf tools task <SUBCOMMAND>
 ```
 
 **Subcommands:**
@@ -425,22 +425,22 @@ ralph tools task <SUBCOMMAND>
 | `fail <ID>` | Mark task failed |
 | `show <ID>` | Show task details |
 
-#### ralph tools skill
+#### ulf tools skill
 
 ```bash
-ralph tools skill <SUBCOMMAND>
+ulf tools skill <SUBCOMMAND>
 ```
 
-#### ralph tools interact
+#### ulf tools interact
 
 Interact with human via Telegram progress/proactiveness hooks.
 
-### ralph completions
+### ulf completions
 
 Generate shell completions.
 
 ```bash
-ralph completions <SHELL>
+ulf completions <SHELL>
 ```
 
 Supported shells: `bash`, `elvish`, `fish`, `powershell`, `zsh`.
@@ -459,13 +459,13 @@ Supported shells: `bash`, `elvish`, `fish`, `powershell`, `zsh`.
 
 | Variable | Description |
 |----------|-------------|
-| `RALPH_DIAGNOSTICS` | Set to `1` to enable diagnostics |
-| `RALPH_CONFIG` | Default config file path |
+| `ULF_DIAGNOSTICS` | Set to `1` to enable diagnostics |
+| `ULF_CONFIG` | Default config file path |
 | `NO_COLOR` | Disable color output |
-| `RALPH_WAVE_WORKER` | Set to `1` inside wave workers (blocks nested waves) |
-| `RALPH_WAVE_ID` | Wave correlation ID (set on wave workers) |
-| `RALPH_WAVE_INDEX` | 0-based worker index within the wave |
-| `RALPH_EVENTS_FILE` | Per-worker events file path (set on wave workers) |
+| `ULF_WAVE_WORKER` | Set to `1` inside wave workers (blocks nested waves) |
+| `ULF_WAVE_ID` | Wave correlation ID (set on wave workers) |
+| `ULF_WAVE_INDEX` | 0-based worker index within the wave |
+| `ULF_EVENTS_FILE` | Per-worker events file path (set on wave workers) |
 
 ## Shell Completion
 
@@ -473,11 +473,11 @@ Generate shell completions:
 
 ```bash
 # Bash
-ralph completions bash > ~/.local/share/bash-completion/completions/ralph
+ulf completions bash > ~/.local/share/bash-completion/completions/ulf
 
 # Zsh
-ralph completions zsh > ~/.zfunc/_ralph
+ulf completions zsh > ~/.zfunc/_ulf
 
 # Fish
-ralph completions fish > ~/.config/fish/completions/ralph.fish
+ulf completions fish > ~/.config/fish/completions/ulf.fish
 ```

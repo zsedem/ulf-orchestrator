@@ -1,0 +1,7 @@
+interface:
+  display_name: "Ulf Loop"
+  short_description: "Run, inspect, resume, merge, and debug Ulf loops"
+  default_prompt: "Use $ulf-loop to inspect or operate this Ulf loop safely."
+
+policy:
+  allow_implicit_invocation: true

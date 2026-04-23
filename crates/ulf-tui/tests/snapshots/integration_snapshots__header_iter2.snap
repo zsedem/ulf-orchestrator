@@ -1,0 +1,5 @@
+---
+source: crates/ulf-tui/tests/integration_snapshots.rs
+expression: harness.render_header()
+---
+[iter 1/0] [TIME] | 📋 Planner | [LIVE] | ? help                                  ────────────────────────────────────────────────────────────────────────────────

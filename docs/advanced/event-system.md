@@ -5,7 +5,7 @@
 
 ## Overview
 
-Ralph's event system provides the communication backbone for hat orchestration, enabling agents to emit signals that trigger hat switches and backpressure mechanisms.
+Ulf's event system provides the communication backbone for hat orchestration, enabling agents to emit signals that trigger hat switches and backpressure mechanisms.
 
 ## Event Types
 
@@ -20,8 +20,8 @@ Ralph's event system provides the communication backbone for hat orchestration, 
 ## Emitting Events
 
 ```bash
-ralph emit plan:complete
-ralph emit test:pass
+ulf emit plan:complete
+ulf emit test:pass
 ```
 
 ## See Also

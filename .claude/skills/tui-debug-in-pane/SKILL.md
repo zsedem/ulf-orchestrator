@@ -1,13 +1,13 @@
 ---
 name: tui-debug-in-pane
-description: Use when you need to reproduce or debug TUI rendering issues (garbled output, broken streaming, layout corruption) by running ralph in a tmux split pane and capturing live output.
+description: Use when you need to reproduce or debug TUI rendering issues (garbled output, broken streaming, layout corruption) by running ulf in a tmux split pane and capturing live output.
 metadata:
   internal: true
 ---
 
 # tui-debug-in-pane
 
-Debug TUI rendering bugs by launching ralph in a tmux split pane and capturing live output. The split keeps your main pane free for inspection commands.
+Debug TUI rendering bugs by launching ulf in a tmux split pane and capturing live output. The split keeps your main pane free for inspection commands.
 
 ## When to Use
 
@@ -51,18 +51,18 @@ tmux send-keys -t PANE "which pi && pi --version" Enter
 ### 3. Clean Up Before Running
 
 ```bash
-rm -f .ralph/loop.lock
+rm -f .ulf/loop.lock
 git worktree prune
 ```
 
-### 4. Launch Ralph
+### 4. Launch Ulf
 
 ```bash
 # Prefer release binary (faster startup)
-tmux send-keys -t PANE "target/release/ralph run -c CONFIG.yml -p 'prompt' --max-iterations N" Enter
+tmux send-keys -t PANE "target/release/ulf run -c CONFIG.yml -p 'prompt' --max-iterations N" Enter
 
 # Or with cargo (must specify --bin for this workspace)
-tmux send-keys -t PANE "cargo run --bin ralph -- run -c CONFIG.yml -p 'prompt' --max-iterations N" Enter
+tmux send-keys -t PANE "cargo run --bin ulf -- run -c CONFIG.yml -p 'prompt' --max-iterations N" Enter
 ```
 
 ### 5. Capture and Analyze
@@ -70,7 +70,7 @@ tmux send-keys -t PANE "cargo run --bin ralph -- run -c CONFIG.yml -p 'prompt' -
 ```bash
 sleep 20  # Pi/Kiro take 15-30s to start streaming
 tmux capture-pane -t PANE -p -S -60
-ls -lt .ralph/diagnostics/logs/ | head -5
+ls -lt .ulf/diagnostics/logs/ | head -5
 ```
 
 ### 6. Clean Up
@@ -84,8 +84,8 @@ tmux kill-pane -t PANE
 ## Common Mistakes
 
 - **Shell mismatch**: Split panes get bash by default. If tools fail with "command not found", switch to fish with `exec /path/to/fish`.
-- **Stale loop lock**: If `.ralph/loop.lock` exists, ralph spawns worktree loops instead of running normally. Always delete it first.
-- **Wrong backend in TUI header**: Without `cli.backend: pi` in the config, ralph uses claude regardless of hat settings.
+- **Stale loop lock**: If `.ulf/loop.lock` exists, ulf spawns worktree loops instead of running normally. Always delete it first.
+- **Wrong backend in TUI header**: Without `cli.backend: pi` in the config, ulf uses claude regardless of hat settings.
 - **Missing hat `name` field**: HatConfig requires `name`; omitting it causes a config parse error.
 - **Premature capture**: Pi and Kiro take 15-30s before streaming text appears. Capture too early and you see an empty content area.
 - **Ghost keystrokes**: If the TUI already exited, pressing `q` prepends it to your next command. Check if the TUI is still running before sending quit keys.

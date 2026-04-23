@@ -3,7 +3,7 @@
 ## A
 
 **Agent**
-: An AI-powered CLI tool that executes tasks based on prompts. Ralph supports Claude, Gemini, and Q agents.
+: An AI-powered CLI tool that executes tasks based on prompts. Ulf supports Claude, Gemini, and Q agents.
 
 **Agent Manager**
 : Component that detects, selects, and manages AI agents, including automatic fallback when preferred agents are unavailable.
@@ -12,7 +12,7 @@
 : Storage of historical prompts and iterations in `.agent/prompts/` directory for debugging and analysis.
 
 **Auto-detection**
-: Ralph's ability to automatically discover which AI agents are installed and available on the system.
+: Ulf's ability to automatically discover which AI agents are installed and available on the system.
 
 ## C
 
@@ -23,10 +23,10 @@
 : Anthropic's AI assistant, accessible via Claude Code CLI. Known for high context window (200K tokens) and code generation capabilities.
 
 **CLI**
-: Command Line Interface - the primary way to interact with Ralph Orchestrator through terminal commands.
+: Command Line Interface - the primary way to interact with Ulf Orchestrator through terminal commands.
 
 **Config**
-: Configuration settings stored in `ralph.json` or passed via command line arguments and environment variables.
+: Configuration settings stored in `ulf.json` or passed via command line arguments and environment variables.
 
 **Context Window**
 : The maximum amount of text/tokens an AI agent can process in a single request. Varies by agent (Claude: 200K, Gemini: 32K, Q: 8K).
@@ -43,7 +43,7 @@
 : Test mode that simulates execution without actually running AI agents. Useful for testing configuration and setup.
 
 **Deterministic Failure**
-: The philosophy that it's better to fail predictably than succeed unpredictably - core to the Ralph Wiggum technique.
+: The philosophy that it's better to fail predictably than succeed unpredictably - core to the Ulf Wiggum technique.
 
 ## E
 
@@ -59,20 +59,20 @@
 : Google's AI model, accessible via Gemini CLI. Balanced context window (32K tokens) and capabilities.
 
 **Git Integration**
-: Ralph's use of Git for checkpointing, history tracking, and recovery from failed states.
+: Ulf's use of Git for checkpointing, history tracking, and recovery from failed states.
 
 ## I
 
 **Iteration**
-: One complete cycle of the Ralph loop - executing an agent with the current prompt and processing results.
+: One complete cycle of the Ulf loop - executing an agent with the current prompt and processing results.
 
 **Iteration Limit**
-: Maximum number of iterations before Ralph stops. Default is 100, configurable via `max_iterations`.
+: Maximum number of iterations before Ulf stops. Default is 100, configurable via `max_iterations`.
 
 ## L
 
 **Loop**
-: The core Ralph pattern - continuously running an AI agent until task completion or limits are reached.
+: The core Ulf pattern - continuously running an AI agent until task completion or limits are reached.
 
 **Loop Detection**
 : Safety feature that detects when an agent is producing repetitive outputs. Uses fuzzy string matching (rapidfuzz) with a 90% similarity threshold to compare recent outputs and prevent infinite loops.
@@ -83,7 +83,7 @@
 : Performance and execution data collected in `.agent/metrics/` including timing, errors, and resource usage.
 
 **MkDocs**
-: Static site generator used for Ralph's documentation, configured in `mkdocs.yml`.
+: Static site generator used for Ulf's documentation, configured in `mkdocs.yml`.
 
 ## O
 
@@ -99,7 +99,7 @@
 : Historical storage of all prompt iterations in `.agent/prompts/` for debugging and analysis.
 
 **Plugin**
-: Extension mechanism for adding custom agents or commands to Ralph.
+: Extension mechanism for adding custom agents or commands to Ulf.
 
 ## Q
 
@@ -108,7 +108,7 @@
 
 ## R
 
-**Ralph Wiggum Technique**
+**Ulf Wiggum Technique**
 : The software engineering pattern of putting AI agents in a loop until the task is done, created by Geoffrey Huntley.
 
 **Recovery**
@@ -118,7 +118,7 @@
 : Automatic retry mechanism with exponential backoff for handling transient failures.
 
 **Runtime Limit**
-: Maximum execution time in seconds before Ralph stops. Default is 14400 (4 hours).
+: Maximum execution time in seconds before Ulf stops. Default is 14400 (4 hours).
 
 ## S
 
@@ -148,7 +148,7 @@
 ## U
 
 **Unpossible**
-: Reference to Ralph Wiggum's quote, embodying the philosophy of achieving the seemingly impossible through persistence.
+: Reference to Ulf Wiggum's quote, embodying the philosophy of achieving the seemingly impossible through persistence.
 
 ## V
 
@@ -158,15 +158,15 @@
 ## W
 
 **Working Directory**
-: The directory where Ralph executes, containing PROMPT.md and project files. Defaults to current directory.
+: The directory where Ulf executes, containing PROMPT.md and project files. Defaults to current directory.
 
 **Workspace**
-: The `.agent/` directory containing Ralph's operational data including metrics, checkpoints, and archives.
+: The `.agent/` directory containing Ulf's operational data including metrics, checkpoints, and archives.
 
 ## Technical Terms
 
 **API**
-: Application Programming Interface - the interface through which Ralph communicates with AI services.
+: Application Programming Interface - the interface through which Ulf communicates with AI services.
 
 **JSON**
 : JavaScript Object Notation - format used for configuration files and state storage.
@@ -194,7 +194,7 @@
 ## Directory Structure
 
 **`.agent/`**
-: Ralph's workspace directory containing all operational data.
+: Ulf's workspace directory containing all operational data.
 
 **`.agent/metrics/`**
 : Storage for execution metrics and state files.
@@ -213,36 +213,36 @@
 
 ## Command Reference
 
-**`ralph run`**
+**`ulf run`**
 : Execute the orchestrator with current configuration.
 
-**`ralph init`**
-: Initialize a new Ralph project with default structure.
+**`ulf init`**
+: Initialize a new Ulf project with default structure.
 
-**`ralph status`**
+**`ulf status`**
 : Check current execution status and metrics.
 
-**`ralph clean`**
+**`ulf clean`**
 : Clean workspace and reset state.
 
-**`ralph agents`**
+**`ulf agents`**
 : List available AI agents on the system.
 
 ## Environment Variables
 
-**`RALPH_AGENT`**
+**`ULF_AGENT`**
 : Override default agent selection.
 
-**`RALPH_MAX_ITERATIONS`**
+**`ULF_MAX_ITERATIONS`**
 : Set maximum iteration limit.
 
-**`RALPH_MAX_RUNTIME`**
+**`ULF_MAX_RUNTIME`**
 : Set maximum runtime in seconds.
 
-**`RALPH_VERBOSE`**
+**`ULF_VERBOSE`**
 : Enable verbose logging (true/false).
 
-**`RALPH_DRY_RUN`**
+**`ULF_DRY_RUN`**
 : Enable dry run mode (true/false).
 
 ## Exit Codes

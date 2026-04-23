@@ -5,25 +5,25 @@
 
 ## Overview
 
-This example demonstrates using Ralph to debug issues, with specialized hats for investigation, hypothesis testing, and fix verification.
+This example demonstrates using Ulf to debug issues, with specialized hats for investigation, hypothesis testing, and fix verification.
 
 ## Enabling Diagnostics
 
 ```bash
-RALPH_DIAGNOSTICS=1 ralph run -p "fix the authentication bug"
+ULF_DIAGNOSTICS=1 ulf run -p "fix the authentication bug"
 ```
 
 ## Reviewing Logs
 
 ```bash
 # View all agent output
-jq 'select(.type == "text")' .ralph/diagnostics/*/agent-output.jsonl
+jq 'select(.type == "text")' .ulf/diagnostics/*/agent-output.jsonl
 
 # View hat selection decisions
-jq 'select(.event.type == "hat_selected")' .ralph/diagnostics/*/orchestration.jsonl
+jq 'select(.event.type == "hat_selected")' .ulf/diagnostics/*/orchestration.jsonl
 
 # View errors
-jq '.' .ralph/diagnostics/*/errors.jsonl
+jq '.' .ulf/diagnostics/*/errors.jsonl
 ```
 
 ## See Also

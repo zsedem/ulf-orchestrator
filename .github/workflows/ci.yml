@@ -75,7 +75,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run test:server
-      - run: npm run test -w @ralph-web/dashboard
+      - run: npm run test -w @ulf-web/dashboard
 
   # Hooks mutation testing is expensive (~20min). Run locally with:
   #   ./scripts/hooks-mutation-gate.sh
@@ -94,9 +94,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
-      - name: Check ralph-cli packages correctly
+      - name: Check ulf-cli packages correctly
         run: |
           # This will fail if include_str! references files outside the crate
           # Use --list to validate without resolving crates.io dependencies
-          cargo package -p ralph-cli --allow-dirty --list > /dev/null
+          cargo package -p ulf-cli --allow-dirty --list > /dev/null
           echo "Package check passed - all embedded files are included"

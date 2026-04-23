@@ -6,7 +6,7 @@
 
 #### Agent Not Found
 
-**Problem**: `ralph: command 'claude' not found`
+**Problem**: `ulf: command 'claude' not found`
 
 **Solutions**:
 
@@ -36,62 +36,62 @@
 
 #### Permission Denied
 
-**Problem**: `Permission denied: './ralph'`
+**Problem**: `Permission denied: './ulf'`
 
 **Solution**:
 
 ```bash
-chmod +x ralph
+chmod +x ulf
 ```
 
 ### Configuration Issues
 
 #### Config File Exists
 
-**Problem**: `ralph.yml already exists. Use --force to overwrite.`
+**Problem**: `ulf.yml already exists. Use --force to overwrite.`
 
 **Solutions**:
 
 1. Overwrite the existing file:
 
    ```bash
-   ralph init --backend claude --force
+   ulf init --backend claude --force
    ```
 
 2. Move or rename the existing config:
 
    ```bash
-   mv ralph.yml ralph.yml.bak
+   mv ulf.yml ulf.yml.bak
    ```
 
 3. Use a different config file:
 
    ```bash
-   ralph run -c path/to/other.yml
+   ulf run -c path/to/other.yml
    ```
 
 #### Config Not Found
 
-**Problem**: `Config file not found: ralph.yml`
+**Problem**: `Config file not found: ulf.yml`
 
 **Solutions**:
 
 1. Verify the path:
 
    ```bash
-   ls -la ralph.yml
+   ls -la ulf.yml
    ```
 
 2. Generate a config:
 
    ```bash
-   ralph init --backend claude
+   ulf init --backend claude
    ```
 
 3. Use defaults by omitting the config flag:
 
    ```bash
-   ralph run
+   ulf run
    ```
 
 #### Unknown Backend
@@ -103,15 +103,15 @@ chmod +x ralph
 1. Use a supported backend:
 
    ```bash
-   ralph init --backend claude
-   ralph init --backend gemini
-   ralph init --backend codex
+   ulf init --backend claude
+   ulf init --backend gemini
+   ulf init --backend codex
    ```
 
 2. List presets (includes backend hints):
 
    ```bash
-   ralph init --list-presets
+   ulf init --list-presets
    ```
 
 #### Unknown Preset
@@ -123,14 +123,14 @@ chmod +x ralph
 1. List presets:
 
    ```bash
-   ralph init --list-presets
+   ulf init --list-presets
    ```
 
 2. Use a known built-in hat collection:
 
    ```bash
-   ralph init --backend claude
-   ralph run -c ralph.yml -H builtin:code-assist
+   ulf init --backend claude
+   ulf run -c ulf.yml -H builtin:code-assist
    ```
 
 #### Custom Backend Command
@@ -151,7 +151,7 @@ chmod +x ralph
 2. Generate a template:
 
    ```bash
-   ralph init --backend custom
+   ulf init --backend custom
    ```
 
 #### Ambiguous Routing
@@ -222,7 +222,7 @@ hats:
      enabled: true
      timeout_seconds: 300
      telegram:
-       bot_token: "..." # or set RALPH_TELEGRAM_BOT_TOKEN
+       bot_token: "..." # or set ULF_TELEGRAM_BOT_TOKEN
    ```
 
 2. Or disable RObot if you don't need human-in-the-loop:
@@ -236,7 +236,7 @@ hats:
 
 #### Task Running Too Long
 
-**Problem**: Ralph runs maximum iterations without achieving goals
+**Problem**: Ulf runs maximum iterations without achieving goals
 
 **Possible Causes**:
 
@@ -249,7 +249,7 @@ hats:
 1. Check iteration progress and logs:
 
    ```bash
-   ralph status
+   ulf status
    ```
 
 2. Break down complex tasks:
@@ -267,8 +267,8 @@ hats:
 3. Increase iteration limits or try different agent:
 
    ```bash
-   ralph run --max-iterations 200
-   ralph run --agent gemini
+   ulf run --max-iterations 200
+   ulf run --agent gemini
    ```
 
 #### Agent Timeout
@@ -280,7 +280,7 @@ hats:
 1. Increase the adapter inactivity timeout:
 
    ```yaml
-   # In ralph.yml
+   # In ulf.yml
    adapters:
      claude:
        timeout: 600
@@ -312,8 +312,8 @@ hats:
 2. Clear workspace and retry:
 
    ```bash
-   ralph clean
-   ralph run
+   ulf clean
+   ulf run
    ```
 
 3. Manual intervention:
@@ -325,7 +325,7 @@ hats:
 
 **Problem**: `Loop detected: XX% similarity to previous output`
 
-Ralph's loop detection triggers when agent output is ≥90% similar to any of the last 5 outputs.
+Ulf's loop detection triggers when agent output is ≥90% similar to any of the last 5 outputs.
 
 **Possible Causes**:
 
@@ -365,7 +365,7 @@ Ralph's loop detection triggers when agent output is ≥90% similar to any of th
 
 #### Completion Marker Not Detected
 
-**Problem**: Ralph continues running despite `TASK_COMPLETE` marker
+**Problem**: Ulf continues running despite `TASK_COMPLETE` marker
 
 **Possible Causes**:
 
@@ -467,14 +467,14 @@ Ralph's loop detection triggers when agent output is ≥90% similar to any of th
 
    ```bash
    git stash
-   ralph run
+   ulf run
    git stash pop
    ```
 
 3. Disable Git operations:
 
    ```bash
-   ralph run --no-git
+   ulf run --no-git
    ```
 
 ### Context Issues
@@ -510,7 +510,7 @@ Ralph's loop detection triggers when agent output is ≥90% similar to any of th
 
    ```bash
    # Claude has 200K context
-   ralph run --agent claude
+   ulf run --agent claude
    ```
 
 4. Clear iteration history:
@@ -543,19 +543,19 @@ Ralph's loop detection triggers when agent output is ≥90% similar to any of th
 
    ```bash
    # Q is typically faster
-   ralph run --agent q
+   ulf run --agent q
    ```
 
 #### High Memory Usage
 
-**Problem**: Ralph consuming excessive memory
+**Problem**: Ulf consuming excessive memory
 
 **Solutions**:
 
 1. Set resource limits:
 
    ```python
-   # In ralph.json
+   # In ulf.json
    {
      "resource_limits": {
        "memory_mb": 2048
@@ -569,11 +569,11 @@ Ralph's loop detection triggers when agent output is ≥90% similar to any of th
    find .agent -name "*.json" -mtime +7 -delete
    ```
 
-3. Restart Ralph:
+3. Restart Ulf:
 
    ```bash
-   pkill -f ralph_orchestrator
-   ralph run
+   pkill -f ulf_orchestrator
+   ulf run
    ```
 
 ### State and Metrics Issues
@@ -599,7 +599,7 @@ Ralph's loop detection triggers when agent output is ≥90% similar to any of th
 3. Reset state:
 
    ```bash
-   ralph clean
+   ulf clean
    ```
 
 #### Missing Metrics
@@ -681,13 +681,13 @@ Ralph's loop detection triggers when agent output is ≥90% similar to any of th
 
 ```bash
 # Maximum verbosity
-ralph run --verbose
+ulf run --verbose
 
 # With debug environment
-DEBUG=1 ralph run
+DEBUG=1 ulf run
 
 # Save logs
-ralph run --verbose 2>&1 | tee debug.log
+ulf run --verbose 2>&1 | tee debug.log
 ```
 
 ### Inspect Execution
@@ -701,10 +701,10 @@ print("DEBUG: Reached checkpoint 1")
 
 ```bash
 # Trace system calls
-strace -o trace.log ralph run
+strace -o trace.log ulf run
 
 # Profile Python execution
-python -m cProfile ralph_orchestrator.py
+python -m cProfile ulf_orchestrator.py
 ```
 
 ## Recovery Procedures
@@ -720,7 +720,7 @@ python -m cProfile ralph_orchestrator.py
 2. **Analyze failure**:
 
    ```bash
-   tail -n 100 .agent/logs/ralph.log
+   tail -n 100 .agent/logs/ulf.log
    ```
 
 3. **Fix issue**:
@@ -732,10 +732,10 @@ python -m cProfile ralph_orchestrator.py
 
    ```bash
    # Resume from checkpoint
-   ralph run
+   ulf run
 
    # Or start fresh
-   ralph clean && ralph run
+   ulf clean && ulf run
    ```
 
 ### From Git Checkpoint
@@ -748,7 +748,7 @@ git log --oneline | grep checkpoint
 git reset --hard <commit-hash>
 
 # Resume execution
-ralph run
+ulf run
 ```
 
 ## Getting Help
@@ -760,7 +760,7 @@ Run the diagnostic script:
 ```bash
 cat > diagnose.sh << 'EOF'
 #!/bin/bash
-echo "Ralph Orchestrator Diagnostic"
+echo "Ulf Orchestrator Diagnostic"
 echo "============================"
 echo "Agents available:"
 which claude && echo "  ✓ Claude" || echo "  ✗ Claude"
@@ -770,8 +770,8 @@ echo ""
 echo "Git status:"
 git status --short
 echo ""
-echo "Ralph status:"
-./ralph status
+echo "Ulf status:"
+./ulf status
 echo ""
 echo "Recent errors:"
 grep ERROR .agent/logs/*.log 2>/dev/null | tail -5
@@ -782,15 +782,15 @@ chmod +x diagnose.sh
 
 ### Community Support
 
-1. **GitHub Issues**: [Report bugs](https://github.com/mikeyobrien/ralph-orchestrator/issues)
-2. **Discussions**: [Ask questions](https://github.com/mikeyobrien/ralph-orchestrator/discussions)
+1. **GitHub Issues**: [Report bugs](https://github.com/mikeyobrien/ulf-orchestrator/issues)
+2. **Discussions**: [Ask questions](https://github.com/mikeyobrien/ulf-orchestrator/discussions)
 3. **Discord**: Join the community chat
 
 ### Reporting Bugs
 
 Include in bug reports:
 
-1. Ralph version: `ralph --version`
+1. Ulf version: `ulf --version`
 2. Agent versions
 3. Error messages
 4. PROMPT.md content
@@ -804,13 +804,13 @@ Include in bug reports:
 1. **Start simple**: Test with basic tasks first
 2. **Regular checkpoints**: Use default 5-iteration interval
 3. **Monitor progress**: Check status frequently
-4. **Version control**: Commit before running Ralph
+4. **Version control**: Commit before running Ulf
 5. **Resource limits**: Set appropriate limits
 6. **Clear requirements**: Write specific, testable criteria
 
 ### Pre-flight Checklist
 
-Before running Ralph:
+Before running Ulf:
 
 - [ ] PROMPT.md is clear and specific
 - [ ] Git repository is clean

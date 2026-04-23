@@ -8,7 +8,7 @@
 #   ./tools/evaluate-preset.sh spec-driven kiro
 #
 # Optional:
-#   RALPH_EVAL_BINARY=/abs/path/to/ralph ./tools/evaluate-preset.sh code-assist claude smoke
+#   ULF_EVAL_BINARY=/abs/path/to/ulf ./tools/evaluate-preset.sh code-assist claude smoke
 
 set -euo pipefail
 
@@ -42,7 +42,7 @@ trap cleanup SIGINT SIGTERM
 
 PRESET=${1:-}
 BACKEND=${2:-claude}
-MODE=${3:-${RALPH_PRESET_TASK_VARIANT:-full}}
+MODE=${3:-${ULF_PRESET_TASK_VARIANT:-full}}
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 TASK_FILE="tools/preset-test-tasks.yml"
 
@@ -144,35 +144,35 @@ termination_source() {
     fi
 }
 
-resolve_ralph_command() {
-    if [[ -n "${RALPH_EVAL_BINARY:-}" ]]; then
-        if [[ "$RALPH_EVAL_BINARY" == */* ]]; then
-            if [[ ! -x "$RALPH_EVAL_BINARY" ]]; then
-                echo -e "${RED}Error: RALPH_EVAL_BINARY is not executable: ${RALPH_EVAL_BINARY}${NC}" >&2
+resolve_ulf_command() {
+    if [[ -n "${ULF_EVAL_BINARY:-}" ]]; then
+        if [[ "$ULF_EVAL_BINARY" == */* ]]; then
+            if [[ ! -x "$ULF_EVAL_BINARY" ]]; then
+                echo -e "${RED}Error: ULF_EVAL_BINARY is not executable: ${ULF_EVAL_BINARY}${NC}" >&2
                 exit 1
             fi
-            export PATH="$(dirname "$RALPH_EVAL_BINARY"):$PATH"
-            RALPH_CMD=("$RALPH_EVAL_BINARY")
+            export PATH="$(dirname "$ULF_EVAL_BINARY"):$PATH"
+            ULF_CMD=("$ULF_EVAL_BINARY")
         else
-            if ! command -v "$RALPH_EVAL_BINARY" >/dev/null 2>&1; then
-                echo -e "${RED}Error: RALPH_EVAL_BINARY not found on PATH: ${RALPH_EVAL_BINARY}${NC}" >&2
+            if ! command -v "$ULF_EVAL_BINARY" >/dev/null 2>&1; then
+                echo -e "${RED}Error: ULF_EVAL_BINARY not found on PATH: ${ULF_EVAL_BINARY}${NC}" >&2
                 exit 1
             fi
-            RALPH_CMD=("$RALPH_EVAL_BINARY")
+            ULF_CMD=("$ULF_EVAL_BINARY")
         fi
     else
-        RALPH_CMD=(cargo run --release --bin ralph --)
+        ULF_CMD=(cargo run --release --bin ulf --)
     fi
 }
 
-run_ralph() {
-    "${RALPH_CMD[@]}" "$@"
+run_ulf() {
+    "${ULF_CMD[@]}" "$@"
 }
 
-run_ralph_with_timeout() {
+run_ulf_with_timeout() {
     local timeout_seconds=$1
     shift
-    timeout --foreground "$timeout_seconds" "${RALPH_CMD[@]}" "$@"
+    timeout --foreground "$timeout_seconds" "${ULF_CMD[@]}" "$@"
 }
 
 completion_promise_reached() {
@@ -195,7 +195,7 @@ if [[ "${EVALUATE_PRESET_LIB_ONLY:-0}" == "1" ]]; then
     return 0 2>/dev/null || exit 0
 fi
 
-resolve_ralph_command
+resolve_ulf_command
 
 if [[ -z "$PRESET" ]]; then
     echo -e "${RED}Error: Preset name required${NC}"
@@ -285,7 +285,7 @@ cat > "$LOG_DIR/environment.json" << EOF
   "backend": "$BACKEND",
   "mode": "$MODE",
   "timestamp": "$TIMESTAMP",
-  "ralph_version": "$(run_ralph --version 2>/dev/null || echo 'unknown')",
+  "ulf_version": "$(run_ulf --version 2>/dev/null || echo 'unknown')",
   "backend_version": "$(${BACKEND}-cli --version 2>/dev/null || ${BACKEND} --version 2>/dev/null || echo 'unknown')",
   "os": "$(uname -s)",
   "hostname": "$(hostname 2>/dev/null || uname -n 2>/dev/null || echo unknown)",
@@ -314,9 +314,9 @@ cat > .agent/scratchpad.md << 'SCRATCHPAD_EOF'
 Follow the instructions in the prompt. This is a fresh evaluation context.
 SCRATCHPAD_EOF
 
-# Create .ralph directory for events isolation
-mkdir -p .ralph
-echo -e "${GREEN}Created fresh .agent/ and .ralph/ state for evaluation${NC}"
+# Create .ulf directory for events isolation
+mkdir -p .ulf
+echo -e "${GREEN}Created fresh .agent/ and .ulf/ state for evaluation${NC}"
 echo ""
 
 # Run evaluation
@@ -370,10 +370,10 @@ verbose: false
 YAML_EOF
 fi
 
-# Run ralph with the merged config
+# Run ulf with the merged config
 set +e  # Don't exit on error - we want to capture failures
 # Use --foreground to allow Ctrl+C to propagate to child processes
-run_ralph_with_timeout "$TIMEOUT" run \
+run_ulf_with_timeout "$TIMEOUT" run \
     -c "$TEMP_CONFIG" \
     -p "$TEST_TASK" \
     --record-session "$LOG_DIR/session.jsonl" \

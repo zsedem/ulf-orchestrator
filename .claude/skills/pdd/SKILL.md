@@ -22,12 +22,12 @@ These rules apply across ALL steps:
 - **Record as you go:** Append questions, answers, and findings to project files in real time — don't batch-write at the end.
 - **Mermaid diagrams:** Include diagrams for architectures, data flows, and component relationships in research and design documents.
 - **Sources:** Cite references and links in research documents when based on external materials.
-- **Planning only:** This SOP produces planning artifacts. You MUST NOT implement code, run containers, execute scripts, or begin any implementation work. If the user wants implementation, direct them to `ralph run`.
+- **Planning only:** This SOP produces planning artifacts. You MUST NOT implement code, run containers, execute scripts, or begin any implementation work. If the user wants implementation, direct them to `ulf run`.
 
 ## Parameters
 
 - **rough_idea** (required): The initial concept or idea to develop
-- **project_dir** (optional, default: `specs/{task_name}/`): Base directory for all artifacts. `{task_name}` is derived as kebab-case from the idea (e.g., "build a rate limiter" → `rate-limiter`). Aligns with Ralph's spec-driven pipeline.
+- **project_dir** (optional, default: `specs/{task_name}/`): Base directory for all artifacts. `{task_name}` is derived as kebab-case from the idea (e.g., "build a rate limiter" → `rate-limiter`). Aligns with Ulf's spec-driven pipeline.
 
 **Constraints:**
 - You MUST ask for all required parameters upfront in a single prompt
@@ -44,7 +44,7 @@ Create the directory and initial files:
 - `{project_dir}/requirements.md` — Q&A record (initially empty)
 - `{project_dir}/research/` — directory for research notes
 
-Inform the user the structure feeds into Ralph's spec-driven presets.
+Inform the user the structure feeds into Ulf's spec-driven presets.
 
 **Gate:** You MUST NOT proceed to Step 2 until the user confirms the project structure is acceptable.
 
@@ -134,9 +134,9 @@ Create `{project_dir}/plan.md` — a numbered series of incremental implementati
 
 Create `{project_dir}/summary.md` listing all artifacts, a brief overview, and suggested next steps. Present this summary in the conversation.
 
-### 9. Offer Ralph Integration
+### 9. Offer Ulf Integration
 
-Ask: "Would you like me to create a PROMPT.md for Ralph to implement this autonomously?"
+Ask: "Would you like me to create a PROMPT.md for Ulf to implement this autonomously?"
 
 If yes, create a concise PROMPT.md (under 100 lines) with:
 - Objective statement
@@ -145,12 +145,12 @@ If yes, create a concise PROMPT.md (under 100 lines) with:
 - Reference to `specs/{task_name}/`
 
 Suggest the appropriate command:
-- Full pipeline: `ralph run --config presets/pdd-to-code-assist.yml`
-- Simpler flow: `ralph run -c ralph.yml -H builtin:code-assist`
+- Full pipeline: `ulf run --config presets/pdd-to-code-assist.yml`
+- Simpler flow: `ulf run -c ulf.yml -H builtin:code-assist`
 
 If the user declines, acknowledge and conclude the session.
 
-**Gate:** You MUST NOT run `ralph run` or begin any implementation. This SOP ends here. Implementation is a separate step the user initiates themselves.
+**Gate:** You MUST NOT run `ulf run` or begin any implementation. This SOP ends here. Implementation is a separate step the user initiates themselves.
 
 ## Example
 

@@ -1,12 +1,12 @@
 # Concepts
 
-Understanding Ralph's core concepts will help you use it effectively.
+Understanding Ulf's core concepts will help you use it effectively.
 
 ## Overview
 
-Ralph is built around a few key ideas:
+Ulf is built around a few key ideas:
 
-1. **[The Ralph Wiggum Technique](ralph-wiggum-technique.md)** — Continuous iteration until success
+1. **[The Ulf Wiggum Technique](ulf-wiggum-technique.md)** — Continuous iteration until success
 2. **[The Six Tenets](tenets.md)** — Guiding principles for orchestration
 3. **[Hats & Events](hats-and-events.md)** — Specialized personas coordinating through typed events
 4. **[Coordination Patterns](coordination-patterns.md)** — Multi-agent workflow architectures
@@ -15,9 +15,9 @@ Ralph is built around a few key ideas:
 
 ## The Core Philosophy
 
-> "The orchestrator is a thin coordination layer, not a platform. Ralph is smart; let Ralph do the work."
+> "The orchestrator is a thin coordination layer, not a platform. Ulf is smart; let Ulf do the work."
 
-Ralph is intentionally simple. Rather than building complex features into the orchestrator, Ralph:
+Ulf is intentionally simple. Rather than building complex features into the orchestrator, Ulf:
 
 - **Trusts the agent** to do the actual work
 - **Provides structure** through hats and events
@@ -26,7 +26,7 @@ Ralph is intentionally simple. Rather than building complex features into the or
 
 ## Traditional vs Hat-Based Mode
 
-Ralph supports two orchestration styles:
+Ulf supports two orchestration styles:
 
 ### Traditional Mode
 
@@ -75,14 +75,14 @@ Events flow between hats, each contributing to the task.
 |---------|-------------|
 | **Iteration** | One cycle of the orchestration loop |
 | **Completion Promise** | Signal that ends the loop (default: `LOOP_COMPLETE`) |
-| **Hat** | Specialized Ralph persona with specific triggers and behaviors |
+| **Hat** | Specialized Ulf persona with specific triggers and behaviors |
 | **Event** | Typed message that triggers hats and carries state |
 | **Backpressure** | Quality gate (tests, lint, typecheck) that rejects bad work |
-| **Memory** | Persistent learning stored in `.ralph/agent/memories.md` |
-| **Task** | Runtime work item stored in `.ralph/agent/tasks.jsonl` |
+| **Memory** | Persistent learning stored in `.ulf/agent/memories.md` |
+| **Task** | Runtime work item stored in `.ulf/agent/tasks.jsonl` |
 
 ## Next Steps
 
-- Understand the [Ralph Wiggum Technique](ralph-wiggum-technique.md)
-- Learn the [Six Tenets](tenets.md) that guide Ralph's design
+- Understand the [Ulf Wiggum Technique](ulf-wiggum-technique.md)
+- Learn the [Six Tenets](tenets.md) that guide Ulf's design
 - Master [Hats & Events](hats-and-events.md) for complex workflows

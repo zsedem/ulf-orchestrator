@@ -1,11 +1,11 @@
 # Getting Started
 
-Welcome to Ralph Orchestrator! This section will help you get up and running quickly.
+Welcome to Ulf Orchestrator! This section will help you get up and running quickly.
 
 ## What You'll Learn
 
-1. **[Installation](installation.md)** — Install Ralph and its prerequisites
-2. **[Quick Start](quick-start.md)** — Run your first Ralph orchestration
+1. **[Installation](installation.md)** — Install Ulf and its prerequisites
+2. **[Quick Start](quick-start.md)** — Run your first Ulf orchestration
 3. **[Your First Task](first-task.md)** — Create and configure a real task
 
 ## Prerequisites
@@ -27,27 +27,27 @@ Before you begin, ensure you have:
 === "npm (Recommended)"
 
     ```bash
-    npm install -g @ralph-orchestrator/ralph-cli
+    npm install -g @ulf-orchestrator/ulf-cli
     ```
 
 === "GitHub Releases installer"
 
     ```bash
     curl --proto '=https' --tlsv1.2 -LsSf \
-      https://github.com/mikeyobrien/ralph-orchestrator/releases/latest/download/ralph-cli-installer.sh | sh
+      https://github.com/mikeyobrien/ulf-orchestrator/releases/latest/download/ulf-cli-installer.sh | sh
     ```
 
 === "Cargo"
 
     ```bash
-    cargo install ralph-cli
+    cargo install ulf-cli
     ```
 
 ## Verify Installation
 
 ```bash
-ralph --version
-ralph --help
+ulf --version
+ulf --help
 ```
 
 ## Next Steps

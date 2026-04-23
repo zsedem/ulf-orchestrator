@@ -5,8 +5,8 @@
 # - Run cargo-mutants on hooks-critical modules only.
 # - Require operational score >= HOOKS_MUTATION_THRESHOLD (caught / (caught + missed)).
 # - Hard-fail on any MISS mutant in loop_runner critical ranges:
-#   - crates/ralph-cli/src/loop_runner.rs:3467-3560
-#   - crates/ralph-cli/src/loop_runner.rs:3623-3635
+#   - crates/ulf-cli/src/loop_runner.rs:3467-3560
+#   - crates/ulf-cli/src/loop_runner.rs:3623-3635
 # - Report TIMEOUT and unviable mutants separately.
 
 set -euo pipefail
@@ -59,7 +59,7 @@ filter_critical_lines() {
     fi
 
     awk -F: '
-        $1 == "crates/ralph-cli/src/loop_runner.rs" {
+        $1 == "crates/ulf-cli/src/loop_runner.rs" {
             line = $2 + 0
             if ((line >= 3467 && line <= 3560) || (line >= 3623 && line <= 3635)) {
                 print $0
@@ -115,10 +115,10 @@ mkdir -p "$ARTIFACT_DIR"
 mutation_cmd=(
     cargo mutants
     --baseline skip
-    --file crates/ralph-core/src/hooks/executor.rs
-    --file crates/ralph-core/src/hooks/engine.rs
-    --file crates/ralph-core/src/preflight.rs
-    --file crates/ralph-cli/src/loop_runner.rs
+    --file crates/ulf-core/src/hooks/executor.rs
+    --file crates/ulf-core/src/hooks/engine.rs
+    --file crates/ulf-core/src/preflight.rs
+    --file crates/ulf-cli/src/loop_runner.rs
     -o "$ARTIFACT_DIR"
     --no-times
     --colors never

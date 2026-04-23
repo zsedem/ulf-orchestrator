@@ -1,27 +1,27 @@
 # Architecture
 
-Ralph's system architecture and how the pieces fit together.
+Ulf's system architecture and how the pieces fit together.
 
 ## Overview
 
-Ralph is a Cargo workspace with seven crates, each with a specific responsibility:
+Ulf is a Cargo workspace with seven crates, each with a specific responsibility:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                      ralph-cli                          │
+│                      ulf-cli                          │
 │                  (Binary Entry Point)                   │
 ├─────────────┬─────────────┬─────────────┬──────────────┤
-│ ralph-core  │ralph-adapters│  ralph-tui  │ ralph-e2e   │
+│ ulf-core  │ulf-adapters│  ulf-tui  │ ulf-e2e   │
 │  (Engine)   │ (Backends)   │    (UI)     │  (Testing)  │
 ├─────────────┴─────────────┴─────────────┴──────────────┤
-│                     ralph-proto                         │
+│                     ulf-proto                         │
 │                  (Protocol Types)                       │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ## Crate Responsibilities
 
-### ralph-proto
+### ulf-proto
 
 Protocol types shared across all crates.
 
@@ -35,9 +35,9 @@ Protocol types shared across all crates.
 | `Topic` | Event routing with glob patterns |
 | `EventBus` | Hat registry and event routing |
 
-**Location:** `crates/ralph-proto/src/`
+**Location:** `crates/ulf-proto/src/`
 
-### ralph-core
+### ulf-core
 
 The orchestration engine.
 
@@ -52,9 +52,9 @@ The orchestration engine.
 | `task_store` | Task storage and querying |
 | `instructions` | Hat instruction assembly |
 
-**Location:** `crates/ralph-core/src/`
+**Location:** `crates/ulf-core/src/`
 
-### ralph-adapters
+### ulf-adapters
 
 CLI backend integrations.
 
@@ -76,9 +76,9 @@ CLI backend integrations.
 - Copilot CLI
 - OpenCode
 
-**Location:** `crates/ralph-adapters/src/`
+**Location:** `crates/ulf-adapters/src/`
 
-### ralph-tui
+### ulf-tui
 
 Terminal UI using ratatui.
 
@@ -89,23 +89,23 @@ Terminal UI using ratatui.
 - Activity indicator
 - Event topic display
 
-**Location:** `crates/ralph-tui/src/`
+**Location:** `crates/ulf-tui/src/`
 
-### ralph-cli
+### ulf-cli
 
 Binary entry point and CLI parsing.
 
 **Commands:**
-- `ralph run` — Execute orchestration
-- `ralph init` — Initialize config
-- `ralph plan` — PDD planning
-- `ralph task` — Task generation
-- `ralph events` — View history
-- `ralph tools` — Memory/task management
+- `ulf run` — Execute orchestration
+- `ulf init` — Initialize config
+- `ulf plan` — PDD planning
+- `ulf task` — Task generation
+- `ulf events` — View history
+- `ulf tools` — Memory/task management
 
-**Location:** `crates/ralph-cli/src/`
+**Location:** `crates/ulf-cli/src/`
 
-### ralph-e2e
+### ulf-e2e
 
 End-to-end testing framework.
 
@@ -121,13 +121,13 @@ End-to-end testing framework.
 | 6 | Memory System |
 | 7 | Error Handling |
 
-**Location:** `crates/ralph-e2e/src/`
+**Location:** `crates/ulf-e2e/src/`
 
-### ralph-bench
+### ulf-bench
 
 Benchmarking harness (development only).
 
-**Location:** `crates/ralph-bench/src/`
+**Location:** `crates/ulf-bench/src/`
 
 ## Data Flow
 
@@ -135,9 +135,9 @@ Benchmarking harness (development only).
 
 ```mermaid
 flowchart TD
-    A[PROMPT.md] --> B[ralph-cli]
-    B --> C[ralph-core EventLoop]
-    C --> D[ralph-adapters Backend]
+    A[PROMPT.md] --> B[ulf-cli]
+    B --> C[ulf-core EventLoop]
+    C --> D[ulf-adapters Backend]
     D --> E[AI CLI]
     E --> F[Output]
     F --> G{LOOP_COMPLETE?}
@@ -190,7 +190,7 @@ struct EventBus {
 
 ### Configuration
 
-Loaded from `ralph.yml`:
+Loaded from `ulf.yml`:
 
 ```rust
 struct Config {
@@ -207,7 +207,7 @@ struct Config {
 
 ### Unix Process Groups
 
-Ralph manages processes carefully:
+Ulf manages processes carefully:
 
 - Creates process group leadership
 - Handles SIGINT, SIGTERM gracefully
@@ -225,7 +225,7 @@ pty_executor.execute(command, stream_handler).await
 
 ## Async Architecture
 
-Ralph uses Tokio throughout:
+Ulf uses Tokio throughout:
 
 - Async trait support
 - Stream-based output capture
@@ -239,7 +239,7 @@ Custom error types with context:
 ```rust
 // thiserror for type definitions
 #[derive(Error, Debug)]
-enum RalphError {
+enum UlfError {
     #[error("Configuration error: {0}")]
     Config(String),
     // ...

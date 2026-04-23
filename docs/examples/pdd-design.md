@@ -27,7 +27,7 @@ It does not generate implementation tasks or write code.
 ## Usage
 
 ```bash
-ralph run --config docs/examples/presets/auto-pdd.yml --prompt "Design a resilient import pipeline for CSV uploads"
+ulf run --config docs/examples/presets/auto-pdd.yml --prompt "Design a resilient import pipeline for CSV uploads"
 ```
 
 ## Why Use It

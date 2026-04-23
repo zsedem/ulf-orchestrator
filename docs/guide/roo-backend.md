@@ -1,10 +1,10 @@
-# Using Ralph Orchestrator with Roo Code CLI
+# Using Ulf Orchestrator with Roo Code CLI
 
 ## Quick Start
 
 ### Prerequisites
 
-1. **Ralph** installed (`cargo build` from this repo)
+1. **Ulf** installed (`cargo build` from this repo)
 2. **Roo CLI** installed (`roo --version` should return 0.1.15+)
 3. **AWS Bedrock** access configured (or another supported provider)
 
@@ -12,7 +12,7 @@
 
 ```bash
 # Simple one-iteration test
-ralph run -b roo --max-iterations 1 \
+ulf run -b roo --max-iterations 1 \
   -- --provider bedrock --aws-profile roo-bedrock --aws-region us-east-1 \
      --model anthropic.claude-sonnet-4-6 --max-tokens 64000 \
   -p "Create a hello.txt file with 'Hello World'"
@@ -25,7 +25,7 @@ ralph run -b roo --max-iterations 1 \
 Pass roo-specific flags after `--`:
 
 ```bash
-ralph run -b roo -- \
+ulf run -b roo -- \
   --provider bedrock \
   --aws-profile roo-bedrock \
   --aws-region us-east-1 \
@@ -35,10 +35,10 @@ ralph run -b roo -- \
 
 ### Option 2: Config File (Recommended)
 
-Create a `ralph.roo.yml`:
+Create a `ulf.roo.yml`:
 
 ```yaml
-# Ralph + Roo Configuration
+# Ulf + Roo Configuration
 event_loop:
   completion_promise: "LOOP_COMPLETE"
   max_iterations: 100
@@ -93,14 +93,14 @@ hats:
 Then run:
 
 ```bash
-ralph run -c ralph.roo.yml -p "Build feature X"
+ulf run -c ulf.roo.yml -p "Build feature X"
 ```
 
 ### Option 3: PDD-to-Code-Assist with Roo
 
 For the full PDD → Code Assist workflow using Roo with Claude Opus 4.6:
 
-Create `ralph.roo.pdd.yml`:
+Create `ulf.roo.pdd.yml`:
 
 ```yaml
 # PDD-to-Code-Assist with Roo Code CLI
@@ -141,7 +141,7 @@ core:
     - "YAGNI ruthlessly — no speculative features"
     - "KISS always — simplest solution that works"
     - "Preserve primary sources — all referenced files, research findings, code snippets, and external docs must be captured with source attribution"
-    - "Confidence protocol: score decisions 0-100. >80 proceed autonomously; 50-80 proceed + document in .ralph/agent/decisions.md; <50 choose safe default + document."
+    - "Confidence protocol: score decisions 0-100. >80 proceed autonomously; 50-80 proceed + document in .ulf/agent/decisions.md; <50 choose safe default + document."
 
 # Copy hats from presets/pdd-to-code-assist.yml
 # (inquisitor, architect, design_critic, explorer, planner, task_writer, builder, validator, committer)
@@ -150,13 +150,13 @@ core:
 Then run:
 
 ```bash
-ralph run -c ralph.roo.pdd.yml -p "Build a CLI tool for managing tasks"
+ulf run -c ulf.roo.pdd.yml -p "Build a CLI tool for managing tasks"
 ```
 
 Or use the built-in preset with roo args:
 
 ```bash
-ralph run -c presets/pdd-to-code-assist.yml \
+ulf run -c presets/pdd-to-code-assist.yml \
   -c cli.backend=roo \
   -- --provider bedrock --aws-profile roo-bedrock --aws-region us-east-1 \
      --model anthropic.claude-opus-4-6 --max-tokens 100000 \
@@ -192,10 +192,10 @@ cli:
 
 ### Interactive Planning
 
-Use `ralph plan` for interactive sessions with Roo's TUI:
+Use `ulf plan` for interactive sessions with Roo's TUI:
 
 ```bash
-ralph plan -b roo -- --provider bedrock --aws-profile roo-bedrock \
+ulf plan -b roo -- --provider bedrock --aws-profile roo-bedrock \
   --aws-region us-east-1 --model anthropic.claude-opus-4-6 \
   --max-tokens 100000 \
   -p "Design the auth system architecture"
@@ -206,12 +206,12 @@ ralph plan -b roo -- --provider bedrock --aws-profile roo-bedrock \
 ### Architecture
 
 ```
-Ralph Loop (each iteration):
-1. Ralph builds prompt (context + events + memories + instructions)
+Ulf Loop (each iteration):
+1. Ulf builds prompt (context + events + memories + instructions)
 2. Writes prompt to temp file
 3. Spawns: roo --print --ephemeral --prompt-file /tmp/xxx [user args]
 4. Roo reads prompt, executes tools, produces text output
-5. Ralph parses output for events (<event topic="...">) and LOOP_COMPLETE
+5. Ulf parses output for events (<event topic="...">) and LOOP_COMPLETE
 6. Next iteration with updated context
 ```
 
@@ -237,7 +237,7 @@ If you see "Try enabling cross-region inference":
 
 ### Roo Retries Indefinitely
 
-Roo retries API errors with exponential backoff. Ralph's `idle_timeout_secs` (default 30s) will kill the process. Increase if your model is slow:
+Roo retries API errors with exponential backoff. Ulf's `idle_timeout_secs` (default 30s) will kill the process. Increase if your model is slow:
 
 ```yaml
 cli:

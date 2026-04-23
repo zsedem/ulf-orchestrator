@@ -1,5 +1,5 @@
 {
-  "name": "ralph-orchestrator",
+  "name": "ulf-orchestrator",
   "version": "2.9.2",
   "private": true,
   "description": "AI agent orchestrator with web dashboard",
@@ -9,15 +9,15 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "build:server": "npm run build -w @ralph-web/server",
-    "build:web": "npm run build -w @ralph-web/dashboard",
+    "build:server": "npm run build -w @ulf-web/server",
+    "build:web": "npm run build -w @ulf-web/dashboard",
     "dev": "npm run dev:web",
-    "dev:api": "cargo run -p ralph-api",
-    "dev:web": "npm run dev -w @ralph-web/dashboard",
-    "dev:legacy-server": "npm run dev -w @ralph-web/server",
-    "start": "cargo run -p ralph-api",
+    "dev:api": "cargo run -p ulf-api",
+    "dev:web": "npm run dev -w @ulf-web/dashboard",
+    "dev:legacy-server": "npm run dev -w @ulf-web/server",
+    "start": "cargo run -p ulf-api",
     "test": "npm run test --workspaces --if-present",
-    "test:server": "npm run test -w @ralph-web/server",
+    "test:server": "npm run test -w @ulf-web/server",
     "clean": "npm run clean --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present"
   },
@@ -28,7 +28,7 @@
     "ai",
     "agent",
     "orchestrator",
-    "ralph"
+    "ulf"
   ],
   "author": "",
   "license": "MIT"

@@ -1,13 +1,13 @@
 ---
 name: review-pr
-description: Use when asked to review a PR, run a code review loop, or invoke the ralph reviewer against a pull request number or GitHub URL
+description: Use when asked to review a PR, run a code review loop, or invoke the ulf reviewer against a pull request number or GitHub URL
 metadata:
   internal: true
 ---
 
 # Review PR
 
-Run the `ralph.reviewer.yml` orchestration loop against a pull request. The loop checks out the PR in an isolated worktree, runs tests, reviews the diff, and produces a structured report.
+Run the `ulf.reviewer.yml` orchestration loop against a pull request. The loop checks out the PR in an isolated worktree, runs tests, reviews the diff, and produces a structured report.
 
 ## Usage
 
@@ -26,7 +26,7 @@ Extract the PR number from the argument. Strip `#` prefix or extract from URL pa
 ### 2. Run the reviewer loop
 
 ```bash
-ralph run -H ralph.reviewer.yml -p "Review PR #<N>"
+ulf run -H ulf.reviewer.yml -p "Review PR #<N>"
 ```
 
 **Bash tool settings:**
@@ -37,12 +37,12 @@ Use `TaskOutput` with `block: true` to wait for completion.
 
 ### 3. Display the report
 
-Read and print `.ralph/REVIEW-REPORT.md` to the conversation.
+Read and print `.ulf/REVIEW-REPORT.md` to the conversation.
 
 If the report file doesn't exist (loop failed before the synthesizer hat), check for and display whatever intermediate files exist:
-1. `.ralph/review-scope.md` — what was scoped
-2. `.ralph/review-verification.md` — test results
-3. `.ralph/review-findings.md` — review findings
+1. `.ulf/review-scope.md` — what was scoped
+2. `.ulf/review-verification.md` — test results
+3. `.ulf/review-findings.md` — review findings
 
 ### 4. Verify cleanup
 
@@ -55,13 +55,13 @@ ls -d .worktrees/review-<N> 2>/dev/null
 - If gone: cleanup succeeded, no action needed.
 - If still present: **warn the user** but do NOT force-remove. Say what's there and let them decide.
 
-Also note the presence of intermediate files (`.ralph/review-scope.md`, etc.) — they're useful for debugging but the user may want to clean them up later.
+Also note the presence of intermediate files (`.ulf/review-scope.md`, etc.) — they're useful for debugging but the user may want to clean them up later.
 
 ## Error Handling
 
 | Situation | Action |
 |-----------|--------|
-| Ralph exits non-zero | Display error output. Suggest re-running with `RALPH_DIAGNOSTICS=1` |
+| Ulf exits non-zero | Display error output. Suggest re-running with `ULF_DIAGNOSTICS=1` |
 | Report file missing | Display intermediate files that do exist (scope, verification, findings) |
 | PR argument missing | Ask the user for the PR number |
 | PR argument unparseable | Ask the user to provide a bare number, `#N`, or full GitHub URL |

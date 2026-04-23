@@ -4,17 +4,17 @@
 
 ### Text Mode (like kiro, gemini, codex, amp, copilot, opencode)
 
-The developer running `ralph run -b roo` sees:
+The developer running `ulf run -b roo` sees:
 - **Raw terminal output** — whatever roo prints, streamed to console/TUI
-- **No structured event parsing** — Ralph treats all output as plain text
-- **Event extraction from text** — Ralph uses regex to find `<event topic="...">` tags in the text output
+- **No structured event parsing** — Ulf treats all output as plain text
+- **Event extraction from text** — Ulf uses regex to find `<event topic="...">` tags in the text output
 - **No cost tracking** — Total cost per iteration is unknown
 - **No token counting** — No visibility into input/output tokens or cache hits
-- **No tool-use visibility** — Ralph can't distinguish tool calls from text output in the TUI
+- **No tool-use visibility** — Ulf can't distinguish tool calls from text output in the TUI
 
 ### Stream-JSON Mode (like Claude, Pi)
 
-The developer running `ralph run -b roo` would see:
+The developer running `ulf run -b roo` would see:
 - **Parsed, structured output** — PrettyStreamHandler renders markdown, tool calls, thinking
 - **Real-time streaming** — Text arrives as deltas, displayed incrementally
 - **Cost tracking** — Each iteration reports `totalCost`, `inputTokens`, `outputTokens`, `cacheReads`, `cacheWrites`
@@ -45,7 +45,7 @@ The developer running `ralph run -b roo` would see:
 
 ### Key Insight: Event Tag Extraction
 
-The most impactful technical difference is **event tag extraction**. Ralph's event system relies on finding `<event topic="build.done">` tags in the agent output. With text mode, these must be found via regex in the raw terminal output (which may contain ANSI escape codes, line wrapping artifacts, etc.). With stream-json, the `extracted_text` field contains clean text extracted from structured events, making event parsing more reliable.
+The most impactful technical difference is **event tag extraction**. Ulf's event system relies on finding `<event topic="build.done">` tags in the agent output. With text mode, these must be found via regex in the raw terminal output (which may contain ANSI escape codes, line wrapping artifacts, etc.). With stream-json, the `extracted_text` field contains clean text extracted from structured events, making event parsing more reliable.
 
 From the code (`loop_runner.rs:3936-3939`):
 ```rust

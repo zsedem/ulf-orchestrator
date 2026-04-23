@@ -17,7 +17,7 @@ Reference documentation and resources.
 ### Version Information
 
 ```bash
-ralph --version
+ulf --version
 ```
 
 ### Configuration Reference
@@ -38,16 +38,16 @@ cargo doc --open
 
 ## External Resources
 
-- [GitHub Repository](https://github.com/mikeyobrien/ralph-orchestrator)
-- [Issue Tracker](https://github.com/mikeyobrien/ralph-orchestrator/issues)
-- [Discussions](https://github.com/mikeyobrien/ralph-orchestrator/discussions)
-- [Original Ralph Wiggum Technique](https://ghuntley.com/ralph/)
+- [GitHub Repository](https://github.com/mikeyobrien/ulf-orchestrator)
+- [Issue Tracker](https://github.com/mikeyobrien/ulf-orchestrator/issues)
+- [Discussions](https://github.com/mikeyobrien/ulf-orchestrator/discussions)
+- [Original Ulf Wiggum Technique](https://ghuntley.com/ulf/)
 
 ## Support
 
 If you need help:
 
 1. Check the [FAQ](faq.md)
-2. Search [existing issues](https://github.com/mikeyobrien/ralph-orchestrator/issues)
+2. Search [existing issues](https://github.com/mikeyobrien/ulf-orchestrator/issues)
 3. Read [Troubleshooting](troubleshooting.md)
-4. [Open a new issue](https://github.com/mikeyobrien/ralph-orchestrator/issues/new)
+4. [Open a new issue](https://github.com/mikeyobrien/ulf-orchestrator/issues/new)

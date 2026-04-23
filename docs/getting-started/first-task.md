@@ -1,10 +1,10 @@
 # Your First Task
 
-Let's walk through creating and running a complete task with Ralph.
+Let's walk through creating and running a complete task with Ulf.
 
 ## Choose Your Mode
 
-Ralph offers two modes. Choose based on your task complexity:
+Ulf offers two modes. Choose based on your task complexity:
 
 | Mode | When to Use |
 |------|-------------|
@@ -18,11 +18,11 @@ For this guide, we'll use traditional mode first, then show hat-based mode.
 ### 1. Initialize
 
 ```bash
-mkdir my-first-ralph-task
-cd my-first-ralph-task
-git init  # Ralph works best with git
+mkdir my-first-ulf-task
+cd my-first-ulf-task
+git init  # Ulf works best with git
 
-ralph init --backend claude
+ulf init --backend claude
 ```
 
 ### 2. Create Your Prompt
@@ -45,13 +45,13 @@ Create a Rust calculator module with:
 - Code is formatted with `cargo fmt`
 ```
 
-### 3. Run Ralph
+### 3. Run Ulf
 
 ```bash
-ralph run
+ulf run
 ```
 
-Ralph will:
+Ulf will:
 
 1. Read your prompt
 2. Start the AI agent
@@ -60,7 +60,7 @@ Ralph will:
 
 ### 4. Review Results
 
-When Ralph completes, check your directory:
+When Ulf completes, check your directory:
 
 ```bash
 ls -la
@@ -79,13 +79,13 @@ For more complex tasks, use hats to separate concerns.
 ### 1. Initialize Core Config
 
 ```bash
-ralph init --backend claude
+ulf init --backend claude
 ```
 
 Then run with a specialized hat collection (recommended: code-assist):
 
 ```bash
-ralph run -c ralph.yml -H builtin:code-assist
+ulf run -c ulf.yml -H builtin:code-assist
 ```
 
 This uses specialized hats:
@@ -115,7 +115,7 @@ Create a URL shortening service with:
 ### 3. Run with Hat Coordination
 
 ```bash
-ralph run
+ulf run
 ```
 
 The TUI shows which hat is active:
@@ -127,7 +127,7 @@ The TUI shows which hat is active:
 ### 4. View Event History
 
 ```bash
-ralph events
+ulf events
 ```
 
 Shows the event flow between hats:
@@ -179,7 +179,7 @@ Create an Axum web app with:
 
 The TUI shows real-time progress. Key information:
 
-- **Iteration count** - How many cycles Ralph has run
+- **Iteration count** - How many cycles Ulf has run
 - **Elapsed time** - Total runtime
 - **Active hat** - Which persona is working (hat-based mode)
 - **Agent output** - What the AI is doing
@@ -191,7 +191,7 @@ Press `q` in the TUI to quit gracefully.
 ### Resume Interrupted Sessions
 
 ```bash
-ralph run --continue
+ulf run --continue
 ```
 
 ### Check Metrics
@@ -206,7 +206,7 @@ After completion, check `.agent/` for:
 
 ### Task Not Completing
 
-If Ralph runs forever:
+If Ulf runs forever:
 
 1. Check your prompt has clear completion criteria
 2. Ensure `LOOP_COMPLETE` can be reasonably output
@@ -216,7 +216,7 @@ If Ralph runs forever:
 
 ```bash
 # Explicitly specify backend
-ralph run --backend kiro
+ulf run --backend kiro
 ```
 
 ### Agent Errors

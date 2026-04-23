@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers deploying Ralph Orchestrator in production environments, including server setup, automation, monitoring, and scaling considerations.
+This guide covers deploying Ulf Orchestrator in production environments, including server setup, automation, monitoring, and scaling considerations.
 
 ## Deployment Options
 
@@ -19,7 +19,7 @@ This guide covers deploying Ralph Orchestrator in production environments, inclu
 #### Installation Script
 ```bash
 #!/bin/bash
-# ralph-install.sh
+# ulf-install.sh
 
 # Update system
 sudo apt-get update && sudo apt-get upgrade -y
@@ -32,17 +32,17 @@ npm install -g @anthropic-ai/claude-code
 npm install -g @google/gemini-cli
 # Install Q following its documentation
 
-# Clone Ralph
-git clone https://github.com/yourusername/ralph-orchestrator.git
-cd ralph-orchestrator
+# Clone Ulf
+git clone https://github.com/yourusername/ulf-orchestrator.git
+cd ulf-orchestrator
 
 # Set permissions
-chmod +x ralph_orchestrator.py ralph
+chmod +x ulf_orchestrator.py ulf
 
 # Create systemd service
-sudo cp ralph.service /etc/systemd/system/
+sudo cp ulf.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable ralph
+sudo systemctl enable ulf
 ```
 
 ### 2. Docker Deployment
@@ -61,22 +61,22 @@ RUN apt-get update && apt-get install -y \
 # Install AI CLI tools
 RUN npm install -g @anthropic-ai/claude-code @google/gemini-cli
 
-# Create ralph user
-RUN useradd -m -s /bin/bash ralph
-WORKDIR /home/ralph
+# Create ulf user
+RUN useradd -m -s /bin/bash ulf
+WORKDIR /home/ulf
 
 # Copy application
-COPY --chown=ralph:ralph . /home/ralph/ralph-orchestrator/
-WORKDIR /home/ralph/ralph-orchestrator
+COPY --chown=ulf:ulf . /home/ulf/ulf-orchestrator/
+WORKDIR /home/ulf/ulf-orchestrator
 
 # Set permissions
-RUN chmod +x ralph_orchestrator.py ralph
+RUN chmod +x ulf_orchestrator.py ulf
 
-# Switch to ralph user
-USER ralph
+# Switch to ulf user
+USER ulf
 
 # Default command
-CMD ["./ralph", "run"]
+CMD ["./ulf", "run"]
 ```
 
 #### Docker Compose
@@ -85,18 +85,18 @@ CMD ["./ralph", "run"]
 version: '3.8'
 
 services:
-  ralph:
+  ulf:
     build: .
-    container_name: ralph-orchestrator
+    container_name: ulf-orchestrator
     restart: unless-stopped
     volumes:
-      - ./workspace:/home/ralph/workspace
-      - ./prompts:/home/ralph/prompts
-      - ralph-agent:/home/ralph/ralph-orchestrator/.agent
+      - ./workspace:/home/ulf/workspace
+      - ./prompts:/home/ulf/prompts
+      - ulf-agent:/home/ulf/ulf-orchestrator/.agent
     environment:
-      - RALPH_MAX_ITERATIONS=100
-      - RALPH_AGENT=auto
-      - RALPH_CHECKPOINT_INTERVAL=5
+      - ULF_MAX_ITERATIONS=100
+      - ULF_AGENT=auto
+      - ULF_CHECKPOINT_INTERVAL=5
     logging:
       driver: "json-file"
       options:
@@ -104,7 +104,7 @@ services:
         max-file: "3"
 
 volumes:
-  ralph-agent:
+  ulf-agent:
 ```
 
 ### 3. Cloud Deployment
@@ -116,23 +116,23 @@ volumes:
 yum update -y
 yum install -y python3 git nodejs
 
-# Install Ralph
+# Install Ulf
 cd /opt
-git clone https://github.com/yourusername/ralph-orchestrator.git
-cd ralph-orchestrator
-chmod +x ralph_orchestrator.py ralph
+git clone https://github.com/yourusername/ulf-orchestrator.git
+cd ulf-orchestrator
+chmod +x ulf_orchestrator.py ulf
 
 # Configure as service
-cat > /etc/systemd/system/ralph.service << EOF
+cat > /etc/systemd/system/ulf.service << EOF
 [Unit]
-Description=Ralph Orchestrator
+Description=Ulf Orchestrator
 After=network.target
 
 [Service]
 Type=simple
 User=ec2-user
-WorkingDirectory=/opt/ralph-orchestrator
-ExecStart=/opt/ralph-orchestrator/ralph run
+WorkingDirectory=/opt/ulf-orchestrator
+ExecStart=/opt/ulf-orchestrator/ulf run
 Restart=on-failure
 RestartSec=10
 
@@ -140,30 +140,30 @@ RestartSec=10
 WantedBy=multi-user.target
 EOF
 
-systemctl enable ralph
-systemctl start ralph
+systemctl enable ulf
+systemctl start ulf
 ```
 
 #### Kubernetes Deployment
 ```yaml
-# ralph-deployment.yaml
+# ulf-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ralph-orchestrator
+  name: ulf-orchestrator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ralph
+      app: ulf
   template:
     metadata:
       labels:
-        app: ralph
+        app: ulf
     spec:
       containers:
-      - name: ralph
-        image: ralph-orchestrator:latest
+      - name: ulf
+        image: ulf-orchestrator:latest
         resources:
           requests:
             memory: "2Gi"
@@ -179,10 +179,10 @@ spec:
       volumes:
       - name: workspace
         persistentVolumeClaim:
-          claimName: ralph-workspace
+          claimName: ulf-workspace
       - name: config
         configMap:
-          name: ralph-config
+          name: ulf-config
 ```
 
 ## Configuration Management
@@ -190,16 +190,16 @@ spec:
 ### Environment Variables
 ```bash
 # /etc/environment or .env file
-RALPH_HOME=/opt/ralph-orchestrator
-RALPH_WORKSPACE=/var/ralph/workspace
-RALPH_LOG_LEVEL=INFO
-RALPH_MAX_ITERATIONS=100
-RALPH_MAX_RUNTIME=14400
-RALPH_AGENT=claude
-RALPH_CHECKPOINT_INTERVAL=5
-RALPH_RETRY_DELAY=2
-RALPH_GIT_ENABLED=true
-RALPH_ARCHIVE_ENABLED=true
+ULF_HOME=/opt/ulf-orchestrator
+ULF_WORKSPACE=/var/ulf/workspace
+ULF_LOG_LEVEL=INFO
+ULF_MAX_ITERATIONS=100
+ULF_MAX_RUNTIME=14400
+ULF_AGENT=claude
+ULF_CHECKPOINT_INTERVAL=5
+ULF_RETRY_DELAY=2
+ULF_GIT_ENABLED=true
+ULF_ARCHIVE_ENABLED=true
 ```
 
 ### Configuration File
@@ -234,24 +234,24 @@ RALPH_ARCHIVE_ENABLED=true
 
 ### Systemd Service
 ```ini
-# /etc/systemd/system/ralph.service
+# /etc/systemd/system/ulf.service
 [Unit]
-Description=Ralph Orchestrator Service
-Documentation=https://github.com/yourusername/ralph-orchestrator
+Description=Ulf Orchestrator Service
+Documentation=https://github.com/yourusername/ulf-orchestrator
 After=network.target
 
 [Service]
 Type=simple
-User=ralph
-Group=ralph
-WorkingDirectory=/opt/ralph-orchestrator
-ExecStart=/opt/ralph-orchestrator/ralph run --config production.json
+User=ulf
+Group=ulf
+WorkingDirectory=/opt/ulf-orchestrator
+ExecStart=/opt/ulf-orchestrator/ulf run --config production.json
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=30
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=ralph
+SyslogIdentifier=ulf
 Environment="PYTHONUNBUFFERED=1"
 
 # Security
@@ -259,7 +259,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/ralph-orchestrator /var/ralph
+ReadWritePaths=/opt/ulf-orchestrator /var/ulf
 
 [Install]
 WantedBy=multi-user.target
@@ -267,28 +267,28 @@ WantedBy=multi-user.target
 
 ### Cron Jobs
 ```bash
-# /etc/cron.d/ralph
+# /etc/cron.d/ulf
 # Clean old logs weekly
-0 2 * * 0 ralph /opt/ralph-orchestrator/scripts/cleanup.sh
+0 2 * * 0 ulf /opt/ulf-orchestrator/scripts/cleanup.sh
 
 # Backup state daily
-0 3 * * * ralph tar -czf /backup/ralph-$(date +\%Y\%m\%d).tar.gz /opt/ralph-orchestrator/.agent
+0 3 * * * ulf tar -czf /backup/ulf-$(date +\%Y\%m\%d).tar.gz /opt/ulf-orchestrator/.agent
 
 # Health check every 5 minutes
-*/5 * * * * ralph /opt/ralph-orchestrator/scripts/health-check.sh || systemctl restart ralph
+*/5 * * * * ulf /opt/ulf-orchestrator/scripts/health-check.sh || systemctl restart ulf
 ```
 
 ### CI/CD Pipeline
 ```yaml
 # .github/workflows/deploy.yml
-name: Deploy Ralph
+name: Deploy Ulf
 
 on:
   push:
     branches: [main]
     paths:
-      - 'ralph_orchestrator.py'
-      - 'ralph'
+      - 'ulf_orchestrator.py'
+      - 'ulf'
       - 'requirements.txt'
 
 jobs:
@@ -301,12 +301,12 @@ jobs:
         run: python test_comprehensive.py
       
       - name: Build Docker image
-        run: docker build -t ralph-orchestrator:${{ github.sha }} .
+        run: docker build -t ulf-orchestrator:${{ github.sha }} .
       
       - name: Push to registry
         run: |
-          docker tag ralph-orchestrator:${{ github.sha }} ${{ secrets.REGISTRY }}/ralph:latest
-          docker push ${{ secrets.REGISTRY }}/ralph:latest
+          docker tag ulf-orchestrator:${{ github.sha }} ${{ secrets.REGISTRY }}/ulf:latest
+          docker push ${{ secrets.REGISTRY }}/ulf:latest
       
       - name: Deploy to server
         uses: appleboy/ssh-action@v0.1.5
@@ -315,9 +315,9 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /opt/ralph-orchestrator
+            cd /opt/ulf-orchestrator
             git pull
-            systemctl restart ralph
+            systemctl restart ulf
 ```
 
 ## Monitoring in Production
@@ -330,13 +330,13 @@ import json
 import glob
 
 # Define metrics
-iteration_counter = Counter('ralph_iterations_total', 'Total iterations')
-error_counter = Counter('ralph_errors_total', 'Total errors')
-runtime_gauge = Gauge('ralph_runtime_seconds', 'Current runtime')
-iteration_duration = Histogram('ralph_iteration_duration_seconds', 'Iteration duration')
+iteration_counter = Counter('ulf_iterations_total', 'Total iterations')
+error_counter = Counter('ulf_errors_total', 'Total errors')
+runtime_gauge = Gauge('ulf_runtime_seconds', 'Current runtime')
+iteration_duration = Histogram('ulf_iteration_duration_seconds', 'Iteration duration')
 
 def collect_metrics():
-    """Collect metrics from Ralph state files"""
+    """Collect metrics from Ulf state files"""
     state_files = glob.glob('.agent/metrics/state_*.json')
     if state_files:
         latest = max(state_files)
@@ -391,7 +391,7 @@ def setup_production_logging():
     
     # File handler with rotation
     file_handler = logging.handlers.RotatingFileHandler(
-        '/var/log/ralph/ralph.log',
+        '/var/log/ulf/ulf.log',
         maxBytes=100*1024*1024,  # 100MB
         backupCount=10
     )
@@ -410,13 +410,13 @@ def setup_production_logging():
 ### User Isolation
 ```bash
 # Create dedicated user
-sudo useradd -r -s /bin/bash -m -d /opt/ralph ralph
-sudo chown -R ralph:ralph /opt/ralph-orchestrator
+sudo useradd -r -s /bin/bash -m -d /opt/ulf ulf
+sudo chown -R ulf:ulf /opt/ulf-orchestrator
 
 # Set restrictive permissions
-chmod 750 /opt/ralph-orchestrator
-chmod 640 /opt/ralph-orchestrator/*.py
-chmod 750 /opt/ralph-orchestrator/ralph
+chmod 750 /opt/ulf-orchestrator
+chmod 640 /opt/ulf-orchestrator/*.py
+chmod 750 /opt/ulf-orchestrator/ulf
 ```
 
 ### Network Security
@@ -438,10 +438,10 @@ ufw default deny outgoing
 pip install keyring
 
 # Store API keys securely
-python -c "import keyring; keyring.set_password('ralph', 'claude_api_key', 'your-key')"
+python -c "import keyring; keyring.set_password('ulf', 'claude_api_key', 'your-key')"
 
 # Or use environment variables from secure store
-source /etc/ralph/secrets.env
+source /etc/ulf/secrets.env
 ```
 
 ## Scaling Considerations
@@ -452,7 +452,7 @@ source /etc/ralph/secrets.env
 import redis
 import json
 
-class RalphJobQueue:
+class UlfJobQueue:
     def __init__(self):
         self.redis = redis.Redis(host='localhost', port=6379)
     
@@ -465,12 +465,12 @@ class RalphJobQueue:
             'status': 'pending',
             'created': time.time()
         }
-        self.redis.lpush('ralph:jobs', json.dumps(job))
+        self.redis.lpush('ulf:jobs', json.dumps(job))
         return job['id']
     
     def get_job(self):
         """Get next job from queue"""
-        job_data = self.redis.rpop('ralph:jobs')
+        job_data = self.redis.rpop('ulf:jobs')
         if job_data:
             return json.loads(job_data)
         return None
@@ -516,20 +516,20 @@ def set_production_limits():
 #!/bin/bash
 # backup.sh
 
-BACKUP_DIR="/backup/ralph"
+BACKUP_DIR="/backup/ulf"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Create backup
-tar -czf $BACKUP_DIR/ralph_$TIMESTAMP.tar.gz \
-    /opt/ralph-orchestrator/.agent \
-    /opt/ralph-orchestrator/*.json \
-    /opt/ralph-orchestrator/PROMPT.md
+tar -czf $BACKUP_DIR/ulf_$TIMESTAMP.tar.gz \
+    /opt/ulf-orchestrator/.agent \
+    /opt/ulf-orchestrator/*.json \
+    /opt/ulf-orchestrator/PROMPT.md
 
 # Keep only last 30 days
-find $BACKUP_DIR -name "ralph_*.tar.gz" -mtime +30 -delete
+find $BACKUP_DIR -name "ulf_*.tar.gz" -mtime +30 -delete
 
 # Sync to S3 (optional)
-aws s3 sync $BACKUP_DIR s3://my-bucket/ralph-backups/
+aws s3 sync $BACKUP_DIR s3://my-bucket/ulf-backups/
 ```
 
 ### Disaster Recovery
@@ -538,10 +538,10 @@ aws s3 sync $BACKUP_DIR s3://my-bucket/ralph-backups/
 # restore.sh
 
 BACKUP_FILE=$1
-RESTORE_DIR="/opt/ralph-orchestrator"
+RESTORE_DIR="/opt/ulf-orchestrator"
 
 # Stop service
-systemctl stop ralph
+systemctl stop ulf
 
 # Restore backup
 tar -xzf $BACKUP_FILE -C /
@@ -551,7 +551,7 @@ cd $RESTORE_DIR
 git reset --hard HEAD
 
 # Restart service
-systemctl start ralph
+systemctl start ulf
 ```
 
 ## Health Checks
@@ -569,8 +569,8 @@ app = Flask(__name__)
 def health():
     """Health check endpoint"""
     try:
-        # Check Ralph process
-        pid_file = '/var/run/ralph.pid'
+        # Check Ulf process
+        pid_file = '/var/run/ulf.pid'
         if os.path.exists(pid_file):
             with open(pid_file) as f:
                 pid = int(f.read())

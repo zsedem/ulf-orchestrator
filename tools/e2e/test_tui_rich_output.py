@@ -1,7 +1,7 @@
 """Benchmark harness for rich TUI output with controlled adapter fixtures.
 
 This test intentionally uses a deterministic mock Pi backend instead of a live model.
-It launches Ralph in tmux with TUI enabled, captures ANSI output, validates the
+It launches Ulf in tmux with TUI enabled, captures ANSI output, validates the
 capture with the LLM judge helper, and prints a machine-readable metric summary.
 """
 
@@ -26,7 +26,7 @@ from .helpers import IterationCapture, LLMJudge, TmuxSession
 
 
 RICH_OUTPUT_CRITERIA = """
-Analyze this ANSI-preserved Ralph TUI capture. Score each dimension 1-10.
+Analyze this ANSI-preserved Ulf TUI capture. Score each dimension 1-10.
 ANSI color escapes and box-drawing characters are normal and expected.
 
 Score each criterion on a 1-10 scale:
@@ -150,7 +150,7 @@ def find_repo_venv_python() -> Optional[Path]:
 
 
 def rerun_benchmark_in_repo_venv() -> bool:
-    if os.environ.get("RALPH_RICH_TUI_INNER") == "1":
+    if os.environ.get("ULF_RICH_TUI_INNER") == "1":
         return False
 
     venv_python = find_repo_venv_python()
@@ -158,7 +158,7 @@ def rerun_benchmark_in_repo_venv() -> bool:
         return False
 
     env = os.environ.copy()
-    env["RALPH_RICH_TUI_INNER"] = "1"
+    env["ULF_RICH_TUI_INNER"] = "1"
     command = [
         str(venv_python),
         "-m",
@@ -232,7 +232,7 @@ def build_mock_pi_fixture(tmp_root: Path) -> tuple[Path, Path, Path, Path]:
     )
     script_path.chmod(0o755)
 
-    config_path = tmp_root / "ralph.mock.yml"
+    config_path = tmp_root / "ulf.mock.yml"
     config_path.write_text(
         textwrap.dedent(
             f"""\
@@ -269,18 +269,18 @@ def build_mock_pi_fixture(tmp_root: Path) -> tuple[Path, Path, Path, Path]:
 
 async def run_tui_capture(
     *,
-    ralph_binary: Path,
+    ulf_binary: Path,
     workspace: Path,
     config_path: Path,
     evidence_dir: Path,
     mode: str,
     legacy_tui: bool,
 ) -> CaptureArtifact:
-    session = TmuxSession(name=f"ralph-rich-{uuid.uuid4().hex[:8]}", width=120, height=40)
+    session = TmuxSession(name=f"ulf-rich-{uuid.uuid4().hex[:8]}", width=120, height=40)
     prompt = "Summarize the README using the controlled adapter fixture."
 
     command_parts = [
-        shlex.quote(str(ralph_binary)),
+        shlex.quote(str(ulf_binary)),
         "run",
         "-c",
         shlex.quote(str(config_path)),
@@ -299,7 +299,7 @@ async def run_tui_capture(
 
         capture = IterationCapture(session=session)
         exited, content = await capture.wait_for_process_exit(timeout=20.0, check_interval=0.5)
-        assert exited, f"{mode}: Ralph did not exit in time"
+        assert exited, f"{mode}: Ulf did not exit in time"
         assert content.strip(), f"{mode}: final TUI capture was empty"
 
     artifact_path = evidence_dir / f"{mode}.ansi.txt"
@@ -310,7 +310,7 @@ async def run_tui_capture(
 @pytest.mark.e2e
 @pytest.mark.requires_tmux
 @pytest.mark.requires_claude
-def test_tui_rich_output_benchmark(ralph_binary: Path):
+def test_tui_rich_output_benchmark(ulf_binary: Path):
     """Benchmark rich TUI output for a deterministic controlled-adapter scenario."""
     if not TmuxSession.is_available():
         pytest.skip("tmux not available")
@@ -320,11 +320,11 @@ def test_tui_rich_output_benchmark(ralph_binary: Path):
         pytest.skip("Claude Agent SDK not available")
 
     async def run_benchmark() -> None:
-        with tempfile.TemporaryDirectory(prefix="ralph-rich-tui-") as tmp_dir:
+        with tempfile.TemporaryDirectory(prefix="ulf-rich-tui-") as tmp_dir:
             workspace, _script_path, config_path, evidence_dir = build_mock_pi_fixture(Path(tmp_dir))
 
             default_capture = await run_tui_capture(
-                ralph_binary=ralph_binary,
+                ulf_binary=ulf_binary,
                 workspace=workspace,
                 config_path=config_path,
                 evidence_dir=evidence_dir,
@@ -332,7 +332,7 @@ def test_tui_rich_output_benchmark(ralph_binary: Path):
                 legacy_tui=False,
             )
             legacy_capture = await run_tui_capture(
-                ralph_binary=ralph_binary,
+                ulf_binary=ulf_binary,
                 workspace=workspace,
                 config_path=config_path,
                 evidence_dir=evidence_dir,

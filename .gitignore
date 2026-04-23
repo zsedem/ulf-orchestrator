@@ -2,7 +2,7 @@
 /target/
 
 # Test configs with secrets
-ralph.test.yml
+ulf.test.yml
 
 # Python
 __pycache__/
@@ -47,10 +47,10 @@ node_modules/
 *.tsbuildinfo
 test-results/
 
-# Web dashboard ephemeral (nested .ralph/.agent in subprojects)
-backend/**/.ralph/
+# Web dashboard ephemeral (nested .ulf/.agent in subprojects)
+backend/**/.ulf/
 backend/**/.agent/
-frontend/**/.ralph/
+frontend/**/.ulf/
 frontend/**/.agent/
 frontend/**/dist/
 backend/**/dist/
@@ -60,13 +60,13 @@ backend/**/target/
 .agent/
 IMPLEMENTATION_PLAN.md
 
-# Ralph specific
+# Ulf specific
 .sop/
 .logs/
 prompts/
 prompts/archive/
-ralph_*.log
-ralph_metrics_*.json
+ulf_*.log
+ulf_metrics_*.json
 
 # Ephemeral logs and debug output
 *.log
@@ -101,20 +101,20 @@ site/
 PROMPT.md
 # But allow benchmark task prompts
 !bench/tasks/**/PROMPT.md
-.tmp-ralph-claude-code
+.tmp-ulf-claude-code
 
-# Ralph orchestrator state
-# All state now consolidated under .ralph/
-.ralph/
+# Ulf orchestrator state
+# All state now consolidated under .ulf/
+.ulf/
 
 # Track git-friendly content (negations must follow the ignore)
-!.ralph/specs/
-!.ralph/specs/**
-!.ralph/tasks/
-!.ralph/tasks/**
-!.ralph/agent/
-!.ralph/agent/memories.md
-!.ralph/agent/tasks.jsonl
+!.ulf/specs/
+!.ulf/specs/**
+!.ulf/tasks/
+!.ulf/tasks/**
+!.ulf/agent/
+!.ulf/agent/memories.md
+!.ulf/agent/tasks.jsonl
 
 # Codex local state
 .codex/

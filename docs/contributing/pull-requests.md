@@ -5,7 +5,7 @@
 
 ## Overview
 
-Guidelines for submitting pull requests to Ralph Orchestrator.
+Guidelines for submitting pull requests to Ulf Orchestrator.
 
 ## Before Submitting
 

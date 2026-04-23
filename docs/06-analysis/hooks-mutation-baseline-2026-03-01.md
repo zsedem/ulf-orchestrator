@@ -4,22 +4,22 @@
 
 Mutation scope (from `just mutants-baseline`):
 
-- `crates/ralph-core/src/hooks/executor.rs`
-- `crates/ralph-core/src/hooks/engine.rs`
-- `crates/ralph-core/src/preflight.rs`
-- `crates/ralph-cli/src/loop_runner.rs`
+- `crates/ulf-core/src/hooks/executor.rs`
+- `crates/ulf-core/src/hooks/engine.rs`
+- `crates/ulf-core/src/preflight.rs`
+- `crates/ulf-cli/src/loop_runner.rs`
 
 Executed in a nix shell that provides `cargo-mutants`:
 
 ```bash
 nix shell nixpkgs#rustc nixpkgs#cargo nixpkgs#cargo-mutants nixpkgs#gcc nixpkgs#pkg-config nixpkgs#openssl nixpkgs#clang -c sh -lc \
-  'cargo mutants --baseline skip --file crates/ralph-core/src/hooks/executor.rs --file crates/ralph-core/src/hooks/engine.rs --file crates/ralph-core/src/preflight.rs --file crates/ralph-cli/src/loop_runner.rs -o /tmp/hooks-mutants-baseline --no-times --colors never --caught --unviable'
+  'cargo mutants --baseline skip --file crates/ulf-core/src/hooks/executor.rs --file crates/ulf-core/src/hooks/engine.rs --file crates/ulf-core/src/preflight.rs --file crates/ulf-cli/src/loop_runner.rs -o /tmp/hooks-mutants-baseline --no-times --colors never --caught --unviable'
 ```
 
 Notes:
 
 - A first run without `--baseline skip` failed in the unmutated-tree baseline due to an `ExecutableFileBusy` flake in `hooks::executor` tests.
-- Baseline tests were re-run successfully (`cargo test -p ralph-core`) before the mutation run above.
+- Baseline tests were re-run successfully (`cargo test -p ulf-core`) before the mutation run above.
 
 ## Baseline result summary
 
@@ -40,14 +40,14 @@ Per-file hotspots (strict score denominator = `caught + missed + timeout`):
 
 | File | Caught | Missed | Timeout | Unviable | Strict score |
 |---|---:|---:|---:|---:|---:|
-| `crates/ralph-cli/src/loop_runner.rs` | 84 | 79 | 6 | 35 | 49.70% |
-| `crates/ralph-core/src/hooks/executor.rs` | 20 | 22 | 4 | 6 | 43.48% |
-| `crates/ralph-core/src/preflight.rs` | 71 | 42 | 0 | 24 | 62.83% |
-| `crates/ralph-core/src/hooks/engine.rs` | 6 | 0 | 0 | 5 | 100.00% |
+| `crates/ulf-cli/src/loop_runner.rs` | 84 | 79 | 6 | 35 | 49.70% |
+| `crates/ulf-core/src/hooks/executor.rs` | 20 | 22 | 4 | 6 | 43.48% |
+| `crates/ulf-core/src/preflight.rs` | 71 | 42 | 0 | 24 | 62.83% |
+| `crates/ulf-core/src/hooks/engine.rs` | 6 | 0 | 0 | 5 | 100.00% |
 
 ## Threshold calibration decision
 
-1. Keep global parser anchor unchanged at `QualityReport::MUTATION_THRESHOLD = 70.0` (`crates/ralph-core/src/event_parser.rs:162`).
+1. Keep global parser anchor unchanged at `QualityReport::MUTATION_THRESHOLD = 70.0` (`crates/ulf-core/src/event_parser.rs:162`).
 2. Calibrate the **hooks rollout mutation threshold** to **>=55% operational score** (`caught / (caught + missed)`) for the first gated rollout.
 3. Track timeouts as a separate failure class and tighten them in Step 12.4/12.5 with critical-path hard checks.
 4. Ratchet the hooks rollout threshold back toward `>=70%` after critical-path survivors/timeouts are eliminated.
@@ -56,13 +56,13 @@ Per-file hotspots (strict score denominator = `caught + missed + timeout`):
 
 Target critical ranges:
 
-- `crates/ralph-cli/src/loop_runner.rs:3467-3560` (suspend/resume transition)
-- `crates/ralph-cli/src/loop_runner.rs:3623-3635` (on_error disposition mapping)
+- `crates/ulf-cli/src/loop_runner.rs:3467-3560` (suspend/resume transition)
+- `crates/ulf-cli/src/loop_runner.rs:3623-3635` (on_error disposition mapping)
 
 Current baseline in those ranges:
 
 - No `MISS` survivors in either critical range (`3467-3560`, `3623-3635`).
-- `TIMEOUT crates/ralph-cli/src/loop_runner.rs:3475:45: replace == with != in wait_for_resume_if_suspended`
+- `TIMEOUT crates/ulf-cli/src/loop_runner.rs:3475:45: replace == with != in wait_for_resume_if_suspended`
 - `unviable` mutants in disposition mapping at `3624` and `3632` (non-survivor class).
 
 ## Step 12.4: Critical no-survivor invariant enforcement
@@ -72,8 +72,8 @@ Current baseline in those ranges:
 For Step 12.5 CI wiring, critical-path mutation enforcement is:
 
 - **Hard fail** if any `MISS` mutant appears in:
-  - `crates/ralph-cli/src/loop_runner.rs:3467-3560` (suspend/resume transition)
-  - `crates/ralph-cli/src/loop_runner.rs:3623-3635` (on_error disposition mapping)
+  - `crates/ulf-cli/src/loop_runner.rs:3467-3560` (suspend/resume transition)
+  - `crates/ulf-cli/src/loop_runner.rs:3623-3635` (on_error disposition mapping)
 - Treat `TIMEOUT` and `unviable` as separate classes that must be explained in gate output.
 
 ### Current invariant status
@@ -94,7 +94,7 @@ Evidence from baseline artifacts:
 
 ### TIMEOUT rationale for Step 12.5 gate
 
-The `TIMEOUT` at `3475` is expected in mutation mode: `wait_for_resume_if_suspended` loops until external `.ralph/resume-requested`, `.ralph/stop-requested`, or `.ralph/restart-requested` signals are observed. The mutant flips the resume check and can create a non-terminating wait. This is a **blocking-control-flow timeout**, not a silent `MISS` survivor.
+The `TIMEOUT` at `3475` is expected in mutation mode: `wait_for_resume_if_suspended` loops until external `.ulf/resume-requested`, `.ulf/stop-requested`, or `.ulf/restart-requested` signals are observed. The mutant flips the resume check and can create a non-terminating wait. This is a **blocking-control-flow timeout**, not a silent `MISS` survivor.
 
 Step 12.5 gate behavior should therefore be:
 
@@ -145,8 +145,8 @@ Required Step 12 verification commands were executed in nix shells:
 
 - `cargo fmt --all -- --check` → `EXIT:0`
 - `cargo clippy --all-targets --all-features -- -D warnings` → `EXIT:0`
-- `cargo test -p ralph-core -q` → `734 passed; 0 failed`
-- `cargo test -p ralph-cli -q` → first run failed in `web::tests::check_tsx_version_blocks_known_bad_release_with_v_prefix`; immediate rerun passed (`320 passed; 0 failed; 2 ignored`)
+- `cargo test -p ulf-core -q` → `734 passed; 0 failed`
+- `cargo test -p ulf-cli -q` → first run failed in `web::tests::check_tsx_version_blocks_known_bad_release_with_v_prefix`; immediate rerun passed (`320 passed; 0 failed; 2 ignored`)
 - `just mutants-hooks-gate` → `PASS`
 
 Mutation gate artifact summary (`.artifacts/hooks-mutation/hooks-mutation-summary.json`):

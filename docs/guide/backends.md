@@ -1,6 +1,6 @@
 # Backends
 
-Ralph supports multiple AI CLI backends. This guide covers setup and selection.
+Ulf supports multiple AI CLI backends. This guide covers setup and selection.
 
 ## Supported Backends
 
@@ -17,10 +17,10 @@ Ralph supports multiple AI CLI backends. This guide covers setup and selection.
 
 ## Auto-Detection
 
-Ralph automatically detects installed backends:
+Ulf automatically detects installed backends:
 
 ```bash
-ralph init
+ulf init
 # Auto-detects available backend
 ```
 
@@ -40,11 +40,11 @@ Override auto-detection:
 
 ```bash
 # Via CLI
-ralph init --backend kiro
-ralph run --backend gemini
+ulf init --backend kiro
+ulf run --backend gemini
 
 # Via config
-# ralph.yml
+# ulf.yml
 cli:
   backend: "claude"
 ```
@@ -55,7 +55,7 @@ Each backend below includes:
 - **Install** instructions
 - **Auth & env vars** (API keys or login)
 - **Hat YAML** configuration
-- **`ralph doctor`** validation notes
+- **`ulf doctor`** validation notes
 
 Backend names (used in YAML and CLI flags): `claude`, `kiro`, `gemini`, `codex`, `amp`, `copilot`, `opencode`, `pi`.
 
@@ -76,7 +76,7 @@ claude --version
 
 **Auth & env vars:**
 - `claude login` (preferred)
-- `ANTHROPIC_API_KEY` (used by `ralph doctor` auth hints)
+- `ANTHROPIC_API_KEY` (used by `ulf doctor` auth hints)
 
 **Hat YAML:**
 ```yaml
@@ -108,7 +108,7 @@ kiro-cli --version
 
 **Auth & env vars:**
 - Complete Kiro CLI authentication (AWS/SSO) per Kiro docs
-- `KIRO_API_KEY` (optional; used by `ralph doctor` auth hints)
+- `KIRO_API_KEY` (optional; used by `ulf doctor` auth hints)
 
 **Hat YAML:**
 ```yaml
@@ -146,7 +146,7 @@ gemini --version
 ```
 
 **Auth & env vars:**
-- `GEMINI_API_KEY` (used by `ralph doctor` auth hints)
+- `GEMINI_API_KEY` (used by `ulf doctor` auth hints)
 
 **Hat YAML:**
 ```yaml
@@ -175,7 +175,7 @@ codex --version
 ```
 
 **Auth & env vars:**
-- `OPENAI_API_KEY` or `CODEX_API_KEY` (either satisfies `ralph doctor` auth hints)
+- `OPENAI_API_KEY` or `CODEX_API_KEY` (either satisfies `ulf doctor` auth hints)
 
 **Hat YAML:**
 ```yaml
@@ -202,7 +202,7 @@ amp --version
 
 **Auth & env vars:**
 - Authenticate via `amp` CLI per Sourcegraph docs
-- No auth env vars are checked by `ralph doctor` for Amp
+- No auth env vars are checked by `ulf doctor` for Amp
 
 **Hat YAML:**
 ```yaml
@@ -231,7 +231,7 @@ copilot --version
 
 **Auth & env vars:**
 - Authenticate via Copilot CLI (`copilot auth login` or `gh auth login`)
-- No auth env vars are checked by `ralph doctor` for Copilot
+- No auth env vars are checked by `ulf doctor` for Copilot
 
 **Hat YAML:**
 ```yaml
@@ -386,14 +386,14 @@ export GEMINI_API_KEY=your-key
 export ANTHROPIC_API_KEY=your-key
 ```
 
-If the CLI is already authenticated but `ralph doctor` still warns, ensure the
+If the CLI is already authenticated but `ulf doctor` still warns, ensure the
 expected env vars above are set (doctor checks are hints, not hard failures).
 
 ### Wrong Backend Used
 
 ```bash
 # Force specific backend
-ralph run --backend claude
+ulf run --backend claude
 
 # Or set in config
 cli:
@@ -408,14 +408,14 @@ Some backends need interactive authentication on first run:
 # Run backend directly first
 claude -p "test"
 
-# Then use with Ralph
-ralph run
+# Then use with Ulf
+ulf run
 ```
 
 ## Best Practices
 
 1. **Pick one primary backend** — Consistency helps
-2. **Test backend directly** — Before using with Ralph
+2. **Test backend directly** — Before using with Ulf
 3. **Use per-hat overrides sparingly** — Can complicate debugging
 4. **Keep backends updated** — New features, bug fixes
 

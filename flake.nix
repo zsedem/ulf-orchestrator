@@ -1,5 +1,5 @@
 {
-  description = "Ralph Orchestrator - Development Environment";
+  description = "Ulf Orchestrator - Development Environment";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";

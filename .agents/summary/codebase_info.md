@@ -4,10 +4,10 @@
 
 | Field | Value |
 |-------|-------|
-| **Name** | Ralph Orchestrator |
+| **Name** | Ulf Orchestrator |
 | **Version** | 2.6.0 (Rust workspace) / 2.3.0 (npm workspace) |
 | **License** | MIT |
-| **Repository** | https://github.com/mikeyobrien/ralph-orchestrator |
+| **Repository** | https://github.com/mikeyobrien/ulf-orchestrator |
 | **Description** | Multi-agent orchestration framework for AI coding assistants |
 | **Rust Edition** | 2024 |
 | **Node.js** | ≥ 22.0.0 |
@@ -34,23 +34,23 @@
 ## Workspace Structure
 
 ```
-ralph-orchestrator/
+ulf-orchestrator/
 ├── Cargo.toml              # Rust workspace root
 ├── package.json            # npm workspace root
 ├── crates/                 # 9 Rust crates
-│   ├── ralph-proto/        # Protocol definitions and shared types
-│   ├── ralph-core/         # Orchestration logic, event loop, hats, memories, tasks
-│   ├── ralph-adapters/     # Backend integrations (Claude, Kiro, Gemini, etc.)
-│   ├── ralph-cli/          # CLI entry point and commands
-│   ├── ralph-tui/          # Terminal UI (ratatui-based)
-│   ├── ralph-telegram/     # Telegram bot for human-in-the-loop
-│   ├── ralph-api/          # REST/WebSocket API server (Axum)
-│   ├── ralph-e2e/          # End-to-end test framework
-│   └── ralph-bench/        # Benchmarking
+│   ├── ulf-proto/        # Protocol definitions and shared types
+│   ├── ulf-core/         # Orchestration logic, event loop, hats, memories, tasks
+│   ├── ulf-adapters/     # Backend integrations (Claude, Kiro, Gemini, etc.)
+│   ├── ulf-cli/          # CLI entry point and commands
+│   ├── ulf-tui/          # Terminal UI (ratatui-based)
+│   ├── ulf-telegram/     # Telegram bot for human-in-the-loop
+│   ├── ulf-api/          # REST/WebSocket API server (Axum)
+│   ├── ulf-e2e/          # End-to-end test framework
+│   └── ulf-bench/        # Benchmarking
 ├── backend/                # Node.js web server
-│   └── ralph-web-server/   # @ralph-web/server (Fastify + tRPC + SQLite)
+│   └── ulf-web-server/   # @ulf-web/server (Fastify + tRPC + SQLite)
 ├── frontend/               # React web dashboard
-│   └── ralph-web/          # @ralph-web/dashboard (React + Vite + TailwindCSS)
+│   └── ulf-web/          # @ulf-web/dashboard (React + Vite + TailwindCSS)
 ├── presets/                 # Hat collection YAML presets
 ├── docs/                   # MkDocs documentation site
 ├── cassettes/              # Replay fixtures for smoke/E2E tests
@@ -71,5 +71,5 @@ ralph-orchestrator/
 ## Distribution
 
 - **cargo-dist**: GitHub CI releases with shell and npm installers
-- **npm scope**: `@ralph-orchestrator/ralph`
+- **npm scope**: `@ulf-orchestrator/ulf`
 - **crates.io**: All 9 crates published

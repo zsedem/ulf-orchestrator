@@ -2,18 +2,18 @@
 
 ## Architecture Overview
 
-The event loop (`crates/ralph-core/src/event_loop/mod.rs`) drives hat activation. The loop runner (`crates/ralph-cli/src/loop_runner.rs`) manages backend execution.
+The event loop (`crates/ulf-core/src/event_loop/mod.rs`) drives hat activation. The loop runner (`crates/ulf-cli/src/loop_runner.rs`) manages backend execution.
 
 ## Event Loop
 
 ```rust
 pub struct EventLoop {
-    config: RalphConfig,
+    config: UlfConfig,
     registry: HatRegistry,
     bus: EventBus,
     state: LoopState,
     instruction_builder: InstructionBuilder,
-    ralph: HatlessRalph,
+    ulf: HatlessUlf,
     robot_guidance: Vec<String>,
     event_reader: EventReader,
     diagnostics: DiagnosticsCollector,
@@ -25,7 +25,7 @@ pub struct EventLoop {
 
 ## Main Loop Iteration Cycle
 
-**File:** `crates/ralph-cli/src/loop_runner.rs:789`
+**File:** `crates/ulf-cli/src/loop_runner.rs:789`
 
 ```
 loop {
@@ -53,11 +53,11 @@ loop {
 
 ## Hat Selection
 
-**File:** `crates/ralph-core/src/event_loop/mod.rs:658-679`
+**File:** `crates/ulf-core/src/event_loop/mod.rs:658-679`
 
 - Solo mode: returns any hat with pending events
-- Multi-hat mode: **always returns "ralph"** (Hatless Ralph architecture)
-- Ralph coordinates all hat personas
+- Multi-hat mode: **always returns "ulf"** (Hatless Ulf architecture)
+- Ulf coordinates all hat personas
 
 ## Backend Execution
 
@@ -77,7 +77,7 @@ Per-hat backend overrides supported via `hat.backend` config.
 
 ## Loop State
 
-**File:** `crates/ralph-core/src/event_loop/loop_state.rs`
+**File:** `crates/ulf-core/src/event_loop/loop_state.rs`
 
 ```rust
 pub struct LoopState {

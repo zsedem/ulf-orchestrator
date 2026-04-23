@@ -2,7 +2,7 @@
 
 {
   # https://devenv.sh/basics/
-  env.GREET = "Ralph Orchestrator dev environment";
+  env.GREET = "Ulf Orchestrator dev environment";
 
   # https://devenv.sh/packages/
   packages = with pkgs; [
@@ -32,7 +32,7 @@
 
   # https://devenv.sh/scripts/
   scripts.hello.exec = ''
-    echo "Welcome to Ralph Orchestrator development environment!"
+    echo "Welcome to Ulf Orchestrator development environment!"
     echo ""
     echo "Available commands:"
     echo "  just check     - Run all checks (fmt, lint, test)"
@@ -68,7 +68,7 @@
     set -euo pipefail
 
     cargo test
-    cargo test -p ralph-core smoke_runner
+    cargo test -p ulf-core smoke_runner
   '';
 
   # https://devenv.sh/pre-commit-hooks/
@@ -88,7 +88,7 @@
   '';
 
   enterShell = ''
-    echo "devenv shell ready for ralph-orchestrator verification"
+    echo "devenv shell ready for ulf-orchestrator verification"
     rustc --version
     cargo --version
     echo "Run: verify"

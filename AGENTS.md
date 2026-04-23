@@ -9,9 +9,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 cargo build
 cargo test
-cargo test -p ralph-core test_name           # Run single test
-cargo test -p ralph-core smoke_runner        # Smoke tests (replay-based)
-cargo run -p ralph-e2e -- --mock             # E2E tests (CI-safe)
+cargo test -p ulf-core test_name           # Run single test
+cargo test -p ulf-core smoke_runner        # Smoke tests (replay-based)
+cargo run -p ulf-e2e -- --mock             # E2E tests (CI-safe)
 ./scripts/setup-hooks.sh                     # Install pre-commit hooks (once)
 ```
 
@@ -20,7 +20,7 @@ cargo run -p ralph-e2e -- --mock             # E2E tests (CI-safe)
 ### Web Dashboard
 
 ```bash
-ralph web                                    # Launch both servers (backend:3000, frontend:5173)
+ulf web                                    # Launch both servers (backend:3000, frontend:5173)
 npm install                                  # Install all dependencies
 npm run dev                                  # Dev mode (both)
 npm run dev:server                           # Backend only
@@ -31,48 +31,48 @@ npm run test:server                          # Backend tests
 ## Architecture
 
 ```
-ralph-cli      → CLI entry point, commands (run, plan, task, loops, web)
-ralph-core     → Orchestration logic, event loop, hats, memories, tasks
-ralph-adapters → Backend integrations (Claude, Kiro, Gemini, Codex, Roo, etc.)
-ralph-telegram → Telegram bot for human-in-the-loop communication
-ralph-tui      → Terminal UI (ratatui-based)
-ralph-e2e      → End-to-end test framework
-ralph-proto    → Protocol definitions
-ralph-bench    → Benchmarking
+ulf-cli      → CLI entry point, commands (run, plan, task, loops, web)
+ulf-core     → Orchestration logic, event loop, hats, memories, tasks
+ulf-adapters → Backend integrations (Claude, Kiro, Gemini, Codex, Roo, etc.)
+ulf-telegram → Telegram bot for human-in-the-loop communication
+ulf-tui      → Terminal UI (ratatui-based)
+ulf-e2e      → End-to-end test framework
+ulf-proto    → Protocol definitions
+ulf-bench    → Benchmarking
 
-backend/       → Web server (@ralph-web/server) - Fastify + tRPC + SQLite
-frontend/      → Web dashboard (@ralph-web/dashboard) - React + Vite + TailwindCSS
+backend/       → Web server (@ulf-web/server) - Fastify + tRPC + SQLite
+frontend/      → Web dashboard (@ulf-web/dashboard) - React + Vite + TailwindCSS
 ```
 
 ### Key Files
 
 | File | Purpose |
 |------|---------|
-| `.ralph/agent/memories.md` | Persistent learning across sessions |
-| `.ralph/agent/tasks.jsonl` | Runtime work tracking |
-| `.ralph/loop.lock` | Contains PID + prompt of primary loop |
-| `.ralph/loops.json` | Registry of all tracked loops |
-| `.ralph/merge-queue.jsonl` | Event-sourced merge queue |
-| `.ralph/telegram-state.json` | Telegram bot state (chat ID, pending questions) |
+| `.ulf/agent/memories.md` | Persistent learning across sessions |
+| `.ulf/agent/tasks.jsonl` | Runtime work tracking |
+| `.ulf/loop.lock` | Contains PID + prompt of primary loop |
+| `.ulf/loops.json` | Registry of all tracked loops |
+| `.ulf/merge-queue.jsonl` | Event-sourced merge queue |
+| `.ulf/telegram-state.json` | Telegram bot state (chat ID, pending questions) |
 
 ### Code Locations
 
-- **Event loop**: `crates/ralph-core/src/event_loop/mod.rs`
-- **Hat system**: `crates/ralph-core/src/hatless_ralph.rs`
-- **Memory system**: `crates/ralph-core/src/memory.rs`, `memory_store.rs`
-- **Task system**: `crates/ralph-core/src/task.rs`, `task_store.rs`
-- **Lock coordination**: `crates/ralph-core/src/worktree.rs`
-- **Loop registry**: `crates/ralph-core/src/loop_registry.rs`
-- **Merge queue**: `crates/ralph-core/src/merge_queue.rs`
-- **CLI commands**: `crates/ralph-cli/src/loops.rs`, `task_cli.rs`
-- **Telegram integration**: `crates/ralph-telegram/src/` (bot, service, state, handler)
-- **RObot config**: `crates/ralph-core/src/config.rs` (`RobotConfig`, `TelegramBotConfig`)
-- **Wave system**: `crates/ralph-core/src/wave_tracker.rs`, `wave_detection.rs`, `wave_prompt.rs`
-- **Wave CLI**: `crates/ralph-cli/src/wave.rs`
-- **Web server**: `backend/ralph-web-server/src/` (tRPC routes in `api/`, runners in `runner/`)
-- **Web dashboard**: `frontend/ralph-web/src/` (React components in `components/`)
+- **Event loop**: `crates/ulf-core/src/event_loop/mod.rs`
+- **Hat system**: `crates/ulf-core/src/hatless_ulf.rs`
+- **Memory system**: `crates/ulf-core/src/memory.rs`, `memory_store.rs`
+- **Task system**: `crates/ulf-core/src/task.rs`, `task_store.rs`
+- **Lock coordination**: `crates/ulf-core/src/worktree.rs`
+- **Loop registry**: `crates/ulf-core/src/loop_registry.rs`
+- **Merge queue**: `crates/ulf-core/src/merge_queue.rs`
+- **CLI commands**: `crates/ulf-cli/src/loops.rs`, `task_cli.rs`
+- **Telegram integration**: `crates/ulf-telegram/src/` (bot, service, state, handler)
+- **RObot config**: `crates/ulf-core/src/config.rs` (`RobotConfig`, `TelegramBotConfig`)
+- **Wave system**: `crates/ulf-core/src/wave_tracker.rs`, `wave_detection.rs`, `wave_prompt.rs`
+- **Wave CLI**: `crates/ulf-cli/src/wave.rs`
+- **Web server**: `backend/ulf-web-server/src/` (tRPC routes in `api/`, runners in `runner/`)
+- **Web dashboard**: `frontend/ulf-web/src/` (React components in `components/`)
 
-## The Ralph Tenets
+## The Ulf Tenets
 
 1. **Fresh Context Is Reliability** — Each iteration clears context. Re-read specs, plan, code every cycle. Optimize for the "smart zone" (40-60% of ~176K usable tokens).
 
@@ -82,9 +82,9 @@ frontend/      → Web dashboard (@ralph-web/dashboard) - React + Vite + Tailwin
 
 4. **Disk Is State, Git Is Memory** — Memories and Tasks are the handoff mechanisms. No sophisticated coordination needed.
 
-5. **Steer With Signals, Not Scripts** — The codebase is the instruction manual. When Ralph fails a specific way, add a sign for next time.
+5. **Steer With Signals, Not Scripts** — The codebase is the instruction manual. When Ulf fails a specific way, add a sign for next time.
 
-6. **Let Ralph Ralph** — Sit *on* the loop, not *in* it. Tune like a guitar, don't conduct like an orchestra.
+6. **Let Ulf Ulf** — Sit *on* the loop, not *in* it. Tune like a guitar, don't conduct like an orchestra.
 
 ## Anti-Patterns
 
@@ -109,8 +109,8 @@ If a gate exits non-zero, its output is injected as `task.resume` backpressure a
 
 ## Specs & Tasks
 
-- Create specs in `.ralph/specs/` — do NOT implement without an approved spec first
-- Create code tasks in `.ralph/tasks/` using `.code-task.md` extension
+- Create specs in `.ulf/specs/` — do NOT implement without an approved spec first
+- Create code tasks in `.ulf/tasks/` using `.code-task.md` extension
 - Work step-by-step: spec → dogfood spec → implement → dogfood implementation → done
 
 ### Memories and Tasks (Default Mode)
@@ -132,13 +132,13 @@ tasks:
 
 ## Parallel Loops
 
-Ralph supports multiple orchestration loops in parallel using git worktrees.
+Ulf supports multiple orchestration loops in parallel using git worktrees.
 
 ```
-Primary Loop (holds .ralph/loop.lock)
+Primary Loop (holds .ulf/loop.lock)
 ├── Runs in main workspace
 ├── Processes merge queue on completion
-└── Spawns merge-ralph for queued loops
+└── Spawns merge-ulf for queued loops
 
 Worktree Loops (.worktrees/<loop-id>/)
 ├── Isolated filesystem via git worktree
@@ -153,13 +153,13 @@ Worktree Loops (.worktrees/<loop-id>/)
 cd $(mktemp -d) && git init && echo "<p>Hello</p>" > index.html && git add . && git commit -m "init"
 
 # Terminal 1: Primary loop
-ralph run -p "Add header before <p>" --max-iterations 5
+ulf run -p "Add header before <p>" --max-iterations 5
 
 # Terminal 2: Worktree loop
-ralph run -p "Add footer after </p>" --max-iterations 5
+ulf run -p "Add footer after </p>" --max-iterations 5
 
 # Monitor
-ralph loops
+ulf loops
 ```
 
 ## Agent Waves (Intra-Loop Parallelism)
@@ -193,7 +193,7 @@ hats:
 
 Agents dispatch waves via CLI:
 ```bash
-ralph wave emit review.file --payloads "src/main.rs" "src/lib.rs" "src/config.rs"
+ulf wave emit review.file --payloads "src/main.rs" "src/lib.rs" "src/config.rs"
 ```
 
 ### How It Works
@@ -207,11 +207,11 @@ ralph wave emit review.file --payloads "src/main.rs" "src/lib.rs" "src/config.rs
 
 ### Key Code Locations
 
-- **Wave CLI**: `crates/ralph-cli/src/wave.rs`
-- **Wave detection**: `crates/ralph-core/src/wave_detection.rs`
-- **Worker prompt**: `crates/ralph-core/src/wave_prompt.rs`
-- **Wave tracker**: `crates/ralph-core/src/wave_tracker.rs`
-- **Loop integration**: `crates/ralph-cli/src/loop_runner.rs` (`execute_wave`)
+- **Wave CLI**: `crates/ulf-cli/src/wave.rs`
+- **Wave detection**: `crates/ulf-core/src/wave_detection.rs`
+- **Worker prompt**: `crates/ulf-core/src/wave_prompt.rs`
+- **Wave tracker**: `crates/ulf-core/src/wave_tracker.rs`
+- **Loop integration**: `crates/ulf-cli/src/loop_runner.rs` (`execute_wave`)
 
 ### Presets
 
@@ -222,42 +222,42 @@ ralph wave emit review.file --payloads "src/main.rs" "src/lib.rs" "src/config.rs
 Smoke tests use recorded JSONL fixtures instead of live API calls:
 
 ```bash
-cargo test -p ralph-core smoke_runner        # All smoke tests
-cargo test -p ralph-core kiro                # Kiro-specific
+cargo test -p ulf-core smoke_runner        # All smoke tests
+cargo test -p ulf-core kiro                # Kiro-specific
 ```
 
-**Fixtures location:** `crates/ralph-core/tests/fixtures/`
+**Fixtures location:** `crates/ulf-core/tests/fixtures/`
 
 ### Recording New Fixtures
 
 ```bash
-cargo run --bin ralph -- run -c ralph.claude.yml --record-session session.jsonl -p "your prompt"
+cargo run --bin ulf -- run -c ulf.claude.yml --record-session session.jsonl -p "your prompt"
 ```
 
 ## E2E Testing
 
 ```bash
-cargo run -p ralph-e2e -- claude             # Live API tests
-cargo run -p ralph-e2e -- --mock             # CI-safe mock mode
-cargo run -p ralph-e2e -- --mock --filter connect  # Filter scenarios
-cargo run -p ralph-e2e -- --list             # List scenarios
+cargo run -p ulf-e2e -- claude             # Live API tests
+cargo run -p ulf-e2e -- --mock             # CI-safe mock mode
+cargo run -p ulf-e2e -- --mock --filter connect  # Filter scenarios
+cargo run -p ulf-e2e -- --list             # List scenarios
 ```
 
 Reports generated in `.e2e-tests/`.
 
 ## RObot (Human-in-the-Loop)
 
-Ralph supports human interaction during orchestration via Telegram. Agents can ask questions and humans can send proactive guidance.
+Ulf supports human interaction during orchestration via Telegram. Agents can ask questions and humans can send proactive guidance.
 
 ### Configuration
 
 ```yaml
-# ralph.yml
+# ulf.yml
 RObot:
   enabled: true
   timeout_seconds: 300    # How long to block waiting for a response
   telegram:
-    bot_token: "your-token"  # Or set RALPH_TELEGRAM_BOT_TOKEN env var
+    bot_token: "your-token"  # Or set ULF_TELEGRAM_BOT_TOKEN env var
 ```
 
 ### Event Types
@@ -267,35 +267,35 @@ RObot:
 | `human.interact` | Agent to Human | Agent asks a question; loop blocks until response or timeout |
 | `human.response` | Human to Agent | Reply to a `human.interact` question |
 | `human.guidance` | Human to Agent | Proactive guidance injected as `## ROBOT GUIDANCE` in prompt |
-| `ralph tools interact progress` | Agent to Human | Non-blocking progress notification via Telegram (no event, direct send) |
+| `ulf tools interact progress` | Agent to Human | Non-blocking progress notification via Telegram (no event, direct send) |
 
 ### How It Works
 
-- The Telegram bot starts only on the **primary loop** (the one holding `.ralph/loop.lock`)
+- The Telegram bot starts only on the **primary loop** (the one holding `.ulf/loop.lock`)
 - When an agent emits `human.interact`, the event loop sends the question via Telegram and **blocks**
 - Responses are published as `human.response` events on the bus
 - Proactive messages become `human.guidance` events, squashed into a numbered list in the prompt
 - Send failures retry with exponential backoff (3 attempts); if all fail, treated as timeout
 - Parallel loops route messages via reply-to, `@loop-id` prefix, or default to primary
 
-See `crates/ralph-telegram/README.md` for setup instructions.
+See `crates/ulf-telegram/README.md` for setup instructions.
 
 ## Diagnostics
 
-TUI mode always logs to `.ralph/diagnostics/logs/ralph-{timestamp}.log` (last 5 kept automatically).
+TUI mode always logs to `.ulf/diagnostics/logs/ulf-{timestamp}.log` (last 5 kept automatically).
 
 ```bash
-RALPH_DIAGNOSTICS=1 ralph run -p "your prompt"
+ULF_DIAGNOSTICS=1 ulf run -p "your prompt"
 ```
 
-Output in `.ralph/diagnostics/<timestamp>/`:
+Output in `.ulf/diagnostics/<timestamp>/`:
 - `agent-output.jsonl` — Agent text, tool calls, results
 - `orchestration.jsonl` — Hat selection, events, backpressure
 - `errors.jsonl` — Parse errors, validation failures
 
 ```bash
-jq 'select(.type == "tool_call")' .ralph/diagnostics/*/agent-output.jsonl
-ralph clean --diagnostics
+jq 'select(.type == "tool_call")' .ulf/diagnostics/*/agent-output.jsonl
+ulf clean --diagnostics
 ```
 
 ## IMPORTANT
@@ -307,5 +307,5 @@ ralph clean --diagnostics
 - Run python tests using a .venv
 - You MUST not commit ephemeral files
 - When I ask you to view something that means to use playwright/chrome tools to go view it.
-- When adding or changing `ralph tools` subcommands, update the appropriate file in `crates/ralph-core/data/`: `ralph-tools.md` (shared commands), `ralph-tools-tasks.md` (task commands), or `ralph-tools-memories.md` (memory commands). `.claude/skills/ralph-tools/SKILL.md` is a symlink to the base `ralph-tools.md`
-- Design docs and specs go in `.ralph/specs` and one-off code tasks and bug fixes go in `.ralph/tasks`
+- When adding or changing `ulf tools` subcommands, update the appropriate file in `crates/ulf-core/data/`: `ulf-tools.md` (shared commands), `ulf-tools-tasks.md` (task commands), or `ulf-tools-memories.md` (memory commands). `.claude/skills/ulf-tools/SKILL.md` is a symlink to the base `ulf-tools.md`
+- Design docs and specs go in `.ulf/specs` and one-off code tasks and bug fixes go in `.ulf/tasks`

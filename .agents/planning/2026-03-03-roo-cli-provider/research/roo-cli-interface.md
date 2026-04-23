@@ -89,12 +89,12 @@
 {"type":"assistant","id":1772593481508,"content":"Hello"}
 {"type":"assistant","id":1772593481508,"content":"! Welcome"}
 {"type":"assistant","id":1772593481508,"content":" to the"}
-{"type":"assistant","id":1772593481508,"content":" ralph"}
+{"type":"assistant","id":1772593481508,"content":" ulf"}
 {"type":"assistant","id":1772593481508,"content":"-orchest"}
 {"type":"assistant","id":1772593481508,"content":"rator project"}
 {"type":"assistant","id":1772593481508,"content":"."}
-{"type":"assistant","id":1772593481508,"content":"Hello! Welcome to the ralph-orchestrator project.","done":true}
-{"type":"result","id":1772593482878,"content":"Hello! I'm Roo, ready to help you with the ralph-orchestrator project.","done":true,"success":true}
+{"type":"assistant","id":1772593481508,"content":"Hello! Welcome to the ulf-orchestrator project.","done":true}
+{"type":"result","id":1772593482878,"content":"Hello! I'm Roo, ready to help you with the ulf-orchestrator project.","done":true,"success":true}
 ```
 
 ### Key Schema Fields (from `JsonEvent` type)
@@ -159,7 +159,7 @@ roo --provider bedrock --aws-profile roo-bedrock --aws-region us-east-1 \
     --print "Say hello in one sentence"
 ```
 
-## Mapping to Ralph Adapter Pattern
+## Mapping to Ulf Adapter Pattern
 
 For a **text-mode** (simplest) integration:
 ```

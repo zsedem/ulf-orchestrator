@@ -8,7 +8,7 @@
 # This is intentionally NOT a shipped builtin preset.
 #
 # Usage:
-#   ralph run --config docs/examples/presets/auto-pdd.yml --prompt "Design a CLI tool for ..."
+#   ulf run --config docs/examples/presets/auto-pdd.yml --prompt "Design a CLI tool for ..."
 
 event_loop:
   prompt_file: "PROMPT.md"

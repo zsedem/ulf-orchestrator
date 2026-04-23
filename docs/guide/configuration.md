@@ -1,34 +1,34 @@
 # Configuration
 
-Complete reference for Ralph's YAML configuration.
+Complete reference for Ulf's YAML configuration.
 
 ## Configuration File
 
-Ralph composes configuration from up to three layers:
+Ulf composes configuration from up to three layers:
 
-1. `~/.ralph/config.yml` when present — user-level defaults loaded automatically
-2. `ralph.yml` in the current workspace (or `$RALPH_CONFIG` / `-c <file>`) — project-level overrides
+1. `~/.ulf/config.yml` when present — user-level defaults loaded automatically
+2. `ulf.yml` in the current workspace (or `$ULF_CONFIG` / `-c <file>`) — project-level overrides
 3. `-c core.field=value` overrides — applied last
 
 Project config overlays on top of the user config via deep merge. Mappings are merged recursively and scalar values or arrays from the project config replace the user-level value.
 
 ```bash
-# Use the workspace config (and automatically merge ~/.ralph/config.yml if present)
-ralph run
+# Use the workspace config (and automatically merge ~/.ulf/config.yml if present)
+ulf run
 
 # Override the project config path
-RALPH_CONFIG=/path/to/config.yml ralph run ...
-ralph run -c custom-config.yml
+ULF_CONFIG=/path/to/config.yml ulf run ...
+ulf run -c custom-config.yml
 ```
 
-### User-level config (`~/.ralph/config.yml`)
+### User-level config (`~/.ulf/config.yml`)
 
-Use `~/.ralph/config.yml` for defaults you want everywhere, such as shared backend settings, global lifecycle hooks, or organization-wide guardrails.
+Use `~/.ulf/config.yml` for defaults you want everywhere, such as shared backend settings, global lifecycle hooks, or organization-wide guardrails.
 
-A common pattern is keeping notification hooks global while leaving project-specific automation in the repo-local `ralph.yml`:
+A common pattern is keeping notification hooks global while leaving project-specific automation in the repo-local `ulf.yml`:
 
 ```yaml
-# ~/.ralph/config.yml
+# ~/.ulf/config.yml
 hooks:
   enabled: true
   events:
@@ -43,7 +43,7 @@ hooks:
 ```
 
 ```yaml
-# ./ralph.yml
+# ./ulf.yml
 hooks:
   events:
     pre.loop.start:
@@ -52,17 +52,17 @@ hooks:
         on_error: block
 ```
 
-With those two files, Ralph loads both and deep-merges them before validation and execution.
+With those two files, Ulf loads both and deep-merges them before validation and execution.
 
 ## MCP Workspace Resolution
 
-`ralph mcp serve` resolves its workspace root in this order:
+`ulf mcp serve` resolves its workspace root in this order:
 
 1. `--workspace-root <path>`
-2. `RALPH_API_WORKSPACE_ROOT`
+2. `ULF_API_WORKSPACE_ROOT`
 3. current working directory
 
-Use one MCP server instance per workspace/repo. Ralph's current control-plane APIs are
+Use one MCP server instance per workspace/repo. Ulf's current control-plane APIs are
 workspace-scoped: `config.*`, `task.*`, `loop.*`, `planning.*`, and `collection.*` all
 read or persist state under a single root.
 
@@ -70,7 +70,7 @@ read or persist state under a single root.
 
 You can override specific core fields from the command line without creating a separate config file. This is useful for:
 
-- Running parallel Ralph instances with isolated scratchpads
+- Running parallel Ulf instances with isolated scratchpads
 - Testing with different specs directories
 - CI/CD pipelines with dynamic paths
 
@@ -86,22 +86,22 @@ You can override specific core fields from the command line without creating a s
 **Examples:**
 
 ```bash
-# Override scratchpad (loads ralph.yml + applies override)
-ralph run -c core.scratchpad=.ralph/agent/feature-auth/scratchpad.md
+# Override scratchpad (loads ulf.yml + applies override)
+ulf run -c core.scratchpad=.ulf/agent/feature-auth/scratchpad.md
 
 # Explicit config + override
-ralph run -c ralph.yml -c core.scratchpad=.ralph/agent/feature-auth/scratchpad.md
+ulf run -c ulf.yml -c core.scratchpad=.ulf/agent/feature-auth/scratchpad.md
 
 # Multiple overrides
-ralph run -c core.scratchpad=.runs/task-1/scratchpad.md -c core.specs_dir=./custom-specs/
+ulf run -c core.scratchpad=.runs/task-1/scratchpad.md -c core.specs_dir=./custom-specs/
 ```
 
-Overrides are applied after `ralph.yml` is loaded, so they take precedence. The scratchpad directory is auto-created if it doesn't exist.
+Overrides are applied after `ulf.yml` is loaded, so they take precedence. The scratchpad directory is auto-created if it doesn't exist.
 
 ## Combined Config Compatibility (`-c` + `-H`)
 
-Ralph supports both styles:
-- **Single-file combined config**: `-c ralph.yml` with core + hats in one file
+Ulf supports both styles:
+- **Single-file combined config**: `-c ulf.yml` with core + hats in one file
 - **Split config**: `-c <core>` plus `-H <hats source>`
 
 If both are used (`-c` contains hats and `-H` is provided), `-H` wins for workflow sections:
@@ -131,7 +131,7 @@ cli:
 core:
   scratchpad:                            # Scratchpad configuration
     enabled: true                        # Enable scratchpad (default: true)
-    path: .ralph/agent/scratchpad.md     # Scratchpad file path
+    path: .ulf/agent/scratchpad.md     # Scratchpad file path
   specs_dir: "./specs/"                  # Specifications directory
   guardrails:                            # Rules injected into every prompt
     - "Fresh context each iteration"
@@ -156,7 +156,7 @@ features:
   parallel: true                        # Allow worktree loops when primary lock is held
   auto_merge: false                     # Auto-merge worktree loops on completion
   preflight:
-    enabled: false                      # Run preflight automatically on `ralph run`
+    enabled: false                      # Run preflight automatically on `ulf run`
     strict: false                       # Treat warnings as failures
     skip: []                            # Skip checks by name (for example: ["hooks"])
 
@@ -187,7 +187,7 @@ hats:
     backend: "claude"                   # Backend override
     scratchpad:                         # Per-hat scratchpad override
       enabled: true                     #   Enable scratchpad (default: true)
-      path: .ralph/agent/my-hat.md      #   Scratchpad file path. Inherits from core if omitted.
+      path: .ulf/agent/my-hat.md      #   Scratchpad file path. Inherits from core if omitted.
     instructions: |
       Hat-specific instructions...
 ```
@@ -238,9 +238,9 @@ Core behaviors, scratchpad, and guardrails.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `scratchpad` | string or object | `{ enabled: true, path: ".ralph/agent/scratchpad.md" }` | Scratchpad configuration (see below) |
+| `scratchpad` | string or object | `{ enabled: true, path: ".ulf/agent/scratchpad.md" }` | Scratchpad configuration (see below) |
 | `scratchpad.enabled` | boolean | `true` | Enable the scratchpad |
-| `scratchpad.path` | string | `".ralph/agent/scratchpad.md"` | Scratchpad file path |
+| `scratchpad.path` | string | `".ulf/agent/scratchpad.md"` | Scratchpad file path |
 | `specs_dir` | string | `"./specs/"` | Specifications directory |
 | `guardrails` | list | `[]` | Rules injected into every prompt |
 
@@ -255,10 +255,10 @@ core:
 core:
   scratchpad:
     enabled: true
-    path: .ralph/agent/scratchpad.md
+    path: .ulf/agent/scratchpad.md
 ```
 
-> **Solo mode safety:** If scratchpad is disabled (`enabled: false`) but no hats are defined, Ralph force-enables it with a warning. Scratchpad is the only continuity mechanism in solo mode.
+> **Solo mode safety:** If scratchpad is disabled (`enabled: false`) but no hats are defined, Ulf force-enables it with a warning. Scratchpad is the only continuity mechanism in solo mode.
 
 ### memories
 
@@ -275,7 +275,7 @@ Persistent learning across sessions.
 
 **Injection modes:**
 - `auto` — Automatically inject at iteration start
-- `manual` — Agent must call `ralph tools memory prime`
+- `manual` — Agent must call `ulf tools memory prime`
 - `none` — No injection
 
 ### tasks
@@ -294,18 +294,18 @@ Optional runtime capabilities.
 |--------|------|---------|-------------|
 | `parallel` | boolean | `true` | Spawn worktree loops when another loop holds the primary lock |
 | `auto_merge` | boolean | `false` | Auto-merge completed worktree loops |
-| `preflight.enabled` | boolean | `false` | Run `ralph preflight` checks automatically before `ralph run` |
+| `preflight.enabled` | boolean | `false` | Run `ulf preflight` checks automatically before `ulf run` |
 | `preflight.strict` | boolean | `false` | Treat preflight warnings as failures |
 | `preflight.skip` | list | `[]` | Skip checks by name (for example `hooks`, `git`) |
 
-When `features.preflight.enabled: true`, `ralph run` uses the default preflight suite:
+When `features.preflight.enabled: true`, `ulf run` uses the default preflight suite:
 `config`, `hooks`, `backend`, `telegram`, `git`, `paths`, `tools`, and `specs`.
 
 ### hooks
 
 Lifecycle hooks for orchestrator phase-events (v1).
 
-Hooks can be defined in either the user-level `~/.ralph/config.yml` or the workspace `ralph.yml`. Ralph loads the user config first, then overlays the project config on top. That means hooks in the user config apply globally unless the project config replaces the same event mapping.
+Hooks can be defined in either the user-level `~/.ulf/config.yml` or the workspace `ulf.yml`. Ulf loads the user config first, then overlays the project config on top. That means hooks in the user config apply globally unless the project config replaces the same event mapping.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -348,9 +348,9 @@ Mutation scope in v1 is intentionally narrow:
 
 Minimal runnable example:
 
-- Config: [`examples/hooks/minimal/ralph.hooks.yml`](https://github.com/mikeyobrien/ralph-orchestrator/blob/main/examples/hooks/minimal/ralph.hooks.yml)
-- Scripts: [`examples/hooks/scripts/env-guard.sh`](https://github.com/mikeyobrien/ralph-orchestrator/blob/main/examples/hooks/scripts/env-guard.sh), [`examples/hooks/scripts/notify.sh`](https://github.com/mikeyobrien/ralph-orchestrator/blob/main/examples/hooks/scripts/notify.sh)
-- Validate: `ralph hooks validate -c examples/hooks/minimal/ralph.hooks.yml`
+- Config: [`examples/hooks/minimal/ulf.hooks.yml`](https://github.com/mikeyobrien/ulf-orchestrator/blob/main/examples/hooks/minimal/ulf.hooks.yml)
+- Scripts: [`examples/hooks/scripts/env-guard.sh`](https://github.com/mikeyobrien/ulf-orchestrator/blob/main/examples/hooks/scripts/env-guard.sh), [`examples/hooks/scripts/notify.sh`](https://github.com/mikeyobrien/ulf-orchestrator/blob/main/examples/hooks/scripts/notify.sh)
+- Validate: `ulf hooks validate -c examples/hooks/minimal/ulf.hooks.yml`
 
 ### hats
 
@@ -373,11 +373,11 @@ Each hat can override the global scratchpad with its own `scratchpad` field. Lik
 ```yaml
 hats:
   planner:
-    scratchpad: .ralph/agent/planner.md       # String shorthand
+    scratchpad: .ulf/agent/planner.md       # String shorthand
     # ...
   builder:
     scratchpad:
-      path: .ralph/agent/builder.md           # Structured with custom path
+      path: .ulf/agent/builder.md           # Structured with custom path
     # ...
   validator:
     scratchpad:
@@ -459,13 +459,13 @@ event_loop:
 core:
   scratchpad:
     enabled: true
-    path: .ralph/agent/scratchpad.md
+    path: .ulf/agent/scratchpad.md
 
 hats:
   planner:
     name: "Planner"
     scratchpad:
-      path: .ralph/agent/planner.md
+      path: .ulf/agent/planner.md
     triggers: ["task.start"]
     publishes: ["plan.ready"]
     instructions: |
@@ -508,8 +508,8 @@ core:
 
 | Variable | Description |
 |----------|-------------|
-| `RALPH_CONFIG` | Default config file path |
-| `RALPH_DIAGNOSTICS` | Enable diagnostics (`1`) |
+| `ULF_CONFIG` | Default config file path |
+| `ULF_DIAGNOSTICS` | Enable diagnostics (`1`) |
 | `NO_COLOR` | Disable color output |
 
 ## Next Steps

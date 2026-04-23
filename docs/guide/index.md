@@ -1,6 +1,6 @@
 # User Guide
 
-Practical guides for using Ralph Orchestrator effectively.
+Practical guides for using Ulf Orchestrator effectively.
 
 ## In This Section
 
@@ -18,23 +18,23 @@ Practical guides for using Ralph Orchestrator effectively.
 
 ### Getting Started
 
-- Initialize core config: `ralph init --backend claude`
-- List built-in hat collections: `ralph init --list-presets`
-- Run with hats: `ralph run -c ralph.yml -H builtin:code-assist`
+- Initialize core config: `ulf init --backend claude`
+- List built-in hat collections: `ulf init --list-presets`
+- Run with hats: `ulf run -c ulf.yml -H builtin:code-assist`
 
-### Running Ralph
+### Running Ulf
 
-- Basic run (core only): `ralph run -c ralph.yml`
-- With hats: `ralph run -c ralph.yml -H builtin:debug`
-- With inline prompt: `ralph run -c ralph.yml -H builtin:code-assist -p "Implement feature X"`
-- Headless mode: `ralph run --no-tui`
-- Resume session: `ralph run --continue`
+- Basic run (core only): `ulf run -c ulf.yml`
+- With hats: `ulf run -c ulf.yml -H builtin:debug`
+- With inline prompt: `ulf run -c ulf.yml -H builtin:code-assist -p "Implement feature X"`
+- Headless mode: `ulf run --no-tui`
+- Resume session: `ulf run --continue`
 
 ### Monitoring
 
-- View event history: `ralph events`
-- Check memories: `ralph tools memory list`
-- Check tasks: `ralph tools task list`
+- View event history: `ulf events`
+- Check memories: `ulf tools memory list`
+- Check tasks: `ulf tools task list`
 
 ## Choosing a Workflow
 
@@ -51,20 +51,20 @@ Practical guides for using Ralph Orchestrator effectively.
 ### Start a New Feature
 
 ```bash
-ralph init --backend claude
-ralph run -c ralph.yml -H builtin:code-assist -p "Add OAuth login"
+ulf init --backend claude
+ulf run -c ulf.yml -H builtin:code-assist -p "Add OAuth login"
 ```
 
 ### Debug an Issue
 
 ```bash
-ralph run -c ralph.yml -H builtin:debug -p "Investigate why user authentication fails on mobile"
+ulf run -c ulf.yml -H builtin:debug -p "Investigate why user authentication fails on mobile"
 ```
 
 ### Review Code
 
 ```bash
-ralph run -c ralph.yml -H builtin:review -p "Review the changes in src/api/"
+ulf run -c ulf.yml -H builtin:review -p "Review the changes in src/api/"
 ```
 
 ## Next Steps

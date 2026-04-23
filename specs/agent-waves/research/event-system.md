@@ -2,7 +2,7 @@
 
 ## Event Structure
 
-**File:** `crates/ralph-proto/src/event.rs`
+**File:** `crates/ulf-proto/src/event.rs`
 
 ```rust
 pub struct Event {
@@ -20,7 +20,7 @@ Key observations:
 
 ## Event Bus
 
-**File:** `crates/ralph-proto/src/event_bus.rs`
+**File:** `crates/ulf-proto/src/event_bus.rs`
 
 ```rust
 pub struct EventBus {
@@ -44,21 +44,21 @@ Key methods:
 
 ## Event Emission from Agents
 
-**File:** `crates/ralph-cli/src/main.rs:2249-2317`
+**File:** `crates/ulf-cli/src/main.rs:2249-2317`
 
-`ralph emit <topic> [--payload "text"] [--json] [--ts] [--file]`
+`ulf emit <topic> [--payload "text"] [--json] [--ts] [--file]`
 
 Flow:
 1. Builds JSON record with topic, payload, ts
-2. Reads `.ralph/current-events` marker to find active events file
-3. Falls back to `.ralph/events.jsonl`
+2. Reads `.ulf/current-events` marker to find active events file
+3. Falls back to `.ulf/events.jsonl`
 4. Appends single JSONL line atomically
 
 **No direct EventBus interaction** — events written to file, read by EventReader.
 
 ## Event Reading
 
-**File:** `crates/ralph-core/src/event_reader.rs`
+**File:** `crates/ulf-core/src/event_reader.rs`
 
 - Incremental reading (tracks file position)
 - Handles both string and object payloads
@@ -66,7 +66,7 @@ Flow:
 
 ## Event Logging
 
-**File:** `crates/ralph-core/src/event_logger.rs`
+**File:** `crates/ulf-core/src/event_logger.rs`
 
 ```rust
 pub struct EventRecord {
@@ -88,13 +88,13 @@ Adding wave/correlation metadata requires changes to:
 2. **EventRecord** — Add corresponding optional fields (skip_serializing_if)
 3. **EventBus** — Track active waves, buffer correlated events, completion conditions
 4. **EventReader** — Parse new fields from JSONL
-5. **`ralph emit`** — Add `--wave-id`, `--wave-index`, `--wave-total` flags
+5. **`ulf emit`** — Add `--wave-id`, `--wave-index`, `--wave-total` flags
 
 The architecture supports optional fields well — serde skip_serializing_if is used throughout.
 
 ## Topic Matching
 
-**File:** `crates/ralph-proto/src/topic.rs`
+**File:** `crates/ulf-proto/src/topic.rs`
 
 Supports glob-style patterns:
 - Exact: `impl.done`

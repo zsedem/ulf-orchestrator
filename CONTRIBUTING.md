@@ -1,6 +1,6 @@
-# Contributing to Ralph Orchestrator
+# Contributing to Ulf Orchestrator
 
-Thank you for considering contributing to Ralph Orchestrator! This document provides guidelines and information to help you contribute effectively.
+Thank you for considering contributing to Ulf Orchestrator! This document provides guidelines and information to help you contribute effectively.
 
 ## Code of Conduct
 
@@ -17,8 +17,8 @@ This project and everyone participating in it is governed by the [Code of Conduc
 
 ```bash
 # Clone the repository
-git clone https://github.com/mikeyobrien/ralph-orchestrator.git
-cd ralph-orchestrator
+git clone https://github.com/mikeyobrien/ulf-orchestrator.git
+cd ulf-orchestrator
 
 # Install git hooks for pre-commit and pre-push checks
 ./scripts/setup-hooks.sh
@@ -101,7 +101,7 @@ Read [AGENTS.md](AGENTS.md) for the full development philosophy. Key tenets:
 cargo test
 
 # Run smoke tests (replay-based, no API calls)
-cargo test -p ralph-core smoke_runner
+cargo test -p ulf-core smoke_runner
 
 # Run with coverage (local only — uses cargo-llvm-cov)
 just coverage          # Full HTML report → coverage/html/index.html
@@ -133,13 +133,13 @@ just coverage-badge-json
 ### Project Structure
 
 ```
-ralph-orchestrator/
+ulf-orchestrator/
 ├── crates/
-│   ├── ralph-cli/      # CLI application
-│   ├── ralph-core/     # Core library
-│   ├── ralph-tui/      # Terminal UI
-│   ├── ralph-adapters/ # Backend adapters
-│   └── ralph-e2e/      # End-to-end tests
+│   ├── ulf-cli/      # CLI application
+│   ├── ulf-core/     # Core library
+│   ├── ulf-tui/      # Terminal UI
+│   ├── ulf-adapters/ # Backend adapters
+│   └── ulf-e2e/      # End-to-end tests
 ├── presets/            # Pre-configured hat collections
 ├── specs/              # Design specifications
 └── tasks/              # Code task files
@@ -161,10 +161,10 @@ To create new test fixtures from live sessions:
 
 ```bash
 # Record a session
-cargo run --bin ralph -- run -c ralph.claude.yml --record-session session.jsonl -p "your prompt"
+cargo run --bin ulf -- run -c ulf.claude.yml --record-session session.jsonl -p "your prompt"
 ```
 
-See `crates/ralph-core/tests/fixtures/` for fixture format details.
+See `crates/ulf-core/tests/fixtures/` for fixture format details.
 
 ## Anti-Patterns to Avoid
 
@@ -178,7 +178,7 @@ See `crates/ralph-core/tests/fixtures/` for fixture format details.
 
 - **Issues**: Open an issue for bugs or feature requests
 - **Discussions**: Use GitHub Discussions for questions
-- **Documentation**: Check the [docs](https://mikeyobrien.github.io/ralph-orchestrator/)
+- **Documentation**: Check the [docs](https://mikeyobrien.github.io/ulf-orchestrator/)
 
 ## License
 

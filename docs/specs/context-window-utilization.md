@@ -2,7 +2,7 @@
 
 ## Problem
 
-Ralph currently shows `Duration | Est. cost | Turns` after each iteration but has zero visibility into context window usage. Token data arrives in Claude/Pi stream events but is **dropped** before reaching the display layer. Operators have no way to know how close an agent is to hitting the context window limit.
+Ulf currently shows `Duration | Est. cost | Turns` after each iteration but has zero visibility into context window usage. Token data arrives in Claude/Pi stream events but is **dropped** before reaching the display layer. Operators have no way to know how close an agent is to hitting the context window limit.
 
 ## Goal
 
@@ -16,7 +16,7 @@ Duration: 12345ms | Est. cost: $0.0526 | Turns: 3 | Context: 45% (90K/200K)
 ## What Changes
 
 ### 1. Extend `SessionResult` with token fields
-**File:** `crates/ralph-adapters/src/stream_handler.rs`
+**File:** `crates/ulf-adapters/src/stream_handler.rs`
 
 Add three optional fields:
 ```rust
@@ -34,7 +34,7 @@ pub struct SessionResult {
 All `Option` because text-only backends (Kiro, Gemini, Codex, etc.) can't report tokens.
 
 ### 2. Capture Claude token data (currently dropped)
-**File:** `crates/ralph-adapters/src/pty_executor.rs`
+**File:** `crates/ulf-adapters/src/pty_executor.rs`
 
 - Add a small private `TokenState { last_input_tokens: Option<u64>, total_output_tokens: u64 }` struct
 - In `dispatch_stream_event`, stop ignoring `usage` on `ClaudeStreamEvent::Assistant { message, usage }`
@@ -43,14 +43,14 @@ All `Option` because text-only backends (Kiro, Gemini, Codex, etc.) can't report
 - Add `input_tokens` and `output_tokens` to `PtyExecutionResult` so data flows out of the executor
 
 ### 3. Capture Pi token data (currently dropped)
-**File:** `crates/ralph-adapters/src/pi_stream.rs`
+**File:** `crates/ulf-adapters/src/pi_stream.rs`
 
 - Add `last_input_tokens: Option<u64>` and `total_output_tokens: u64` to `PiSessionState`
 - In `dispatch_pi_stream_event` → `TurnEnd`, capture `usage.input` and accumulate `usage.output`
 - Populate new `SessionResult` fields in the synthesized `on_complete` calls (pty_executor.rs)
 
 ### 4. Update iteration summary display
-**File:** `crates/ralph-adapters/src/stream_handler.rs`
+**File:** `crates/ulf-adapters/src/stream_handler.rs`
 
 Update `on_complete()` in all three active handlers to append context info:
 
@@ -68,7 +68,7 @@ Handlers to update:
 - `TuiStreamHandler::on_complete` (ratatui TUI)
 
 ### 5. Context window size: defaults + config override
-**File:** `crates/ralph-core/src/config.rs`
+**File:** `crates/ulf-core/src/config.rs`
 
 Add `context_window_tokens: Option<u64>` to `EventLoopConfig`.
 
@@ -83,7 +83,7 @@ event_loop:
 ```
 
 ### 6. Track per-hat token stats in LoopState
-**File:** `crates/ralph-core/src/event_loop/loop_state.rs`
+**File:** `crates/ulf-core/src/event_loop/loop_state.rs`
 
 Add to `LoopState`:
 - `last_input_tokens: Option<u64>` — latest iteration's context usage
@@ -93,7 +93,7 @@ Add to `LoopState`:
 Add `EventLoop::update_token_stats(hat_id, input_tokens)` method.
 
 ### 7. Add token data to events.jsonl
-**File:** `crates/ralph-core/src/event_logger.rs`
+**File:** `crates/ulf-core/src/event_logger.rs`
 
 Add optional fields to `EventRecord`:
 - `input_tokens: Option<u64>`
@@ -102,7 +102,7 @@ Add optional fields to `EventRecord`:
 Both `skip_serializing_if = "Option::is_none"` to keep existing events clean. Populated when logging iteration completion.
 
 ### 8. Wire through loop_runner
-**File:** `crates/ralph-cli/src/loop_runner.rs`
+**File:** `crates/ulf-cli/src/loop_runner.rs`
 
 - Extract `input_tokens`/`output_tokens` from `PtyExecutionResult` into `ExecutionOutcome`
 - After each iteration, call `event_loop.update_token_stats()`
@@ -146,6 +146,6 @@ The token data is already arriving — we just need to stop throwing it away and
 ```bash
 cargo test                               # All tests pass
 cargo build                              # Clean build
-# Manual: run ralph with claude backend, verify iteration summary shows Context: X%
-# Manual: ralph events shows token data in output
+# Manual: run ulf with claude backend, verify iteration summary shows Context: X%
+# Manual: ulf events shows token data in output
 ```

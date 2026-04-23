@@ -1,12 +1,12 @@
-# Ralph Orchestrator Documentation
+# Ulf Orchestrator Documentation
 # MkDocs configuration for GitHub Pages hosting
 
-site_name: Ralph Orchestrator
+site_name: Ulf Orchestrator
 site_description: Hat-based orchestration framework that keeps AI agents in a loop until the task is done
-site_author: Ralph Orchestrator Contributors
-site_url: https://mikeyobrien.github.io/ralph-orchestrator/
-repo_url: https://github.com/mikeyobrien/ralph-orchestrator
-repo_name: mikeyobrien/ralph-orchestrator
+site_author: Ulf Orchestrator Contributors
+site_url: https://mikeyobrien.github.io/ulf-orchestrator/
+repo_url: https://github.com/mikeyobrien/ulf-orchestrator
+repo_name: mikeyobrien/ulf-orchestrator
 edit_uri: edit/main/docs/
 
 # Theme Configuration
@@ -67,7 +67,7 @@ nav:
     - Your First Task: getting-started/first-task.md
   - Concepts:
     - concepts/index.md
-    - The Ralph Wiggum Technique: concepts/ralph-wiggum-technique.md
+    - The Ulf Wiggum Technique: concepts/ulf-wiggum-technique.md
     - The Six Tenets: concepts/tenets.md
     - Hats & Events: concepts/hats-and-events.md
     - Coordination Patterns: concepts/coordination-patterns.md
@@ -94,11 +94,11 @@ nav:
     - Agent Waves: advanced/agent-waves.md
   - API Reference:
     - api/index.md
-    - ralph-proto: api/ralph-proto.md
-    - ralph-core: api/ralph-core.md
-    - ralph-adapters: api/ralph-adapters.md
-    - ralph-tui: api/ralph-tui.md
-    - ralph-cli: api/ralph-cli.md
+    - ulf-proto: api/ulf-proto.md
+    - ulf-core: api/ulf-core.md
+    - ulf-adapters: api/ulf-adapters.md
+    - ulf-tui: api/ulf-tui.md
+    - ulf-cli: api/ulf-cli.md
   - Examples:
     - examples/index.md
     - Simple Task: examples/simple-task.md
@@ -126,17 +126,17 @@ plugins:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - llmstxt:
       markdown_description: >
-        Ralph Orchestrator is a hat-based orchestration framework for autonomous AI agents.
+        Ulf Orchestrator is a hat-based orchestration framework for autonomous AI agents.
         This llms.txt provides an LLM-friendly map of the most important project documentation.
       sections:
         Getting Started:
           - getting-started/index.md: Start here for first-time setup and orientation.
           - getting-started/installation.md: Installation methods and prerequisites.
-          - getting-started/quick-start.md: Fast path to running Ralph.
+          - getting-started/quick-start.md: Fast path to running Ulf.
           - getting-started/first-task.md: First end-to-end task walkthrough.
         Concepts:
           - concepts/index.md: Concept overview and mental model.
-          - concepts/ralph-wiggum-technique.md
+          - concepts/ulf-wiggum-technique.md
           - concepts/tenets.md
           - concepts/hats-and-events.md
           - concepts/coordination-patterns.md
@@ -163,11 +163,11 @@ plugins:
           - advanced/agent-waves.md
         API Reference:
           - api/index.md
-          - api/ralph-proto.md
-          - api/ralph-core.md
-          - api/ralph-adapters.md
-          - api/ralph-tui.md
-          - api/ralph-cli.md
+          - api/ulf-proto.md
+          - api/ulf-core.md
+          - api/ulf-adapters.md
+          - api/ulf-tui.md
+          - api/ulf-cli.md
         Examples:
           - examples/index.md
           - examples/simple-task.md
@@ -221,7 +221,7 @@ markdown_extensions:
   - pymdownx.magiclink:
       repo_url_shorthand: true
       user: mikeyobrien
-      repo: ralph-orchestrator
+      repo: ulf-orchestrator
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.superfences:
@@ -240,10 +240,10 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/mikeyobrien/ralph-orchestrator
+      link: https://github.com/mikeyobrien/ulf-orchestrator
   version:
     provider: mike
   generator: false
 
 # Copyright
-copyright: Copyright &copy; 2024-2026 Ralph Orchestrator Contributors
+copyright: Copyright &copy; 2024-2026 Ulf Orchestrator Contributors

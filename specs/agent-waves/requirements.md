@@ -4,19 +4,19 @@ Questions and answers from requirements clarification.
 
 ---
 
-## Q1: Hatless Ralph vs. Actual Concurrent Execution
+## Q1: Hatless Ulf vs. Actual Concurrent Execution
 
-Today Ralph uses a "Hatless Ralph" architecture — Ralph is always the single executor, and custom hats are just personas with filtered instructions. Waves fundamentally require **actual concurrent hat execution** (multiple backends running simultaneously).
+Today Ulf uses a "Hatless Ulf" architecture — Ulf is always the single executor, and custom hats are just personas with filtered instructions. Waves fundamentally require **actual concurrent hat execution** (multiple backends running simultaneously).
 
-How should waves interact with the Hatless Ralph model?
+How should waves interact with the Hatless Ulf model?
 
-**Option A — Break the model for waves:** When a wave is active, the loop runner spawns actual separate backend processes per wave instance. Ralph doesn't coordinate these — each instance runs independently with its hat's instructions. Ralph resumes coordination after the aggregator collects results.
+**Option A — Break the model for waves:** When a wave is active, the loop runner spawns actual separate backend processes per wave instance. Ulf doesn't coordinate these — each instance runs independently with its hat's instructions. Ulf resumes coordination after the aggregator collects results.
 
-**Option B — Ralph orchestrates wave dispatch:** Ralph remains the single executor. When Ralph decides to fan out, it emits wave events and the *loop runner* (not Ralph) spawns concurrent backends. Ralph is "paused" until the wave completes and the aggregator activates.
+**Option B — Ulf orchestrates wave dispatch:** Ulf remains the single executor. When Ulf decides to fan out, it emits wave events and the *loop runner* (not Ulf) spawns concurrent backends. Ulf is "paused" until the wave completes and the aggregator activates.
 
-**Option C — Waves are a loop-runner concern only:** Hats define topology and concurrency hints in config. The loop runner handles all parallelism transparently — Ralph doesn't even know waves exist. The loop runner detects when multiple events target the same hat (or correlated hats) and spawns backends in parallel.
+**Option C — Waves are a loop-runner concern only:** Hats define topology and concurrency hints in config. The loop runner handles all parallelism transparently — Ulf doesn't even know waves exist. The loop runner detects when multiple events target the same hat (or correlated hats) and spawns backends in parallel.
 
-**A1:** Option B — Ralph orchestrates wave dispatch, loop runner executes concurrently. Ralph decides WHAT to parallelize (adaptive, NL-driven), loop runner handles HOW (concurrent backends, correlation tracking, concurrency limits). Mirrors the existing `human.interact` blocking pattern. Preserves Hatless Ralph architecture.
+**A1:** Option B — Ulf orchestrates wave dispatch, loop runner executes concurrently. Ulf decides WHAT to parallelize (adaptive, NL-driven), loop runner handles HOW (concurrent backends, correlation tracking, concurrency limits). Mirrors the existing `human.interact` blocking pattern. Preserves Hatless Ulf architecture.
 
 Note: Waves are a general-purpose parallel execution primitive, not limited to code review. Use cases include deep research (parallel topic exploration), multi-perspective analysis, parallel builds, scatter-gather for any domain.
 
@@ -38,29 +38,29 @@ When the loop runner spawns concurrent backends for a wave, what does each insta
 
 ## Q3: Aggregator Activation Model
 
-When all wave results arrive, the aggregator hat activates. In the Hatless Ralph model, Ralph is always the executor. How does the aggregator work?
+When all wave results arrive, the aggregator hat activates. In the Hatless Ulf model, Ulf is always the executor. How does the aggregator work?
 
-**Option A — Ralph as aggregator:** Ralph activates wearing the aggregator hat's persona. All wave results are injected into Ralph's prompt as pending events. Ralph synthesizes per the aggregator's instructions. This is consistent with how every other hat works today.
+**Option A — Ulf as aggregator:** Ulf activates wearing the aggregator hat's persona. All wave results are injected into Ulf's prompt as pending events. Ulf synthesizes per the aggregator's instructions. This is consistent with how every other hat works today.
 
-**Option B — Dedicated aggregator backend:** The aggregator gets its own backend process (like wave workers do), separate from Ralph's main process. This could be useful if the aggregated results are very large and need a fresh context window.
+**Option B — Dedicated aggregator backend:** The aggregator gets its own backend process (like wave workers do), separate from Ulf's main process. This could be useful if the aggregated results are very large and need a fresh context window.
 
 **Option C — Implicit aggregation:** No explicit aggregator hat. Wave results are simply queued as pending events for whatever hat subscribes to the result topic. The existing event routing handles it — no special aggregation semantics needed.
 
-**A3:** Option A — Ralph as aggregator. The aggregator is just another hat with a `wait_for_all` gate. Ralph activates wearing the aggregator persona once all correlated wave results arrive. Consistent with existing hat model. Option B (dedicated backend) is a future escape hatch if context pressure becomes an issue with large wave result sets.
+**A3:** Option A — Ulf as aggregator. The aggregator is just another hat with a `wait_for_all` gate. Ulf activates wearing the aggregator persona once all correlated wave results arrive. Consistent with existing hat model. Option B (dedicated backend) is a future escape hatch if context pressure becomes an issue with large wave result sets.
 
 ---
 
 ## Q4: Wave Dispatch Mechanism
 
-The issue proposes CLI tools (`ralph wave start --expect N`, `ralph wave end`) for explicit dispatch, and @mikeyobrien asked about NL-driven dispatch where the model just decides. For v1, which dispatch mechanism should we build?
+The issue proposes CLI tools (`ulf wave start --expect N`, `ulf wave end`) for explicit dispatch, and @mikeyobrien asked about NL-driven dispatch where the model just decides. For v1, which dispatch mechanism should we build?
 
-**Option A — Explicit CLI tools only:** `ralph wave start/emit/end`. The dispatcher hat's instructions tell the agent exactly which tools to call. Deterministic, easy to test and debug.
+**Option A — Explicit CLI tools only:** `ulf wave start/emit/end`. The dispatcher hat's instructions tell the agent exactly which tools to call. Deterministic, easy to test and debug.
 
 **Option B — NL dispatch only:** The loop runner detects when a hat emits multiple events targeting wave-capable hats and automatically treats them as a wave. No new CLI tools — just emit events normally and the infrastructure handles concurrency.
 
 **Option C — Both, but NL is the primary path:** Build the CLI tools for explicit control, but also build the context injection (downstream hat descriptions in prompt) so the model can dispatch naturally. The loop runner infers wave semantics from correlated event emission. Preset authors choose the style via instructions.
 
-**A4:** Option C — Both. CLI tools (`ralph wave start/emit/end`) are the mechanism; context injection (downstream hat descriptions in prompt) enables adaptive NL dispatch. They're the same system — the preset author controls the spectrum via instructions. The HATS table already resolves publishes → downstream hats, so context injection is partially built.
+**A4:** Option C — Both. CLI tools (`ulf wave start/emit/end`) are the mechanism; context injection (downstream hat descriptions in prompt) enables adaptive NL dispatch. They're the same system — the preset author controls the spectrum via instructions. The HATS table already resolves publishes → downstream hats, so context injection is partially built.
 
 ---
 
@@ -125,7 +125,7 @@ The issue proposes `aggregate.timeout` as a fail-safe for hung workers. What sho
 Given all the decisions so far, what's the minimum viable scope for v1? What's explicitly deferred?
 
 **v1 includes:**
-- Wave CLI tools (`ralph wave start/emit/end`)
+- Wave CLI tools (`ulf wave start/emit/end`)
 - Event correlation metadata (`wave_id`, `wave_index`, `wave_total`)
 - Concurrent backend spawning in loop runner (respecting `concurrency` limit)
 - `aggregate.mode: wait_for_all` with timeout

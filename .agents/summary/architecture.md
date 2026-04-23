@@ -2,28 +2,28 @@
 
 ## System Overview
 
-Ralph Orchestrator is a multi-agent orchestration framework that coordinates AI coding assistants (Claude, Kiro, Gemini, Codex, Amp, Pi) through an event-driven loop. The system uses a "hat" metaphor where different agent personas (hats) handle different phases of work, coordinated via pub/sub messaging.
+Ulf Orchestrator is a multi-agent orchestration framework that coordinates AI coding assistants (Claude, Kiro, Gemini, Codex, Amp, Pi) through an event-driven loop. The system uses a "hat" metaphor where different agent personas (hats) handle different phases of work, coordinated via pub/sub messaging.
 
 ```mermaid
 graph TB
     subgraph "User Interfaces"
-        CLI["ralph-cli<br/>CLI Entry Point"]
-        TUI["ralph-tui<br/>Terminal UI"]
-        WEB["ralph-web<br/>React Dashboard"]
-        TEL["ralph-telegram<br/>Telegram Bot"]
+        CLI["ulf-cli<br/>CLI Entry Point"]
+        TUI["ulf-tui<br/>Terminal UI"]
+        WEB["ulf-web<br/>React Dashboard"]
+        TEL["ulf-telegram<br/>Telegram Bot"]
     end
 
     subgraph "API Layer"
-        API["ralph-api<br/>REST/WebSocket Server"]
+        API["ulf-api<br/>REST/WebSocket Server"]
     end
 
     subgraph "Core Engine"
-        CORE["ralph-core<br/>Orchestration Logic"]
-        PROTO["ralph-proto<br/>Protocol Types"]
+        CORE["ulf-core<br/>Orchestration Logic"]
+        PROTO["ulf-proto<br/>Protocol Types"]
     end
 
     subgraph "Agent Backends"
-        ADAPT["ralph-adapters<br/>Backend Integrations"]
+        ADAPT["ulf-adapters<br/>Backend Integrations"]
         CLAUDE["Claude CLI"]
         KIRO["Kiro CLI"]
         GEMINI["Gemini CLI"]
@@ -53,13 +53,13 @@ graph TB
 
 ```mermaid
 graph LR
-    CLI["ralph-cli"] --> CORE["ralph-core"]
-    CLI --> ADAPT["ralph-adapters"]
-    CLI --> TUI["ralph-tui"]
-    CLI --> TELE["ralph-telegram"]
-    CLI --> API["ralph-api"]
+    CLI["ulf-cli"] --> CORE["ulf-core"]
+    CLI --> ADAPT["ulf-adapters"]
+    CLI --> TUI["ulf-tui"]
+    CLI --> TELE["ulf-telegram"]
+    CLI --> API["ulf-api"]
 
-    CORE --> PROTO["ralph-proto"]
+    CORE --> PROTO["ulf-proto"]
     ADAPT --> PROTO
     TUI --> PROTO
     TUI --> CORE
@@ -69,10 +69,10 @@ graph LR
     API --> ADAPT
     API --> PROTO
 
-    E2E["ralph-e2e"] --> CORE
+    E2E["ulf-e2e"] --> CORE
     E2E --> ADAPT
     E2E --> PROTO
-    BENCH["ralph-bench"] --> CORE
+    BENCH["ulf-bench"] --> CORE
 ```
 
 ## Core Architectural Patterns
@@ -81,7 +81,7 @@ graph LR
 
 The central architectural pattern is a pub/sub event bus. Each iteration of the loop:
 1. An agent (wearing a "hat") executes a task
-2. The agent writes events to a JSONL file (`.ralph/events.jsonl`)
+2. The agent writes events to a JSONL file (`.ulf/events.jsonl`)
 3. The event loop parses events and publishes them on the `EventBus`
 4. The `EventBus` routes events to subscribed hats based on topic patterns
 5. The next hat with pending events is activated
@@ -120,9 +120,9 @@ The default topology is Planner → Builder:
 
 Custom hats are defined in YAML configuration and can create arbitrary workflows.
 
-### 3. Hatless Ralph (Coordinator)
+### 3. Hatless Ulf (Coordinator)
 
-Ralph is the constant coordinator — always present, cannot be configured away. Ralph:
+Ulf is the constant coordinator — always present, cannot be configured away. Ulf:
 - Handles `task.start` and `task.resume` (reserved events)
 - Performs gap analysis and planning
 - Delegates to custom hats via events
@@ -141,20 +141,20 @@ Routing priority: specific subscriptions > fallback wildcards.
 
 ### 5. Parallel Loops via Git Worktrees
 
-When the primary loop lock is held, Ralph spawns parallel loops in git worktrees:
-- Primary loop holds `.ralph/loop.lock`
+When the primary loop lock is held, Ulf spawns parallel loops in git worktrees:
+- Primary loop holds `.ulf/loop.lock`
 - Worktree loops run in `.worktrees/<loop-id>/`
 - Shared state: memories, specs, and code tasks are symlinked from main repo
-- Merge queue: completed worktree loops queue for merge via `.ralph/merge-queue.jsonl`
+- Merge queue: completed worktree loops queue for merge via `.ulf/merge-queue.jsonl`
 
 ### 6. Disk-as-State, Git-as-Memory
 
-Per the Ralph Tenets, persistent state lives on disk:
-- `.ralph/agent/memories.md` — persistent learning across sessions
-- `.ralph/agent/tasks.jsonl` — runtime work tracking
-- `.ralph/events.jsonl` — event history for the current loop
-- `.ralph/loop.lock` — PID + prompt of the primary loop
-- `.ralph/loops.json` — registry of all tracked loops
+Per the Ulf Tenets, persistent state lives on disk:
+- `.ulf/agent/memories.md` — persistent learning across sessions
+- `.ulf/agent/tasks.jsonl` — runtime work tracking
+- `.ulf/events.jsonl` — event history for the current loop
+- `.ulf/loop.lock` — PID + prompt of the primary loop
+- `.ulf/loops.json` — registry of all tracked loops
 
 ### 7. Communication Protocols
 
@@ -169,7 +169,7 @@ The system supports multiple communication modes:
 
 ### 8. Backpressure Over Prescription
 
-Rather than prescribing how agents should work, Ralph creates gates that reject bad work:
+Rather than prescribing how agents should work, Ulf creates gates that reject bad work:
 - Tests, typechecks, builds, lints (via lifecycle hooks)
 - LLM-as-judge with binary pass/fail for subjective criteria
 - Hooks can `warn`, `block`, or `suspend` the loop on failure
@@ -183,8 +183,8 @@ Each iteration clears agent context. The orchestrator:
 
 ## Configuration Architecture
 
-Ralph uses a split configuration model:
-1. **Core config** (`ralph.yml`): Backend, event loop settings, features
+Ulf uses a split configuration model:
+1. **Core config** (`ulf.yml`): Backend, event loop settings, features
 2. **Hat collections** (`-H builtin:feature` or YAML files): Hat definitions, event metadata
 3. **Presets** (`presets/`): Pre-built hat collection YAML files
 

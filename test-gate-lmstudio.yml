@@ -1,18 +1,18 @@
-# Ralph Orchestrator Configuration - Completion Gates E2E Test
+# Ulf Orchestrator Configuration - Completion Gates E2E Test
 # Target: LMStudio at 192.168.2.1:1234 via opencode
 #
 # Setup:
 # 1. Ensure opencode is installed and configured for LMStudio:
 #    opencode config set base_url http://192.168.2.1:1234/v1
 #    opencode config set api_key lm-studio
-# 2. Run: ralph run -c test-gate-lmstudio.yml -p "Create .ralph/completion-marker and remove any TODO from README.md"
+# 2. Run: ulf run -c test-gate-lmstudio.yml -p "Create .ulf/completion-marker and remove any TODO from README.md"
 
 event_loop:
   completion_promise: "LOOP_COMPLETE"
   max_iterations: 5
   completion_gates:
     - name: file-exists
-      command: ["test", "-f", ".ralph/completion-marker"]
+      command: ["test", "-f", ".ulf/completion-marker"]
     - name: no-todo
       command: ["sh", "-c", "! grep -q 'TODO' README.md"]
 

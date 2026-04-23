@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to ralph-orchestrator are documented here.
+All notable changes to ulf-orchestrator are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -8,14 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- Claude child sessions now default to `--setting-sources project,local`, preventing host user-level `~/.claude/settings.json` hooks, plugins, and MCP servers from leaking into Ralph orchestration runs. Users who want the old behavior can opt back in with `cli.args: ["--setting-sources", "user,project,local"]`.
+- Claude child sessions now default to `--setting-sources project,local`, preventing host user-level `~/.claude/settings.json` hooks, plugins, and MCP servers from leaking into Ulf orchestration runs. Users who want the old behavior can opt back in with `cli.args: ["--setting-sources", "user,project,local"]`.
 
 ## [2.9.2] - 2026-04-10
 
 ### Changed
 
 - Added a post-publish `cargo install` smoke test to the release workflow for faster detection of broken release artifacts.
-- Expanded `ralph doctor` auth environment variable detection for the Pi and Roo backends.
+- Expanded `ulf doctor` auth environment variable detection for the Pi and Roo backends.
 - Documented the Pi backend in the backend guide.
 
 ### Fixed
@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- `cargo install ralph-cli` fails due to cross-crate `#[path]` include of `tool_preview.rs` from `ralph-adapters` into `ralph-tui`. Moved `tool_preview` to a public module in `ralph-adapters` and added it as a proper dependency.
+- `cargo install ulf-cli` fails due to cross-crate `#[path]` include of `tool_preview.rs` from `ulf-adapters` into `ulf-tui`. Moved `tool_preview` to a public module in `ulf-adapters` and added it as a proper dependency.
 
 ## [2.9.0] - 2026-04-03
 
@@ -60,15 +60,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- `ralph mcp serve` for exposing Ralph as a workspace-scoped MCP server over stdio.
-- User-scoped default config discovery and support for per-user Ralph defaults.
+- `ulf mcp serve` for exposing Ulf as a workspace-scoped MCP server over stdio.
+- User-scoped default config discovery and support for per-user Ulf defaults.
 - TUI update availability notices in the header.
 - Human guidance can now trigger a clean restart request flow.
 
 ### Changed
 
 - Consolidated the core preset set around the maintained workflows and refreshed preset docs, examples, and evaluation tooling.
-- Refined PDD and code-task guidance to reduce Ralph-specific noise and improve handoff quality.
+- Refined PDD and code-task guidance to reduce Ulf-specific noise and improve handoff quality.
 
 ### Fixed
 
@@ -90,7 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Simplified internal code paths by removing redundant clones and deduplicating `now_ts`.
 - Replaced deprecated `Duration` method usage with `from_secs`.
-- `ralph plan` PDD SOP now syncs from the canonical `strands-agents/agent-sop` upstream source, with a small Ralph-specific loop handoff addendum.
+- `ulf plan` PDD SOP now syncs from the canonical `strands-agents/agent-sop` upstream source, with a small Ulf-specific loop handoff addendum.
 - Added embedded asset sync, check, and upstream refresh helpers for SOP maintenance.
 - Unified and modernized preset documentation.
 - Added `llms.txt` map generation and CI validation.
@@ -109,7 +109,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Rust RPC v1 control plane and web client migration to the new RPC contract.
-- Shell completions support for `ralph` CLI.
+- Shell completions support for `ulf` CLI.
 - `fresh-eyes` preset with enforced review passes.
 
 ### Fixed
@@ -129,13 +129,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- **Web Dashboard (Alpha)**: Full-featured web UI for monitoring and managing Ralph orchestration loops
+- **Web Dashboard (Alpha)**: Full-featured web UI for monitoring and managing Ulf orchestration loops
   - React + Vite + TailwindCSS frontend with Fastify + tRPC + SQLite backend
-  - `ralph web` command to launch both servers (backend:3000, frontend:5173)
+  - `ulf web` command to launch both servers (backend:3000, frontend:5173)
   - Preflight checks and auto-install for fresh installs
   - Port conflict detection, labeled output, and automatic browser open
   - Node 22 pinned for backend dev with tsc+node compilation
-- **Hats CLI**: Topology visualization and AI-powered diagrams (`ralph hats`)
+- **Hats CLI**: Topology visualization and AI-powered diagrams (`ulf hats`)
 - **Event Publishing Guide**: Skip topology display when a hat is already active
 - **Parallel config gate**: `features.parallel` config option to control worktree spawning
 - **Per-hat backend args**: `args` support in hat-level backend configurations
@@ -151,7 +151,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Loop merge command (`ralph loop merge`) and custom backend args
+- Loop merge command (`ulf loop merge`) and custom backend args
 - Config override support for core fields via CLI
 - Mock adapter for cost-free E2E testing
 - CI: Run mock E2E tests on every PR/push
@@ -202,20 +202,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - TUI: require stdin to be terminal for TUI enablement
 - MkDocs strict build failures
-- Confession-loop preset updated to use `ralph emit` command
+- Confession-loop preset updated to use `ulf emit` command
 
 ### Changed
 
 - Modularized codebase and fixed TUI mode
 
-[Unreleased]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.8.0...HEAD
-[2.8.0]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.7.0...v2.8.0
-[2.7.0]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.6.0...v2.7.0
-[2.6.0]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.5.1...v2.6.0
-[2.5.1]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.5.0...v2.5.1
-[2.3.0]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.2.5...v2.3.0
-[2.2.5]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.2.4...v2.2.5
-[2.2.4]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.2.3...v2.2.4
-[2.2.3]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.2.2...v2.2.3
-[2.2.2]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.2.1...v2.2.2
-[2.2.1]: https://github.com/mikeyobrien/ralph-orchestrator/compare/v2.2.0...v2.2.1
+[Unreleased]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.8.0...HEAD
+[2.8.0]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.7.0...v2.8.0
+[2.7.0]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.6.0...v2.7.0
+[2.6.0]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.5.1...v2.6.0
+[2.5.1]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.5.0...v2.5.1
+[2.3.0]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.2.5...v2.3.0
+[2.2.5]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.2.4...v2.2.5
+[2.2.4]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.2.3...v2.2.4
+[2.2.3]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.2.2...v2.2.3
+[2.2.2]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.2.1...v2.2.2
+[2.2.1]: https://github.com/mikeyobrien/ulf-orchestrator/compare/v2.2.0...v2.2.1

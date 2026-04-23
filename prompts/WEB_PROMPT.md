@@ -1,6 +1,6 @@
-# Task: Build Web UI for Ralph Orchestrator Monitoring ✅ COMPLETE
+# Task: Build Web UI for Ulf Orchestrator Monitoring ✅ COMPLETE
 
-Create a web-based monitoring interface for the Ralph Orchestrator system that provides real-time visibility into agent execution, task progress, and system health metrics.
+Create a web-based monitoring interface for the Ulf Orchestrator system that provides real-time visibility into agent execution, task progress, and system health metrics.
 
 **COMPLETION DATE**: September 8, 2024  
 **FINAL STATUS**: ✅ All requirements successfully implemented and tested  
@@ -32,14 +32,14 @@ Create a web-based monitoring interface for the Ralph Orchestrator system that p
 - ✅ Comprehensive authentication test script confirms fix works correctly
 
 **Files Modified**:
-- `src/ralph_orchestrator/web/static/index.html` - Simplified authentication flow to prevent race conditions
+- `src/ulf_orchestrator/web/static/index.html` - Simplified authentication flow to prevent race conditions
 
 **TASK STATUS**: ✅ COMPLETE - Authentication issue fully resolved, all functionality working correctly
 
 **FINAL VERIFICATION**: The authentication fix has been tested and confirmed working. Users can now:
 1. Visit the dashboard at http://localhost:8080
 2. Be properly redirected to login page if not authenticated  
-3. Login with credentials (admin / ralph-admin-2024)
+3. Login with credentials (admin / ulf-admin-2024)
 4. Access all dashboard features without 403 errors
 5. All API calls work correctly with proper authentication
 
@@ -61,20 +61,20 @@ To start using the web monitoring dashboard:
 
 ```bash
 # Run the web server on default port 8080
-uv run python -m ralph_orchestrator.web
+uv run python -m ulf_orchestrator.web
 
 # Or specify a custom port
-uv run python -m ralph_orchestrator.web --port 8000
+uv run python -m ulf_orchestrator.web --port 8000
 
 # With authentication enabled (default)
 # Username: admin
-# Password: ralph-admin-2024
+# Password: ulf-admin-2024
 ```
 
 Then open your browser to: http://localhost:8080
 
 ## Final Summary
-The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed through 11 iterations of development. The system provides a comprehensive, secure, and performant web interface for monitoring and controlling Ralph Orchestrator instances.
+The Ulf Orchestrator Web Monitoring Dashboard has been successfully completed through 11 iterations of development. The system provides a comprehensive, secure, and performant web interface for monitoring and controlling Ulf Orchestrator instances.
 
 ### Key Achievements:
 - **Full-stack implementation**: FastAPI backend with WebSocket support + responsive HTML/JS frontend
@@ -93,7 +93,7 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
 ## Progress
 
 ### Iteration 1: Basic Web Server Infrastructure ✅
-- Created `src/ralph_orchestrator/web/` module
+- Created `src/ulf_orchestrator/web/` module
 - Implemented FastAPI web server with WebSocket support
 - Added monitoring infrastructure for orchestrator instances
 - Created REST API endpoints:
@@ -111,7 +111,7 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
 - Added CORS middleware for cross-origin requests
 
 ### Iteration 2: Frontend HTML/JavaScript Dashboard ✅
-- Created comprehensive HTML dashboard at `src/ralph_orchestrator/web/static/index.html`
+- Created comprehensive HTML dashboard at `src/ulf_orchestrator/web/static/index.html`
 - Implemented real-time WebSocket connection with automatic reconnection
 - Added system metrics display with live updates (CPU, memory, processes)
 - Created orchestrator monitoring cards with status and controls
@@ -124,7 +124,7 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
 - Implemented connection status indicator with visual feedback
 
 ### Iteration 3: Task Queue Visualization ✅
-- Extended RalphOrchestrator class to track task queue state
+- Extended UlfOrchestrator class to track task queue state
   - Added task_queue, current_task, and completed_tasks attributes
   - Implemented _extract_tasks_from_prompt() method to parse tasks from prompt
   - Added _update_current_task() method to manage task state transitions
@@ -144,17 +144,17 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
   - TODO format: `TODO: description`
 
 ### Iteration 4: Authentication Implementation ✅
-- Created authentication module at `src/ralph_orchestrator/web/auth.py`
+- Created authentication module at `src/ulf_orchestrator/web/auth.py`
   - Implemented JWT-based authentication with bcrypt password hashing
   - Added AuthManager class for user management
-  - Support for environment variable configuration (RALPH_WEB_SECRET_KEY, RALPH_WEB_USERNAME, RALPH_WEB_PASSWORD)
-  - Default credentials: admin / ralph-admin-2024 (configurable)
+  - Support for environment variable configuration (ULF_WEB_SECRET_KEY, ULF_WEB_USERNAME, ULF_WEB_PASSWORD)
+  - Default credentials: admin / ulf-admin-2024 (configurable)
 - Added authentication endpoints to the web server:
   - `/api/auth/login` - Login with username/password, returns JWT token
   - `/api/auth/verify` - Verify current token validity
   - `/api/auth/change-password` - Change user password
   - `/api/admin/users` - Admin endpoint for user management
-- Created login page at `src/ralph_orchestrator/web/static/login.html`
+- Created login page at `src/ulf_orchestrator/web/static/login.html`
   - Clean, responsive login interface
   - Automatic token validation on page load
   - Error handling and user feedback
@@ -177,7 +177,7 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
   - `GET /api/orchestrators/{id}/prompt` - Retrieve current prompt content
   - `POST /api/orchestrators/{id}/prompt` - Update prompt content with automatic backup
 - Extended orchestrator with prompt reload capability:
-  - Added `_reload_prompt()` method to RalphOrchestrator class
+  - Added `_reload_prompt()` method to UlfOrchestrator class
   - Prompts are automatically reloaded from disk on each iteration
   - Context manager refreshes cache when prompt is updated
 - Created prompt editor modal in the dashboard:
@@ -233,7 +233,7 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
 - All 58 web module tests now pass successfully
 
 ### Iteration 10: API Rate Limiting Implementation ✅
-- Created rate limiting module at `src/ralph_orchestrator/web/rate_limit.py`
+- Created rate limiting module at `src/ulf_orchestrator/web/rate_limit.py`
   - Implemented token bucket algorithm for flexible rate limiting
   - Different rate limits for different endpoint categories (auth, api, websocket, static, admin)
   - Automatic IP blocking after multiple consecutive violations
@@ -281,13 +281,13 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
   - Prompt editing capabilities
   - Production deployment with nginx/systemd
   - API rate limiting implementation
-- Created `src/ralph_orchestrator/web/database.py` module
+- Created `src/ulf_orchestrator/web/database.py` module
   - Implemented DatabaseManager class with thread-safe SQLite operations
   - Three main tables: orchestrator_runs, iteration_history, task_history
   - Proper foreign key relationships and indices for performance
   - Methods for creating, updating, and querying runs, iterations, and tasks
 - Database features:
-  - Automatic database initialization in ~/.ralph/history.db
+  - Automatic database initialization in ~/.ulf/history.db
   - Thread-safe connection management with context managers
   - JSON storage for metadata and metrics
   - Statistics generation (success rate, average iterations, etc.)
@@ -331,15 +331,15 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
   - Verifies real-time chart updates
 
 ### Final Implementation Fix: Module Entry Point ✅
-- Created `src/ralph_orchestrator/web/__main__.py` to enable module execution
+- Created `src/ulf_orchestrator/web/__main__.py` to enable module execution
   - Added command-line argument parsing for port, host, auth, and logging
-  - Enables running with `python -m ralph_orchestrator.web`
+  - Enables running with `python -m ulf_orchestrator.web`
   - Provides proper help text and configuration options
   - Includes authentication warning for production use
 
 ## Final Verification (September 8, 2024) ✅
 - **All 73 tests passing**: Confirmed 100% pass rate with `uv run pytest tests/test_web*.py`
-- **Module entry point working**: `python -m ralph_orchestrator.web --help` executes correctly
+- **Module entry point working**: `python -m ulf_orchestrator.web --help` executes correctly
 - **Task fully complete**: All requirements met, all success criteria achieved
 - **Production ready**: Complete with authentication, rate limiting, persistence, and documentation
 
@@ -354,7 +354,7 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
 
 ## Latest Verification (Current Date) ✅
 - **Tests verified passing**: All 73 tests pass successfully (verified with `uv run pytest tests/test_web*.py -v`)
-- **Module entry point confirmed**: Command `uv run python -m ralph_orchestrator.web --help` works as documented
+- **Module entry point confirmed**: Command `uv run python -m ulf_orchestrator.web --help` works as documented
 - **Task remains complete**: No additional work required
 
 ## Requirements
@@ -390,12 +390,12 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
 ## Final Verification Summary
 
 ### Code Structure ✅
-- **Backend**: `src/ralph_orchestrator/web/` module fully implemented
+- **Backend**: `src/ulf_orchestrator/web/` module fully implemented
   - `server.py` - FastAPI server with WebSocket support
   - `auth.py` - JWT authentication system
   - `database.py` - SQLite persistence layer
   - `rate_limit.py` - Token bucket rate limiting
-- **Frontend**: `src/ralph_orchestrator/web/static/`
+- **Frontend**: `src/ulf_orchestrator/web/static/`
   - `index.html` - Complete dashboard with Chart.js visualizations
   - `login.html` - Authentication interface
 
@@ -414,13 +414,13 @@ The Ralph Orchestrator Web Monitoring Dashboard has been successfully completed 
 
 Fix this issues 
 
-✦ ❯ uv run python -m ralph_orchestrator.web
+✦ ❯ uv run python -m ulf_orchestrator.web
 
-2025-09-08 17:14:57,646 - ralph.orchestrator - INFO - Logging initialized - Level: INFO, Console: True, File: None, Dir: .logs
-2025-09-08 17:14:57,863 - ralph_orchestrator.web.database - INFO - Database initialized at /home/mobrienv/.ralph/history.db
-2025-09-08 17:14:57,868 - __main__ - INFO - Starting Ralph Orchestrator Web Monitor on 0.0.0.0:8080
-2025-09-08 17:14:57,868 - __main__ - INFO - Authentication enabled - default credentials: admin / ralph-admin-2024
-2025-09-08 17:14:57,868 - ralph_orchestrator.web.server - INFO - Starting web monitor on 0.0.0.0:8080
+2025-09-08 17:14:57,646 - ulf.orchestrator - INFO - Logging initialized - Level: INFO, Console: True, File: None, Dir: .logs
+2025-09-08 17:14:57,863 - ulf_orchestrator.web.database - INFO - Database initialized at /home/mobrienv/.ulf/history.db
+2025-09-08 17:14:57,868 - __main__ - INFO - Starting Ulf Orchestrator Web Monitor on 0.0.0.0:8080
+2025-09-08 17:14:57,868 - __main__ - INFO - Authentication enabled - default credentials: admin / ulf-admin-2024
+2025-09-08 17:14:57,868 - ulf_orchestrator.web.server - INFO - Starting web monitor on 0.0.0.0:8080
 INFO:     Started server process [331156]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.

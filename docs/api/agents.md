@@ -2,20 +2,20 @@
 
 ## Overview
 
-Ralph treats agents as CLI backends. Backend selection lives in `ralph_core::HatBackend` and
-`ralph_core::CliConfig`, while execution is handled by `ralph-adapters`.
+Ulf treats agents as CLI backends. Backend selection lives in `ulf_core::HatBackend` and
+`ulf_core::CliConfig`, while execution is handled by `ulf-adapters`.
 
 Key types:
-- `ralph_adapters::detect_backend_default`, `detect_backend`, `is_backend_available`
-- `ralph_adapters::CliBackend`, `CliExecutor`
-- `ralph_core::HatBackend`, `CliConfig`
+- `ulf_adapters::detect_backend_default`, `detect_backend`, `is_backend_available`
+- `ulf_adapters::CliBackend`, `CliExecutor`
+- `ulf_core::HatBackend`, `CliConfig`
 
 ## Backend Detection
 
 Detect an available backend in PATH (Claude, Kiro, Gemini, Codex, Amp, Copilot, OpenCode):
 
 ```rust
-use ralph_adapters::{detect_backend_default, is_backend_available};
+use ulf_adapters::{detect_backend_default, is_backend_available};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if is_backend_available("claude") {
@@ -31,12 +31,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Build a Backend from Hat Configuration
 
-`HatBackend` is the per-hat backend definition used in `ralph.yml`. You can convert it into
+`HatBackend` is the per-hat backend definition used in `ulf.yml`. You can convert it into
 a `CliBackend` for execution:
 
 ```rust
-use ralph_adapters::{CliBackend, CliExecutor};
-use ralph_core::HatBackend;
+use ulf_adapters::{CliBackend, CliExecutor};
+use ulf_core::HatBackend;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -62,8 +62,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 Use `CliConfig` when you want to start from the top-level config:
 
 ```rust
-use ralph_adapters::CliBackend;
-use ralph_core::CliConfig;
+use ulf_adapters::CliBackend;
+use ulf_core::CliConfig;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = CliConfig {
@@ -87,7 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 and timeout state.
 
 ```rust
-use ralph_adapters::{CliBackend, CliExecutor};
+use ulf_adapters::{CliBackend, CliExecutor};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -2,11 +2,11 @@
 
 ## Primary Orchestration Loop
 
-The main workflow executed by `ralph run`:
+The main workflow executed by `ulf run`:
 
 ```mermaid
 flowchart TD
-    START([ralph run]) --> LOAD[Load Configuration]
+    START([ulf run]) --> LOAD[Load Configuration]
     LOAD --> NORM[Normalize v1→v2 Config]
     NORM --> VALIDATE[Validate Config]
     VALIDATE --> DETECT{Backend = auto?}
@@ -51,7 +51,7 @@ Detail of a single iteration within the loop:
 ```mermaid
 sequenceDiagram
     participant Loop as Event Loop
-    participant HR as HatlessRalph
+    participant HR as HatlessUlf
     participant HE as Hook Engine
     participant Agent as AI Backend
     participant EB as EventBus
@@ -90,7 +90,7 @@ sequenceDiagram
         Loop->>Loop: Select next hat
         Note over Loop: Iteration N+1
     else No events, no completion
-        Loop->>Loop: Continue with Ralph (fallback)
+        Loop->>Loop: Continue with Ulf (fallback)
     end
 ```
 
@@ -153,27 +153,27 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    START([ralph plan]) --> LOAD[Load Config]
+    START([ulf plan]) --> LOAD[Load Config]
     LOAD --> BACKEND[Resolve Backend]
     BACKEND --> SPAWN[Spawn AI Backend<br/>with PDD SOP prompt]
     SPAWN --> INTERACT[Interactive Session<br/>Clarify requirements]
     INTERACT --> RESEARCH[Research Phase<br/>Explore codebase]
     RESEARCH --> DESIGN[Design Phase<br/>Architecture decisions]
     DESIGN --> PLAN[Implementation Plan<br/>Phased steps]
-    PLAN --> OUTPUT[Write plan to .ralph/specs/]
+    PLAN --> OUTPUT[Write plan to .ulf/specs/]
 ```
 
 ## Code Task Generation
 
 ```mermaid
 flowchart TD
-    START([ralph code-task]) --> INPUT{Input Type}
+    START([ulf code-task]) --> INPUT{Input Type}
     INPUT -->|Description| DESC[Parse description text]
     INPUT -->|PDD Plan| PLAN[Parse plan file steps]
     DESC --> GEN[Generate .code-task.md]
     PLAN --> GEN
     GEN --> CRITERIA[Given-When-Then<br/>Acceptance Criteria]
-    CRITERIA --> OUTPUT[Write to .ralph/tasks/]
+    CRITERIA --> OUTPUT[Write to .ulf/tasks/]
 ```
 
 ## Subprocess TUI Mode
@@ -189,7 +189,7 @@ flowchart LR
         READER[Event Reader<br/>stdout pipe]
     end
     
-    subgraph "Child Process (ralph run --rpc)"
+    subgraph "Child Process (ulf run --rpc)"
         RPC_IN[RPC stdin reader]
         LOOP[Event Loop]
         RPC_OUT[JSON-lines stdout]
@@ -215,13 +215,13 @@ flowchart TD
     
     subgraph "Backend (Fastify + tRPC)"
         API[tRPC Router]
-        RUNNER[Ralph Runner]
+        RUNNER[Ulf Runner]
         QUEUE[Task Queue]
         DB[(SQLite)]
     end
     
-    subgraph "Ralph Process"
-        RALPH[ralph run --rpc]
+    subgraph "Ulf Process"
+        ULF[ulf run --rpc]
     end
     
     UI --> TRPC_C
@@ -229,7 +229,7 @@ flowchart TD
     UI --> WS_C
     WS_C --> API
     API --> RUNNER
-    RUNNER --> RALPH
+    RUNNER --> ULF
     API --> QUEUE
     QUEUE --> DB
 ```
@@ -263,7 +263,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    REC[ralph run --record-session file.jsonl] --> OBSERVER[Session Recorder<br/>EventBus Observer]
+    REC[ulf run --record-session file.jsonl] --> OBSERVER[Session Recorder<br/>EventBus Observer]
     OBSERVER --> JSONL[(file.jsonl)]
     
     JSONL --> REPLAY[Smoke Test Runner]

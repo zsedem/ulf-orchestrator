@@ -4,7 +4,7 @@
 # Files referenced via include_str!() must live inside the crate directory to be
 # included when publishing. Most embedded assets are mirrored from local source
 # files. The PDD SOP is generated from its canonical GitHub source plus a small
-# Ralph-specific addendum.
+# Ulf-specific addendum.
 #
 # Usage:
 #   ./scripts/sync-embedded-files.sh                   # Sync files
@@ -15,35 +15,35 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PDD_SOURCE_CONFIG="crates/ralph-cli/sops/upstream/pdd.env"
-PDD_ADDENDUM="crates/ralph-cli/sops/addendums/pdd-ralph.md"
-PDD_DEST="crates/ralph-cli/sops/pdd.md"
+PDD_SOURCE_CONFIG="crates/ulf-cli/sops/upstream/pdd.env"
+PDD_ADDENDUM="crates/ulf-cli/sops/addendums/pdd-ulf.md"
+PDD_DEST="crates/ulf-cli/sops/pdd.md"
 
 # Define source -> destination mappings for direct file mirrors.
 # Format: "source_path:dest_path"
 MIRRORED_FILES=(
-    # SOPs for ralph plan/task commands
-    ".claude/skills/code-task-generator/SKILL.md:crates/ralph-cli/sops/code-task-generator.md"
+    # SOPs for ulf plan/task commands
+    ".claude/skills/code-task-generator/SKILL.md:crates/ulf-cli/sops/code-task-generator.md"
 
     # Presets (canonical -> mirror for cargo install)
-    "presets/autoresearch.yml:crates/ralph-cli/presets/autoresearch.yml"
-    "presets/code-assist.yml:crates/ralph-cli/presets/code-assist.yml"
-    "presets/debug.yml:crates/ralph-cli/presets/debug.yml"
-    "presets/hatless-baseline.yml:crates/ralph-cli/presets/hatless-baseline.yml"
-    "presets/minimal/amp.yml:crates/ralph-cli/presets/minimal/amp.yml"
-    "presets/minimal/builder.yml:crates/ralph-cli/presets/minimal/builder.yml"
-    "presets/minimal/claude.yml:crates/ralph-cli/presets/minimal/claude.yml"
-    "presets/minimal/code-assist.yml:crates/ralph-cli/presets/minimal/code-assist.yml"
-    "presets/minimal/codex.yml:crates/ralph-cli/presets/minimal/codex.yml"
-    "presets/minimal/gemini.yml:crates/ralph-cli/presets/minimal/gemini.yml"
-    "presets/minimal/kiro.yml:crates/ralph-cli/presets/minimal/kiro.yml"
-    "presets/minimal/opencode.yml:crates/ralph-cli/presets/minimal/opencode.yml"
-    "presets/minimal/preset-evaluator.yml:crates/ralph-cli/presets/minimal/preset-evaluator.yml"
-    "presets/minimal/smoke.yml:crates/ralph-cli/presets/minimal/smoke.yml"
-    "presets/minimal/test.yml:crates/ralph-cli/presets/minimal/test.yml"
-    "presets/pdd-to-code-assist.yml:crates/ralph-cli/presets/pdd-to-code-assist.yml"
-    "presets/research.yml:crates/ralph-cli/presets/research.yml"
-    "presets/review.yml:crates/ralph-cli/presets/review.yml"
+    "presets/autoresearch.yml:crates/ulf-cli/presets/autoresearch.yml"
+    "presets/code-assist.yml:crates/ulf-cli/presets/code-assist.yml"
+    "presets/debug.yml:crates/ulf-cli/presets/debug.yml"
+    "presets/hatless-baseline.yml:crates/ulf-cli/presets/hatless-baseline.yml"
+    "presets/minimal/amp.yml:crates/ulf-cli/presets/minimal/amp.yml"
+    "presets/minimal/builder.yml:crates/ulf-cli/presets/minimal/builder.yml"
+    "presets/minimal/claude.yml:crates/ulf-cli/presets/minimal/claude.yml"
+    "presets/minimal/code-assist.yml:crates/ulf-cli/presets/minimal/code-assist.yml"
+    "presets/minimal/codex.yml:crates/ulf-cli/presets/minimal/codex.yml"
+    "presets/minimal/gemini.yml:crates/ulf-cli/presets/minimal/gemini.yml"
+    "presets/minimal/kiro.yml:crates/ulf-cli/presets/minimal/kiro.yml"
+    "presets/minimal/opencode.yml:crates/ulf-cli/presets/minimal/opencode.yml"
+    "presets/minimal/preset-evaluator.yml:crates/ulf-cli/presets/minimal/preset-evaluator.yml"
+    "presets/minimal/smoke.yml:crates/ulf-cli/presets/minimal/smoke.yml"
+    "presets/minimal/test.yml:crates/ulf-cli/presets/minimal/test.yml"
+    "presets/pdd-to-code-assist.yml:crates/ulf-cli/presets/pdd-to-code-assist.yml"
+    "presets/research.yml:crates/ulf-cli/presets/research.yml"
+    "presets/review.yml:crates/ulf-cli/presets/review.yml"
 )
 
 # Colors for output
@@ -113,7 +113,7 @@ write_pdd_source_config() {
 
     mkdir -p "$(dirname "$config_path")"
     cat > "$config_path" <<EOF
-# Canonical upstream source for the bundled Ralph PDD SOP.
+# Canonical upstream source for the bundled Ulf PDD SOP.
 # Generated/updated via:
 #   ./scripts/sync-embedded-files.sh update-pdd-ref [branch]
 # Resync after manual edits with:
@@ -334,7 +334,7 @@ check_files() {
         echo "must be inside the crate directory to be included when publishing"
         echo "to crates.io. Some files are mirrored from local sources, and the"
         echo "PDD SOP is generated from its canonical GitHub source plus a"
-        echo "small Ralph addendum."
+        echo "small Ulf addendum."
         exit 1
     else
         echo -e "${GREEN}All embedded assets are in sync.${NC}"

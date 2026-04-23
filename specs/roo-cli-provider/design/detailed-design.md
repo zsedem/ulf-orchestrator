@@ -2,17 +2,17 @@
 
 ## Overview
 
-This design adds Roo Code CLI (`roo`) as a new backend provider in ralph-orchestrator, following the same adapter pattern used by kiro, claude, gemini, and other existing backends. The integration uses **text mode** (plain stdout capture) for simplicity and reliability, with `--prompt-file` for prompt passing.
+This design adds Roo Code CLI (`roo`) as a new backend provider in ulf-orchestrator, following the same adapter pattern used by kiro, claude, gemini, and other existing backends. The integration uses **text mode** (plain stdout capture) for simplicity and reliability, with `--prompt-file` for prompt passing.
 
-Roo is an AI coding assistant CLI (v0.1.15+) that supports multiple LLM providers (Anthropic, OpenAI, AWS Bedrock, OpenRouter, etc.) and features tool auto-approval by default, making it well-suited for Ralph's autonomous loop.
+Roo is an AI coding assistant CLI (v0.1.15+) that supports multiple LLM providers (Anthropic, OpenAI, AWS Bedrock, OpenRouter, etc.) and features tool auto-approval by default, making it well-suited for Ulf's autonomous loop.
 
 ## Detailed Requirements
 
 ### Functional Requirements
 
 1. **Headless execution**: `roo --print --ephemeral --prompt-file <path>` runs roo in non-interactive mode with clean disk state, reads prompt from file, executes, and exits
-2. **Interactive execution**: `roo "prompt"` launches roo's TUI for `ralph plan` use
-3. **Extra args passthrough**: Users configure model, provider, AWS flags via `cli.args` in ralph.yml
+2. **Interactive execution**: `roo "prompt"` launches roo's TUI for `ulf plan` use
+3. **Extra args passthrough**: Users configure model, provider, AWS flags via `cli.args` in ulf.yml
 4. **Auto-detection**: `roo --version` checks if roo is available in PATH
 5. **Preset file**: `presets/minimal/roo.yml` provides a ready-to-use configuration
 
@@ -27,7 +27,7 @@ Roo is an AI coding assistant CLI (v0.1.15+) that supports multiple LLM provider
 
 - **Stream-JSON support**: Roo's `--output-format stream-json` provides structured NDJSON with cost/token tracking. Deferred to future enhancement.
 - **`--ephemeral` issue**: Previously broke Bedrock authentication, now fixed in roo v0.1.15+. Included in defaults.
-- **Roo mode integration**: Ralph hats don't map to roo `--mode` flags. Users configure via `cli.args`.
+- **Roo mode integration**: Ulf hats don't map to roo `--mode` flags. Users configure via `cli.args`.
 - **Custom RooStreamParser**: Not needed for text mode. Required only if stream-json is added later.
 - **Roo session management**: No `--continue` or `--session-id` usage. Each iteration is a fresh invocation.
 
@@ -35,7 +35,7 @@ Roo is an AI coding assistant CLI (v0.1.15+) that supports multiple LLM provider
 
 ```mermaid
 graph TD
-    Config["ralph.yml<br/>cli.backend: 'roo'"] --> CliBackend["CliBackend::from_config()"]
+    Config["ulf.yml<br/>cli.backend: 'roo'"] --> CliBackend["CliBackend::from_config()"]
     CliBackend --> |"roo --print --ephemeral --prompt-file tmp"| CliExecutor["CliExecutor<br/>(pipe-based)"]
     CliBackend --> |"roo prompt"| PtyExecutor["PtyExecutor<br/>(interactive)"]
     CliExecutor --> Output["Text output<br/>parsed for events"]
@@ -47,7 +47,7 @@ graph TD
     end
     
     subgraph "Config Flow"
-        UserConfig["User ralph.yml"] --> |"cli.args"| MergedArgs["--provider bedrock<br/>--aws-profile ...<br/>--model ..."]
+        UserConfig["User ulf.yml"] --> |"cli.args"| MergedArgs["--provider bedrock<br/>--aws-profile ...<br/>--model ..."]
         Preset["presets/minimal/roo.yml"] --> UserConfig
     end
 ```
@@ -139,7 +139,7 @@ This is cleaner than Claude's workaround (which writes a temp file and tells the
 Mirrors the kiro preset pattern:
 
 ```yaml
-# Ralph Orchestrator Configuration for Roo Code CLI
+# Ulf Orchestrator Configuration for Roo Code CLI
 # v2 nested format - optimized for Roo CLI
 
 # Event loop settings
@@ -190,7 +190,7 @@ No new data models needed. The existing `CliBackend`, `OutputFormat`, `PromptMod
 
 ## Error Handling
 
-Standard Ralph error handling applies with one important caveat:
+Standard Ulf error handling applies with one important caveat:
 
 Roo's exit code behavior varies by error type (verified via live testing):
 
@@ -200,10 +200,10 @@ Roo's exit code behavior varies by error type (verified via live testing):
 | **API auth error** (invalid key) | **Never exits** | Retries indefinitely, `--exit-on-error` doesn't stop retries |
 | **Success** | **0** | Exits normally |
 
-Ralph's error detection handles all cases:
+Ulf's error detection handles all cases:
 
-- **Config errors** → Non-zero exit code → Ralph detects failure immediately
-- **API auth errors** → Roo retries indefinitely → Ralph's **idle timeout** kills the process → counted as failure
+- **Config errors** → Non-zero exit code → Ulf detects failure immediately
+- **API auth errors** → Roo retries indefinitely → Ulf's **idle timeout** kills the process → counted as failure
 - **No events emitted** → Consecutive failure counter increments (primary detection)
 - **LOOP_COMPLETE not found** → Loop continues to next iteration, failure counter increments
 - **Max consecutive failures** → Loop terminates after N iterations without events
@@ -236,7 +236,7 @@ No roo-specific error detection or parsing needed.
 
 ```bash
 # Verify roo backend works end-to-end
-ralph run -b roo -- --provider bedrock --aws-profile roo-bedrock \
+ulf run -b roo -- --provider bedrock --aws-profile roo-bedrock \
   --aws-region us-east-1 --model anthropic.claude-sonnet-4-6 \
   --max-tokens 64000 -p "Create a hello.txt file with 'Hello World'"
 ```
@@ -247,9 +247,9 @@ ralph run -b roo -- --provider bedrock --aws-profile roo-bedrock \
 2. **`--ephemeral` now works with Bedrock** — Fixed in roo v0.1.15+. Previously broke Bedrock auth by using temp dir that lost provider settings.
 3. **Tool auto-approval is roo's default** — No `--trust-all-tools` equivalent needed. File write/read executed without any approval flag.
 4. **`--prompt-file` is native** — Verified working with 7530-char prompt. Cleaner than Claude's temp-file workaround.
-5. **Roo exit codes are nuanced** — Config errors exit 1 ✅. API auth errors cause infinite retry (never exits) — Ralph's idle timeout handles this. Success exits 0 ✅.
-6. **Event tags work with proper context** — Roo refuses bare "output this text" prompts as injection attacks, but cooperates when event protocol is part of system instructions (as Ralph provides).
-7. **Roo outputs `[task complete]`** — Not parsed by Ralph, but useful for debugging.
+5. **Roo exit codes are nuanced** — Config errors exit 1 ✅. API auth errors cause infinite retry (never exits) — Ulf's idle timeout handles this. Success exits 0 ✅.
+6. **Event tags work with proper context** — Roo refuses bare "output this text" prompts as injection attacks, but cooperates when event protocol is part of system instructions (as Ulf provides).
+7. **Roo outputs `[task complete]`** — Not parsed by Ulf, but useful for debugging.
 
 ## Appendices
 
@@ -268,12 +268,12 @@ ralph run -b roo -- --provider bedrock --aws-profile roo-bedrock \
 
 2. **No `--ephemeral`**: Initially considered because `--ephemeral` broke Bedrock auth. Now fixed in roo v0.1.15+, so `--ephemeral` is included by default for clean disk state.
 
-3. **Roo mode mapping**: Ralph hats → roo `--mode`. Rejected as over-engineering; users can set `--mode` via `cli.args` if needed.
+3. **Roo mode mapping**: Ulf hats → roo `--mode`. Rejected as over-engineering; users can set `--mode` via `cli.args` if needed.
 
-4. **Custom roo mode for Ralph**: Creating a dedicated roo mode with Ralph-specific system instructions. Rejected — roo's default "code" mode provides all necessary tool groups and its system prompt complements Ralph's user prompt.
+4. **Custom roo mode for Ulf**: Creating a dedicated roo mode with Ulf-specific system instructions. Rejected — roo's default "code" mode provides all necessary tool groups and its system prompt complements Ulf's user prompt.
 
 ### Research References
 
 - [roo CLI interface research](./../research/roo-cli-interface.md)
-- [Ralph adapter system research](./../research/ralph-adapter-system.md)  
+- [Ulf adapter system research](./../research/ulf-adapter-system.md)  
 - [Text vs stream-json analysis](./../research/text-vs-stream-json.md)

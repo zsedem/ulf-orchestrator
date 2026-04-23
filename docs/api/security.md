@@ -2,11 +2,11 @@
 
 ## Overview
 
-Ralph's security-related utilities are distributed across crates. Common safeguards:
+Ulf's security-related utilities are distributed across crates. Common safeguards:
 
-- **Safe CLI execution** via `ralph_adapters::CliExecutor` (no shell invocation)
-- **Secret masking** via `ralph_telegram::TelegramService::bot_token_masked`
-- **Output escaping** via `ralph_telegram::escape_html`
+- **Safe CLI execution** via `ulf_adapters::CliExecutor` (no shell invocation)
+- **Secret masking** via `ulf_telegram::TelegramService::bot_token_masked`
+- **Output escaping** via `ulf_telegram::escape_html`
 
 ## Safe CLI Execution
 
@@ -14,8 +14,8 @@ Ralph's security-related utilities are distributed across crates. Common safegua
 avoids shell interpolation and reduces injection risk for prompt content.
 
 ```rust
-use ralph_adapters::{CliBackend, CliExecutor};
-use ralph_core::CliConfig;
+use ulf_adapters::{CliBackend, CliExecutor};
+use ulf_core::CliConfig;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -41,7 +41,7 @@ When integrating Telegram, `TelegramService::bot_token_masked` keeps logs safe
 by exposing only the prefix/suffix of the token.
 
 ```rust
-use ralph_telegram::TelegramService;
+use ulf_telegram::TelegramService;
 use std::path::PathBuf;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -63,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 Telegram's HTML parse mode requires escaping special characters.
 
 ```rust
-use ralph_telegram::escape_html;
+use ulf_telegram::escape_html;
 
 fn main() {
     let raw = "<task> & details";

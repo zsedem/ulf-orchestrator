@@ -38,7 +38,7 @@ def pytest_configure(config):
         "markers", "requires_claude: mark test as requiring Claude Agent SDK"
     )
     config.addinivalue_line(
-        "markers", "slow: mark test as slow-running (requires live Ralph)"
+        "markers", "slow: mark test as slow-running (requires live Ulf)"
     )
 
 
@@ -49,17 +49,17 @@ def project_root() -> Path:
 
 
 @pytest.fixture(scope="session")
-def ralph_binary(project_root: Path) -> Path:
-    """Get the Ralph binary path."""
-    release_path = project_root / "target" / "release" / "ralph"
-    debug_path = project_root / "target" / "debug" / "ralph"
+def ulf_binary(project_root: Path) -> Path:
+    """Get the Ulf binary path."""
+    release_path = project_root / "target" / "release" / "ulf"
+    debug_path = project_root / "target" / "debug" / "ulf"
 
     if release_path.exists():
         return release_path
     elif debug_path.exists():
         return debug_path
     else:
-        pytest.skip("Ralph binary not found. Run 'cargo build' first.")
+        pytest.skip("Ulf binary not found. Run 'cargo build' first.")
 
 
 @pytest.fixture(scope="session")
@@ -82,7 +82,7 @@ def evidence_dir(evidence_base_dir: Path) -> Path:
 @pytest.fixture
 def tmux_session_name() -> str:
     """Generate a unique tmux session name."""
-    return f"ralph-e2e-{uuid.uuid4().hex[:8]}"
+    return f"ulf-e2e-{uuid.uuid4().hex[:8]}"
 
 
 @async_fixture
@@ -121,14 +121,14 @@ def llm_judge() -> LLMJudge:
 
 
 @pytest.fixture
-def ralph_config_path(project_root: Path) -> Path:
-    """Get a valid Ralph config file path."""
+def ulf_config_path(project_root: Path) -> Path:
+    """Get a valid Ulf config file path."""
     # Look for common config files
     candidates = [
-        "ralph.yml",
-        "ralph.yaml",
-        "ralph.claude.yml",
-        ".ralph.yml",
+        "ulf.yml",
+        "ulf.yaml",
+        "ulf.claude.yml",
+        ".ulf.yml",
     ]
 
     for candidate in candidates:
@@ -137,7 +137,7 @@ def ralph_config_path(project_root: Path) -> Path:
             return config_path
 
     # Create a minimal config for testing
-    test_config = project_root / "ralph.test.yml"
+    test_config = project_root / "ulf.test.yml"
     test_config.write_text("""
 cli:
   backend: claude
@@ -199,7 +199,7 @@ def create_iteration_test_config(
     max_runtime_seconds: int = 300,
     idle_timeout_secs: int = 30,
 ) -> Path:
-    """Create a Ralph config file for iteration testing.
+    """Create a Ulf config file for iteration testing.
 
     Args:
         project_root: Project root directory
@@ -210,7 +210,7 @@ def create_iteration_test_config(
     Returns:
         Path to the created config file
     """
-    config_content = f"""# Ralph E2E test config
+    config_content = f"""# Ulf E2E test config
 cli:
   backend: claude
   prompt_mode: arg
@@ -221,7 +221,7 @@ event_loop:
   max_runtime_seconds: {max_runtime_seconds}
   idle_timeout_secs: {idle_timeout_secs}
 """
-    config_path = project_root / "ralph.iteration-test.yml"
+    config_path = project_root / "ulf.iteration-test.yml"
     config_path.write_text(config_content)
     return config_path
 

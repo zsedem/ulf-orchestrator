@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide documents the spec-driven development workflow for Ralph Orchestrator. All changes flow through specs—they are the source of truth.
+This guide documents the spec-driven development workflow for Ulf Orchestrator. All changes flow through specs—they are the source of truth.
 
 ## Quick Start
 
@@ -16,7 +16,7 @@ This guide documents the spec-driven development workflow for Ralph Orchestrator
 
 ```bash
 # Clone the repo
-cd ralph-orchestrator
+cd ulf-orchestrator
 
 # Allow direnv to activate the dev environment
 direnv allow
@@ -27,7 +27,7 @@ direnv allow
 **Option B: With nix develop**
 
 ```bash
-cd ralph-orchestrator
+cd ulf-orchestrator
 
 # Enter the development shell
 nix develop
@@ -76,15 +76,15 @@ Spec → Review → Dogfood → Implement → Verify → Done
 
 | Change Type | Input | Process | Output |
 |-------------|-------|---------|--------|
-| **New Feature** | Idea/requirement | Create spec → Ralph implements | Working feature |
-| **Modified Feature** | Spec update | Gap analysis → Ralph addresses | Updated implementation |
-| **Bug Fix** | Bug report | ISSUES.md → Ralph fixes → Spec update | Fixed behavior + regression guard |
+| **New Feature** | Idea/requirement | Create spec → Ulf implements | Working feature |
+| **Modified Feature** | Spec update | Gap analysis → Ulf addresses | Updated implementation |
+| **Bug Fix** | Bug report | ISSUES.md → Ulf fixes → Spec update | Fixed behavior + regression guard |
 
 ---
 
 ## New Feature Workflow
 
-When adding a new capability to Ralph.
+When adding a new capability to Ulf.
 
 ### Step 1: Create the Spec
 
@@ -146,14 +146,14 @@ Before implementation, validate the spec itself:
 
 Update `status: review` when ready.
 
-### Step 3: Run Ralph to Implement
+### Step 3: Run Ulf to Implement
 
 ```bash
 # Option A: Use the built-in spec implementation prompt
-ralph start --prompt prompts/implement-spec-delta.md
+ulf start --prompt prompts/implement-spec-delta.md
 
 # Option B: Create a focused PROMPT.md
-cat > /tmp/ralph-impl/PROMPT.md << 'EOF'
+cat > /tmp/ulf-impl/PROMPT.md << 'EOF'
 Implement the spec at ./specs/my-feature.spec.md
 
 ## Rules
@@ -166,7 +166,7 @@ Implement the spec at ./specs/my-feature.spec.md
 Output LOOP_COMPLETE when all acceptance criteria pass.
 EOF
 
-cd /tmp/ralph-impl && ralph start
+cd /tmp/ulf-impl && ulf start
 ```
 
 ### Step 4: Verify Implementation
@@ -212,10 +212,10 @@ Gap analysis identifies differences between specs and implementation.
 
 ```bash
 # Option A: Full automated gap analysis
-ralph start --prompt prompts/spec-sync.md
+ulf start --prompt prompts/spec-sync.md
 
-# Option B: Manual gap analysis using Ralph
-cat > /tmp/ralph-gap/PROMPT.md << 'EOF'
+# Option B: Manual gap analysis using Ulf
+cat > /tmp/ulf-gap/PROMPT.md << 'EOF'
 Perform gap analysis between specs and implementation.
 
 ## Process
@@ -233,7 +233,7 @@ Perform gap analysis between specs and implementation.
 Create/update GAPS.md with findings, then LOOP_COMPLETE.
 EOF
 
-cd /tmp/ralph-gap && ralph start
+cd /tmp/ulf-gap && ulf start
 ```
 
 ### Step 3: Review GAPS.md
@@ -259,10 +259,10 @@ After gap analysis, review the output:
 - **P2**: Minor gaps—address when convenient
 - **P3**: Nice-to-have—future enhancement
 
-### Step 4: Run Ralph to Address Gaps
+### Step 4: Run Ulf to Address Gaps
 
 ```bash
-cat > /tmp/ralph-fix/PROMPT.md << 'EOF'
+cat > /tmp/ulf-fix/PROMPT.md << 'EOF'
 Address gaps identified in GAPS.md
 
 ## Priority Order
@@ -281,7 +281,7 @@ Address gaps identified in GAPS.md
 When all P0 and P1 gaps are resolved, LOOP_COMPLETE.
 EOF
 
-cd /tmp/ralph-fix && ralph start
+cd /tmp/ulf-fix && ulf start
 ```
 
 ### Step 5: Update Gap Analysis Date
@@ -315,10 +315,10 @@ Add the bug to `ISSUES.md`:
 - **Status**: NEW → IN_PROGRESS → FIXED → VERIFIED
 ```
 
-### Step 2: Run Ralph to Fix
+### Step 2: Run Ulf to Fix
 
 ```bash
-cat > /tmp/ralph-bugfix/PROMPT.md << 'EOF'
+cat > /tmp/ulf-bugfix/PROMPT.md << 'EOF'
 Fix the bug described in ISSUES.md: [BUG-001]
 
 ## Process
@@ -337,7 +337,7 @@ Fix the bug described in ISSUES.md: [BUG-001]
 When bug is fixed AND test passes, LOOP_COMPLETE.
 EOF
 
-cd /tmp/ralph-bugfix && ralph start
+cd /tmp/ulf-bugfix && ulf start
 ```
 
 ### Step 3: Update Specs for Regression Prevention
@@ -381,10 +381,10 @@ grep -r "relevant keyword" specs/
 
 ```bash
 # New feature implementation
-ralph start --prompt prompts/implement-spec-delta.md
+ulf start --prompt prompts/implement-spec-delta.md
 
 # Full gap analysis
-ralph start --prompt prompts/spec-sync.md
+ulf start --prompt prompts/spec-sync.md
 
 # Check spec status
 grep -r "^status:" specs/*.spec.md
@@ -399,7 +399,7 @@ grep -l "gap_analysis: null" specs/*.spec.md
 draft → review → approved → implemented → deprecated
   │        │         │            │
   │        │         │            └─ Periodically run gap analysis
-  │        │         └─ Ralph implements
+  │        │         └─ Ulf implements
   │        └─ Dogfood and refine
   └─ Initial creation
 ```
@@ -411,8 +411,8 @@ draft → review → approved → implemented → deprecated
 | `specs/*.spec.md` | Feature specifications |
 | `ISSUES.md` | Bug tracking and gap analysis results |
 | `GAPS.md` | Output from gap analysis runs |
-| `prompts/spec-sync.md` | Ralph prompt for full gap analysis |
-| `prompts/implement-spec-delta.md` | Ralph prompt for spec implementation |
+| `prompts/spec-sync.md` | Ulf prompt for full gap analysis |
+| `prompts/implement-spec-delta.md` | Ulf prompt for spec implementation |
 | `CLAUDE.md` | Agent instructions (dogfooding process) |
 
 ### Backpressure Commands
@@ -461,11 +461,11 @@ Good: "Fix only what the spec/issue requires"
 
 ---
 
-## Workflows with Ralph Loop
+## Workflows with Ulf Loop
 
-### Running Ralph in Isolated Directory
+### Running Ulf in Isolated Directory
 
-**Important**: Always run Ralph loops in a temp directory to avoid polluting the workspace.
+**Important**: Always run Ulf loops in a temp directory to avoid polluting the workspace.
 
 ```bash
 # Create isolated workspace
@@ -473,24 +473,24 @@ WORK_DIR=$(mktemp -d)
 cp -r . "$WORK_DIR"
 cd "$WORK_DIR"
 
-# Run Ralph
-ralph start
+# Run Ulf
+ulf start
 
 # Review changes, cherry-pick what you want
 ```
 
 ### Parallel Workflows
 
-For large gap analyses, run multiple Ralph instances:
+For large gap analyses, run multiple Ulf instances:
 
 ```bash
 # Terminal 1: Fix P0 issues
 WORK1=$(mktemp -d) && cp -r . "$WORK1" && cd "$WORK1"
-ralph start --prompt "Fix P0 gaps from GAPS.md"
+ulf start --prompt "Fix P0 gaps from GAPS.md"
 
 # Terminal 2: Fix P1 issues (independent)
 WORK2=$(mktemp -d) && cp -r . "$WORK2" && cd "$WORK2"
-ralph start --prompt "Fix P1 gaps from GAPS.md"
+ulf start --prompt "Fix P1 gaps from GAPS.md"
 ```
 
 ---
@@ -501,13 +501,13 @@ For critical behaviors, use the behavioral verification catalog:
 
 ```bash
 # Verify specific behaviors
-ralph /verify-behaviors --category planner
+ulf /verify-behaviors --category planner
 
 # Verify single behavior
-ralph /verify-behaviors --id PL-007
+ulf /verify-behaviors --id PL-007
 
 # Update behavior catalog after spec changes
-ralph /update-behaviors
+ulf /update-behaviors
 ```
 
 See `specs/behavioral-verification.spec.md` for the full catalog.

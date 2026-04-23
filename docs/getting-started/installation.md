@@ -1,12 +1,12 @@
 # Installation
 
-This guide covers all installation methods for Ralph Orchestrator.
+This guide covers all installation methods for Ulf Orchestrator.
 
 ## Prerequisites
 
 ### AI CLI Tools
 
-Ralph needs at least one AI CLI tool to function. Install one of the following:
+Ulf needs at least one AI CLI tool to function. Install one of the following:
 
 === "Claude Code (Recommended)"
 
@@ -53,25 +53,25 @@ Ralph needs at least one AI CLI tool to function. Install one of the following:
     curl -fsSL https://opencode.ai/install | bash
     ```
 
-## Installing Ralph
+## Installing Ulf
 
 ### Via npm (Recommended)
 
-The easiest way to install Ralph:
+The easiest way to install Ulf:
 
 ```bash
 # Install globally
-npm install -g @ralph-orchestrator/ralph-cli
+npm install -g @ulf-orchestrator/ulf-cli
 
 # Or run directly with npx
-npx @ralph-orchestrator/ralph-cli --version
+npx @ulf-orchestrator/ulf-cli --version
 ```
 
 ### Via GitHub Releases installer
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/mikeyobrien/ralph-orchestrator/releases/latest/download/ralph-cli-installer.sh | sh
+  https://github.com/mikeyobrien/ulf-orchestrator/releases/latest/download/ulf-cli-installer.sh | sh
 ```
 
 ### Via Cargo
@@ -79,7 +79,7 @@ curl --proto '=https' --tlsv1.2 -LsSf \
 If you have Rust installed:
 
 ```bash
-cargo install ralph-cli
+cargo install ulf-cli
 ```
 
 ### From Source
@@ -88,8 +88,8 @@ For the latest development version:
 
 ```bash
 # Clone the repository
-git clone https://github.com/mikeyobrien/ralph-orchestrator.git
-cd ralph-orchestrator
+git clone https://github.com/mikeyobrien/ulf-orchestrator.git
+cd ulf-orchestrator
 
 # Build release binary
 cargo build --release
@@ -98,38 +98,38 @@ cargo build --release
 export PATH="$PATH:$(pwd)/target/release"
 
 # Or create symlink
-sudo ln -s $(pwd)/target/release/ralph /usr/local/bin/ralph
+sudo ln -s $(pwd)/target/release/ulf /usr/local/bin/ulf
 ```
 
 ## Verify Installation
 
 ```bash
 # Check version
-ralph --version
+ulf --version
 
 # Show help
-ralph --help
+ulf --help
 
 # List available presets
-ralph init --list-presets
+ulf init --list-presets
 ```
 
 ## Migrating from v1 (Legacy)
 
-If you have the legacy Ralph v1 installed, uninstall it first:
+If you have the legacy Ulf v1 installed, uninstall it first:
 
 ```bash
 # If installed via pip
-pip uninstall ralph-orchestrator
+pip uninstall ulf-orchestrator
 
 # If installed via pipx
-pipx uninstall ralph-orchestrator
+pipx uninstall ulf-orchestrator
 
 # If installed via uv
-uv tool uninstall ralph-orchestrator
+uv tool uninstall ulf-orchestrator
 
 # Verify removal
-which ralph  # Should return nothing or point to new Rust version
+which ulf  # Should return nothing or point to new Rust version
 ```
 
 The v1 release is no longer maintained. See [Migration from v1](../reference/migration-v1.md) for details.
@@ -138,7 +138,7 @@ The v1 release is no longer maintained. See [Migration from v1](../reference/mig
 
 ### Command Not Found
 
-If `ralph` is not found after installation:
+If `ulf` is not found after installation:
 
 ```bash
 # For npm global installs, ensure npm bin is in PATH
@@ -150,7 +150,7 @@ export PATH="$PATH:$HOME/.cargo/bin"
 
 ### No AI Agents Detected
 
-Ralph auto-detects available AI CLI tools. If none are found:
+Ulf auto-detects available AI CLI tools. If none are found:
 
 1. Install one of the supported AI CLI tools (see Prerequisites)
 2. Ensure the tool is in your PATH
@@ -162,12 +162,12 @@ If you get permission errors:
 
 ```bash
 # For npm
-sudo npm install -g @ralph-orchestrator/ralph-cli
+sudo npm install -g @ulf-orchestrator/ulf-cli
 
 # For symlinks
-sudo ln -s $(pwd)/target/release/ralph /usr/local/bin/ralph
+sudo ln -s $(pwd)/target/release/ulf /usr/local/bin/ulf
 ```
 
 ## Next Steps
 
-Now that Ralph is installed, proceed to the [Quick Start](quick-start.md) guide.
+Now that Ulf is installed, proceed to the [Quick Start](quick-start.md) guide.

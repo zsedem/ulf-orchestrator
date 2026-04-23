@@ -1,4 +1,4 @@
-# Ralph Orchestrator Configuration for Roo Code CLI
+# Ulf Orchestrator Configuration for Roo Code CLI
 # v2 nested format - optimized for Roo CLI
 
 # Event loop settings
@@ -23,7 +23,7 @@ core:
     - "Fresh context each iteration - save learnings to memories for next time"
     - "Don't assume 'not implemented' - search first"
     - "Verification is mandatory - tests/typecheck/lint/audit must pass"
-    - "Confidence protocol: score decisions 0-100. >80 proceed autonomously; 50-80 proceed + document in .ralph/agent/decisions.md; <50 choose safe default + document."
+    - "Confidence protocol: score decisions 0-100. >80 proceed autonomously; 50-80 proceed + document in .ulf/agent/decisions.md; <50 choose safe default + document."
 
 hats:
   builder:

@@ -1,24 +1,24 @@
 # Parallel Loops
 
-Ralph supports running multiple orchestration loops in parallel using git worktrees for filesystem isolation. This enables working on multiple tasks simultaneously without conflicts.
+Ulf supports running multiple orchestration loops in parallel using git worktrees for filesystem isolation. This enables working on multiple tasks simultaneously without conflicts.
 
 ## How It Works
 
-When you start a Ralph loop:
+When you start a Ulf loop:
 
-1. **First loop** acquires `.ralph/loop.lock` and runs in-place (the primary loop)
+1. **First loop** acquires `.ulf/loop.lock` and runs in-place (the primary loop)
 2. **Additional loops** automatically spawn into `.worktrees/<loop-id>/`
 3. **Each loop** has isolated events, tasks, and scratchpad
 4. **Memories are shared** — symlinked back to the main repo's `.agent/memories.md`
-5. **On completion**, worktree loops automatically spawn a merge-ralph to integrate changes
+5. **On completion**, worktree loops automatically spawn a merge-ulf to integrate changes
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  Terminal 1                    │  Terminal 2                       │
-│  ralph run -p "Add auth"       │  ralph run -p "Add logging"       │
+│  ulf run -p "Add auth"       │  ulf run -p "Add logging"       │
 │  [acquires lock, runs in-place]│  [spawns to worktree]             │
 │           ↓                    │           ↓                       │
-│     Primary loop               │  .worktrees/ralph-20250124-a3f2/  │
+│     Primary loop               │  .worktrees/ulf-20250124-a3f2/  │
 │           ↓                    │           ↓                       │
 │     LOOP_COMPLETE              │     LOOP_COMPLETE → auto-merge    │
 └─────────────────────────────────────────────────────────────────────┘
@@ -28,23 +28,23 @@ When you start a Ralph loop:
 
 ```bash
 # First loop acquires lock, runs in-place
-ralph run -p "Add authentication"
+ulf run -p "Add authentication"
 
 # In another terminal — automatically spawns to worktree
-ralph run -p "Add logging"
+ulf run -p "Add logging"
 
 # Check running loops
-ralph loops
+ulf loops
 
 # View logs from a specific loop
-ralph loops logs <loop-id>
-ralph loops logs <loop-id> --follow  # Real-time streaming
+ulf loops logs <loop-id>
+ulf loops logs <loop-id> --follow  # Real-time streaming
 
 # Force sequential execution (wait for lock)
-ralph run --exclusive -p "Task that needs main workspace"
+ulf run --exclusive -p "Task that needs main workspace"
 
 # Skip auto-merge (keep worktree for manual handling)
-ralph run --no-auto-merge -p "Experimental feature"
+ulf run --no-auto-merge -p "Experimental feature"
 ```
 
 ## Loop States
@@ -64,7 +64,7 @@ ralph run --no-auto-merge -p "Experimental feature"
 
 ```
 project/
-├── .ralph/
+├── .ulf/
 │   ├── loop.lock          # Primary loop indicator
 │   ├── loops.json         # Loop registry
 │   ├── merge-queue.jsonl  # Merge event log
@@ -72,8 +72,8 @@ project/
 ├── .agent/
 │   └── memories.md        # Shared across all loops
 └── .worktrees/
-    └── ralph-20250124-a3f2/
-        ├── .ralph/events.jsonl    # Loop-isolated
+    └── ulf-20250124-a3f2/
+        ├── .ulf/events.jsonl    # Loop-isolated
         ├── .agent/
         │   ├── memories.md → ../../.agent/memories.md  # Symlink
         │   └── scratchpad.md      # Loop-isolated
@@ -84,39 +84,39 @@ project/
 
 ```bash
 # List all loops with status
-ralph loops list
+ulf loops list
 
 # View loop output
-ralph loops logs <id>              # Full output
-ralph loops logs <id> --follow     # Stream real-time
+ulf loops logs <id>              # Full output
+ulf loops logs <id> --follow     # Stream real-time
 
 # View event history
-ralph loops history <id>           # Formatted table
-ralph loops history <id> --json    # Raw JSONL
+ulf loops history <id>           # Formatted table
+ulf loops history <id> --json    # Raw JSONL
 
 # Show changes from merge-base
-ralph loops diff <id>              # Full diff
-ralph loops diff <id> --stat       # Summary only
+ulf loops diff <id>              # Full diff
+ulf loops diff <id> --stat       # Summary only
 
 # Open shell in worktree
-ralph loops attach <id>
+ulf loops attach <id>
 
 # Re-run merge for failed loop
-ralph loops retry <id>
+ulf loops retry <id>
 
 # Stop a running loop
-ralph loops stop <id>              # SIGTERM
-ralph loops stop <id> --force      # SIGKILL
+ulf loops stop <id>              # SIGTERM
+ulf loops stop <id> --force      # SIGKILL
 
 # Resume a suspended loop
-ralph loops resume <id>
+ulf loops resume <id>
 
 # Abandon loop and cleanup
-ralph loops discard <id>           # With confirmation
-ralph loops discard <id> -y        # Skip confirmation
+ulf loops discard <id>           # With confirmation
+ulf loops discard <id> -y        # Skip confirmation
 
 # Clean up stale loops (crashed processes)
-ralph loops prune
+ulf loops prune
 ```
 
 ## Auto-Merge Workflow
@@ -135,11 +135,11 @@ When a worktree loop completes, it queues itself for merge. The primary loop pro
 │                                              ↓                       │
 │                                        Process merge queue           │
 │                                              ↓                       │
-│                                        Spawn merge-ralph             │
+│                                        Spawn merge-ulf             │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-The merge-ralph process uses a **hat collection** with specialized roles:
+The merge-ulf process uses a **hat collection** with specialized roles:
 
 | Hat | Trigger | Purpose |
 |-----|---------|---------|
@@ -171,16 +171,16 @@ When merge conflicts occur, the AI resolver:
 To manually resolve:
 ```bash
 # Enter the worktree
-ralph loops attach <loop-id>
+ulf loops attach <loop-id>
 
 # Fix the issue, commit
 git add . && git commit -m "Manual conflict resolution"
 
 # Retry the merge
-ralph loops retry <loop-id>
+ulf loops retry <loop-id>
 
 # Or discard if unneeded
-ralph loops discard <loop-id>
+ulf loops discard <loop-id>
 ```
 
 ## Best Practices
@@ -209,63 +209,63 @@ ralph loops discard <loop-id>
 
 ```bash
 # Check loop state and logs
-ralph loops
-ralph loops logs <loop-id>
+ulf loops
+ulf loops logs <loop-id>
 
 # Resume from the suspended boundary
-ralph loops resume <loop-id>
+ulf loops resume <loop-id>
 ```
 
-`ralph loops resume` is safe to run repeatedly (idempotent).
+`ulf loops resume` is safe to run repeatedly (idempotent).
 
 ### Loop stuck in `queued` state
 
 ```bash
 # Check if primary loop is still running
-ralph loops
+ulf loops
 
 # If primary finished but merge didn't start, manually trigger
-ralph loops retry <loop-id>
+ulf loops retry <loop-id>
 ```
 
 ### Merge keeps failing
 
 ```bash
-# View merge-ralph logs
-ralph loops logs <loop-id>
+# View merge-ulf logs
+ulf loops logs <loop-id>
 
 # Check what changes conflict
-ralph loops diff <loop-id>
+ulf loops diff <loop-id>
 
 # Manually resolve in worktree
-ralph loops attach <loop-id>
+ulf loops attach <loop-id>
 ```
 
 ### Orphaned worktrees
 
 ```bash
 # List and clean up orphans
-ralph loops prune
+ulf loops prune
 
 # Force cleanup of specific worktree
 git worktree remove .worktrees/<loop-id> --force
-git branch -D ralph/<loop-id>
+git branch -D ulf/<loop-id>
 ```
 
 ### Lock file issues
 
 ```bash
 # Check who holds the lock
-cat .ralph/loop.lock
+cat .ulf/loop.lock
 
 # If process is dead, remove stale lock
-rm .ralph/loop.lock
+rm .ulf/loop.lock
 ```
 
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `RALPH_MERGE_LOOP_ID` | Set by auto-merge to identify which loop to merge |
-| `RALPH_DIAGNOSTICS=1` | Enable detailed diagnostic logging |
-| `RALPH_VERBOSE=1` | Verbose output mode |
+| `ULF_MERGE_LOOP_ID` | Set by auto-merge to identify which loop to merge |
+| `ULF_DIAGNOSTICS=1` | Enable detailed diagnostic logging |
+| `ULF_VERBOSE=1` | Verbose output mode |

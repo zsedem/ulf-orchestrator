@@ -32,7 +32,7 @@ flowchart TD
 
     subgraph PHASE2["🔄 PHASE 2: Planning Loop"]
         direction TB
-        PLANNER["📋 Planner<br/>🟣 Opus"] -->|plan.draft| WAVE_DISPATCH1["ralph wave emit plan.critique"]
+        PLANNER["📋 Planner<br/>🟣 Opus"] -->|plan.draft| WAVE_DISPATCH1["ulf wave emit plan.critique"]
         WAVE_DISPATCH1 --> CW1["🔎 Critique Worker<br/>code-refactor<br/>🟢 Qwen3"]
         WAVE_DISPATCH1 --> CW2["🔎 Critique Worker<br/>product-vision<br/>🟢 Qwen3"]
         WAVE_DISPATCH1 --> CW3["🔎 Critique Worker<br/>feature-breaks<br/>🟢 Qwen3"]
@@ -62,7 +62,7 @@ flowchart TD
     subgraph PHASE4["🔄 PHASE 4: Review Wave"]
         direction TB
         COORD4 -->|review.start| REVIEW_COORD["📊 Review Coordinator<br/>🟢 Qwen3"]
-        REVIEW_COORD -->|review.requested| WAVE_DISPATCH2["ralph wave emit review.perspective"]
+        REVIEW_COORD -->|review.requested| WAVE_DISPATCH2["ulf wave emit review.perspective"]
         WAVE_DISPATCH2 --> RW1["👁️ Review Worker<br/>coverage-report<br/>🟢 Qwen3"]
         WAVE_DISPATCH2 --> RW2["👁️ Review Worker<br/>code<br/>🟢 Qwen3"]
         WAVE_DISPATCH2 --> RW3["👁️ Review Worker<br/>tests<br/>🟢 Qwen3"]

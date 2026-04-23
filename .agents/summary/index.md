@@ -1,6 +1,6 @@
-# Ralph Orchestrator — Documentation Index
+# Ulf Orchestrator — Documentation Index
 
-> **For AI Assistants**: This file is the primary entry point for understanding the Ralph Orchestrator codebase. Read this file first, then consult specific files as needed based on the summaries below.
+> **For AI Assistants**: This file is the primary entry point for understanding the Ulf Orchestrator codebase. Read this file first, then consult specific files as needed based on the summaries below.
 
 ## How to Use This Documentation
 
@@ -25,16 +25,16 @@
 
 ### Project Structure
 - **9 Rust crates** in `crates/` (proto → core → adapters → cli/tui/telegram/api/e2e/bench)
-- **1 Node.js backend** in `backend/ralph-web-server/` (Fastify + tRPC + SQLite)
-- **1 React frontend** in `frontend/ralph-web/` (Vite + TailwindCSS)
+- **1 Node.js backend** in `backend/ulf-web-server/` (Fastify + tRPC + SQLite)
+- **1 React frontend** in `frontend/ulf-web/` (Vite + TailwindCSS)
 - **Hat presets** in `presets/` (YAML configuration files)
 
 ### Key Concepts
 - **Event Loop**: Core orchestration via pub/sub EventBus with topic-based routing
 - **Hats**: Agent personas (Planner, Builder, custom) with subscriptions and publications
-- **HatlessRalph**: Constant coordinator that builds prompts and delegates
-- **Memories**: Persistent learning stored in markdown (`.ralph/agent/memories.md`)
-- **Tasks**: Runtime work tracking in JSONL (`.ralph/agent/tasks.jsonl`)
+- **HatlessUlf**: Constant coordinator that builds prompts and delegates
+- **Memories**: Persistent learning stored in markdown (`.ulf/agent/memories.md`)
+- **Tasks**: Runtime work tracking in JSONL (`.ulf/agent/tasks.jsonl`)
 - **Hooks**: Lifecycle event handlers (pre/post loop, iteration, completion)
 - **Parallel Loops**: Concurrent execution via git worktrees with merge queue
 - **RObot**: Human-in-the-loop via Telegram (blocking questions + proactive guidance)
@@ -46,10 +46,10 @@ Claude, Kiro, Gemini, Codex, Amp, Pi, and custom commands.
 1. **Subprocess TUI** (default): Two-process model with ratatui frontend
 2. **Autonomous** (`--no-tui`): Headless CLI execution
 3. **RPC** (`--rpc`): JSON-lines protocol for IDE integration
-4. **Web Dashboard**: React UI via ralph-api server
+4. **Web Dashboard**: React UI via ulf-api server
 5. **Telegram Daemon**: Persistent bot for remote interaction
 
 ### Configuration
-- Core config: `ralph.yml` (supports v1 flat and v2 nested formats)
+- Core config: `ulf.yml` (supports v1 flat and v2 nested formats)
 - Hat collections: `presets/*.yml` or custom YAML via `-H` flag
 - Split model: core config + hat collection merged at runtime

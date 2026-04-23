@@ -4,7 +4,7 @@
     The Q Chat CLI has been rebranded to **Kiro CLI**. This guide references the legacy Q Chat adapter.
     Please refer to the [Kiro Migration Guide](../guide/kiro-migration.md) for information on migrating to the new `kiro` adapter.
 
-This guide provides comprehensive instructions for deploying the Q Chat adapter in production environments with Ralph Orchestrator.
+This guide provides comprehensive instructions for deploying the Q Chat adapter in production environments with Ulf Orchestrator.
 
 ## Overview
 
@@ -32,8 +32,8 @@ pip install q-cli
 # Verify installation
 qchat --version
 
-# Install Ralph Orchestrator with Q adapter support
-pip install ralph-orchestrator
+# Install Ulf Orchestrator with Q adapter support
+pip install ulf-orchestrator
 ```
 
 ## Configuration
@@ -79,7 +79,7 @@ performance:
 logging:
   level: INFO
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  file: /var/log/ralph/qchat.log
+  file: /var/log/ulf/qchat.log
   
 monitoring:
   metrics_enabled: true
@@ -102,14 +102,14 @@ export ENVIRONMENT=production
 export QCHAT_TIMEOUT=300
 export QCHAT_VERBOSE=1
 
-# Start Ralph Orchestrator with Q Chat
-python -m ralph_orchestrator \
+# Start Ulf Orchestrator with Q Chat
+python -m ulf_orchestrator \
   --agent q \
   --config config/qchat.yaml \
   --checkpoint-interval 10 \
   --max-iterations 1000 \
   --metrics-interval 60 \
-  --log-file /var/log/ralph/orchestrator.log
+  --log-file /var/log/ulf/orchestrator.log
 ```
 
 ### 2. High-Availability Deployment
@@ -130,10 +130,10 @@ export HEALTH_CHECK_ENABLED=true
 export HEALTH_CHECK_INTERVAL=30
 
 # Start with supervisor for automatic restart
-supervisorctl start ralph-qchat
+supervisorctl start ulf-qchat
 
 # Or use systemd
-systemctl start ralph-qchat.service
+systemctl start ulf-qchat.service
 ```
 
 ### 3. Containerized Deployment
@@ -147,7 +147,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install dependencies
-RUN pip install ralph-orchestrator q-cli
+RUN pip install ulf-orchestrator q-cli
 
 # Copy configuration
 COPY config/qchat.yaml /app/config/
@@ -162,7 +162,7 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
   CMD python -c "import requests; requests.get('http://localhost:8080/health')"
 
 # Run the orchestrator
-CMD ["python", "-m", "ralph_orchestrator", "--agent", "q", "--config", "config/qchat.yaml"]
+CMD ["python", "-m", "ulf_orchestrator", "--agent", "q", "--config", "config/qchat.yaml"]
 ```
 
 Docker Compose configuration:
@@ -172,9 +172,9 @@ Docker Compose configuration:
 version: '3.8'
 
 services:
-  ralph-qchat:
+  ulf-qchat:
     build: .
-    container_name: ralph-qchat
+    container_name: ulf-qchat
     restart: unless-stopped
     environment:
       - QCHAT_TIMEOUT=300
@@ -205,12 +205,12 @@ import logging
 import logging.handlers
 
 def setup_logging():
-    logger = logging.getLogger('ralph.qchat')
+    logger = logging.getLogger('ulf.qchat')
     logger.setLevel(logging.INFO)
     
     # File handler with rotation
     file_handler = logging.handlers.RotatingFileHandler(
-        '/var/log/ralph/qchat.log',
+        '/var/log/ulf/qchat.log',
         maxBytes=10485760,  # 10MB
         backupCount=5
     )
@@ -341,8 +341,8 @@ ulimit -u 2048          # Increase process limit
 ulimit -m 4194304       # Set memory limit (4GB)
 
 # Configure cgroups for container environments
-echo "4G" > /sys/fs/cgroup/memory/ralph-qchat/memory.limit_in_bytes
-echo "80" > /sys/fs/cgroup/cpu/ralph-qchat/cpu.shares
+echo "4G" > /sys/fs/cgroup/memory/ulf-qchat/memory.limit_in_bytes
+echo "80" > /sys/fs/cgroup/cpu/ulf-qchat/cpu.shares
 ```
 
 ## Troubleshooting
@@ -397,7 +397,7 @@ export PYTHONVERBOSE=1
 export RUST_LOG=debug  # If using Rust-based components
 
 # Run with debug logging
-python -m ralph_orchestrator \
+python -m ulf_orchestrator \
   --agent q \
   --verbose \
   --debug \
@@ -435,7 +435,7 @@ Run Q Chat processes with limited privileges:
 useradd -r -s /bin/false qchat-user
 
 # Run with limited privileges
-sudo -u qchat-user python -m ralph_orchestrator --agent q
+sudo -u qchat-user python -m ulf_orchestrator --agent q
 ```
 
 ### 3. Network Security
@@ -459,7 +459,7 @@ Perform zero-downtime updates:
 # rolling-update.sh
 
 # Start new version
-docker-compose up -d ralph-qchat-new
+docker-compose up -d ulf-qchat-new
 
 # Wait for health check
 while ! curl -f http://localhost:8081/health; do
@@ -470,7 +470,7 @@ done
 nginx -s reload
 
 # Stop old version
-docker-compose stop ralph-qchat-old
+docker-compose stop ulf-qchat-old
 ```
 
 ### Backup and Recovery
@@ -519,31 +519,31 @@ Expected performance metrics in production:
 
 ## Support and Resources
 
-- **Documentation**: [Ralph Orchestrator Docs](https://ralph-orchestrator.readthedocs.io)
-- **Issues**: [GitHub Issues](https://github.com/your-org/ralph-orchestrator/issues)
-- **Community**: [Discord Server](https://discord.gg/ralph-orchestrator)
-- **Emergency Support**: support@ralph-orchestrator.com
+- **Documentation**: [Ulf Orchestrator Docs](https://ulf-orchestrator.readthedocs.io)
+- **Issues**: [GitHub Issues](https://github.com/your-org/ulf-orchestrator/issues)
+- **Community**: [Discord Server](https://discord.gg/ulf-orchestrator)
+- **Emergency Support**: support@ulf-orchestrator.com
 
 ## Appendix: Systemd Service
 
 ```ini
-# /etc/systemd/system/ralph-qchat.service
+# /etc/systemd/system/ulf-qchat.service
 [Unit]
-Description=Ralph Orchestrator with Q Chat Adapter
+Description=Ulf Orchestrator with Q Chat Adapter
 After=network.target
 
 [Service]
 Type=simple
 User=qchat-user
 Group=qchat-group
-WorkingDirectory=/opt/ralph-orchestrator
+WorkingDirectory=/opt/ulf-orchestrator
 Environment="QCHAT_TIMEOUT=300"
 Environment="QCHAT_VERBOSE=1"
-ExecStart=/usr/bin/python3 -m ralph_orchestrator --agent q --config /etc/ralph/qchat.yaml
+ExecStart=/usr/bin/python3 -m ulf_orchestrator --agent q --config /etc/ulf/qchat.yaml
 Restart=always
 RestartSec=10
-StandardOutput=append:/var/log/ralph/qchat.log
-StandardError=append:/var/log/ralph/qchat-error.log
+StandardOutput=append:/var/log/ulf/qchat.log
+StandardError=append:/var/log/ulf/qchat-error.log
 
 [Install]
 WantedBy=multi-user.target
@@ -553,7 +553,7 @@ Enable and start the service:
 
 ```bash
 systemctl daemon-reload
-systemctl enable ralph-qchat.service
-systemctl start ralph-qchat.service
-systemctl status ralph-qchat.service
+systemctl enable ulf-qchat.service
+systemctl start ulf-qchat.service
+systemctl status ulf-qchat.service
 ```

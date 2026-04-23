@@ -1,6 +1,6 @@
-# Funding Ralph Orchestrator
+# Funding Ulf Orchestrator
 
-If Ralph Orchestrator helps your team ship faster, consider sponsoring ongoing development.
+If Ulf Orchestrator helps your team ship faster, consider sponsoring ongoing development.
 
 ## Sponsor
 

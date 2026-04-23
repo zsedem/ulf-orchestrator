@@ -105,15 +105,15 @@
 
 ```mermaid
 graph TD
-    PROTO["ralph-proto<br/>v2.6.0"]
-    CORE["ralph-core<br/>v2.6.0"]
-    ADAPT["ralph-adapters<br/>v2.6.0"]
-    CLI["ralph-cli<br/>v2.6.0"]
-    TUI["ralph-tui<br/>v2.6.0"]
-    TELE["ralph-telegram<br/>v2.6.0"]
-    API["ralph-api<br/>v2.6.0"]
-    E2E["ralph-e2e<br/>v2.6.0"]
-    BENCH["ralph-bench<br/>v2.6.0"]
+    PROTO["ulf-proto<br/>v2.6.0"]
+    CORE["ulf-core<br/>v2.6.0"]
+    ADAPT["ulf-adapters<br/>v2.6.0"]
+    CLI["ulf-cli<br/>v2.6.0"]
+    TUI["ulf-tui<br/>v2.6.0"]
+    TELE["ulf-telegram<br/>v2.6.0"]
+    API["ulf-api<br/>v2.6.0"]
+    E2E["ulf-e2e<br/>v2.6.0"]
+    BENCH["ulf-bench<br/>v2.6.0"]
 
     CORE --> PROTO
     ADAPT --> PROTO
@@ -141,7 +141,7 @@ All internal crates are versioned at `2.6.0` and use path dependencies within th
 
 ## Node.js Dependencies
 
-### Backend (@ralph-web/server)
+### Backend (@ulf-web/server)
 
 | Package | Purpose |
 |---------|---------|
@@ -152,7 +152,7 @@ All internal crates are versioned at `2.6.0` and use path dependencies within th
 | `zod` | Schema validation |
 | `ws` | WebSocket support |
 
-### Frontend (@ralph-web/dashboard)
+### Frontend (@ulf-web/dashboard)
 
 | Package | Purpose |
 |---------|---------|

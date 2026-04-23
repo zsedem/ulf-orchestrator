@@ -1,6 +1,6 @@
 # Advanced Topics
 
-Deep dives into Ralph's internals and advanced usage patterns.
+Deep dives into Ulf's internals and advanced usage patterns.
 
 ## In This Section
 
@@ -21,33 +21,33 @@ Deep dives into Ralph's internals and advanced usage patterns.
 These guides are for you if:
 
 - You're building complex multi-hat workflows
-- You want to understand how Ralph works internally
-- You're contributing to Ralph development
+- You want to understand how Ulf works internally
+- You're contributing to Ulf development
 - You need to debug tricky issues
-- You're extending Ralph with custom backends
+- You're extending Ulf with custom backends
 
 ## Key Concepts
 
 ### Crate Architecture
 
-Ralph is organized as a Cargo workspace:
+Ulf is organized as a Cargo workspace:
 
 ```
-ralph-orchestrator/
+ulf-orchestrator/
 ├── crates/
-│   ├── ralph-proto/     # Protocol types
-│   ├── ralph-core/      # Orchestration engine
-│   ├── ralph-adapters/  # CLI backends
-│   ├── ralph-telegram/  # Telegram bot for human-in-the-loop
-│   ├── ralph-tui/       # Terminal UI
-│   ├── ralph-cli/       # Binary entry point
-│   ├── ralph-e2e/       # End-to-end testing
-│   └── ralph-bench/     # Benchmarking
+│   ├── ulf-proto/     # Protocol types
+│   ├── ulf-core/      # Orchestration engine
+│   ├── ulf-adapters/  # CLI backends
+│   ├── ulf-telegram/  # Telegram bot for human-in-the-loop
+│   ├── ulf-tui/       # Terminal UI
+│   ├── ulf-cli/       # Binary entry point
+│   ├── ulf-e2e/       # End-to-end testing
+│   └── ulf-bench/     # Benchmarking
 ```
 
 ### Event Flow
 
-Events are the nervous system of hat-based Ralph:
+Events are the nervous system of hat-based Ulf:
 
 ```mermaid
 flowchart LR
@@ -60,7 +60,7 @@ flowchart LR
 
 ### State Management
 
-Ralph uses files for all persistent state:
+Ulf uses files for all persistent state:
 
 | File | Purpose |
 |------|---------|
@@ -74,26 +74,26 @@ Ralph uses files for all persistent state:
 ### Enable Diagnostics
 
 ```bash
-RALPH_DIAGNOSTICS=1 ralph run
+ULF_DIAGNOSTICS=1 ulf run
 ```
 
 ### Run E2E Tests
 
 ```bash
-cargo run -p ralph-e2e -- claude
+cargo run -p ulf-e2e -- claude
 ```
 
 ### Record a Session
 
 ```bash
-ralph run --record-session debug.jsonl -p "your prompt"
+ulf run --record-session debug.jsonl -p "your prompt"
 ```
 
 ### Validate TUI
 
 ```bash
 # See TUI Validation in Testing guide
-/tui-validate file:output.txt criteria:ralph-header
+/tui-validate file:output.txt criteria:ulf-header
 ```
 
 ## Next Steps

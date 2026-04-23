@@ -1,19 +1,19 @@
 # Orchestrator API Reference
 
-Complete API documentation for the Ralph Orchestrator core module.
+Complete API documentation for the Ulf Orchestrator core module.
 
-## Module: `ralph_orchestrator`
+## Module: `ulf_orchestrator`
 
 The main orchestration module that coordinates AI agent execution.
 
 ## Classes
 
-### `RalphOrchestrator`
+### `UlfOrchestrator`
 
 Main orchestrator class managing the execution loop.
 
 ```python
-class RalphOrchestrator:
+class UlfOrchestrator:
     def __init__(
         self,
         prompt_file_or_config = None,
@@ -45,13 +45,13 @@ async def arun(self) -> None:
     """Run the orchestration loop asynchronously."""
 ```
 
-### `RalphConfig`
+### `UlfConfig`
 
 Configuration dataclass for the orchestrator.
 
 ```python
 @dataclass
-class RalphConfig:
+class UlfConfig:
     agent: AgentType = AgentType.AUTO
     prompt_file: str = "PROMPT.md"
     max_iterations: int = 100
@@ -98,15 +98,15 @@ def main() -> int:
 ## Usage Examples
 
 ```python
-from ralph_orchestrator import RalphOrchestrator, RalphConfig
+from ulf_orchestrator import UlfOrchestrator, UlfConfig
 
 # Using config object
-config = RalphConfig(agent=AgentType.CLAUDE)
-orchestrator = RalphOrchestrator(config)
+config = UlfConfig(agent=AgentType.CLAUDE)
+orchestrator = UlfOrchestrator(config)
 orchestrator.run()
 
 # Using individual parameters
-orchestrator = RalphOrchestrator(
+orchestrator = UlfOrchestrator(
     prompt_file_or_config="PROMPT.md",
     primary_tool="claude",
     max_iterations=50
@@ -114,21 +114,21 @@ orchestrator = RalphOrchestrator(
 orchestrator.run()
 ```
 
-The main orchestration module that implements the Ralph Wiggum technique.
+The main orchestration module that implements the Ulf Wiggum technique.
 
 ### Classes
 
-#### `RalphOrchestrator`
+#### `UlfOrchestrator`
 
 The main orchestrator class that manages the iteration loop.
 
 ```python
-class RalphOrchestrator:
+class UlfOrchestrator:
     """
     Orchestrates AI agent iterations for autonomous task completion.
     
     Attributes:
-        config (RalphConfig): Configuration object
+        config (UlfConfig): Configuration object
         agent (Agent): Active AI agent instance
         metrics (MetricsCollector): Metrics tracking
         state (OrchestratorState): Current state
@@ -138,12 +138,12 @@ class RalphOrchestrator:
 ##### Constructor
 
 ```python
-def __init__(self, config: RalphConfig) -> None:
+def __init__(self, config: UlfConfig) -> None:
     """
     Initialize the orchestrator with configuration.
     
     Args:
-        config: RalphConfig object with settings
+        config: UlfConfig object with settings
         
     Raises:
         ValueError: If configuration is invalid
@@ -226,20 +226,20 @@ def load_state(self) -> Optional[OrchestratorState]:
     """
 ```
 
-#### `RalphConfig`
+#### `UlfConfig`
 
 Configuration dataclass for the orchestrator.
 
 ```python
 @dataclass
-class RalphConfig:
+class UlfConfig:
     """
-    Configuration for Ralph orchestrator.
+    Configuration for Ulf orchestrator.
     
     All parameters can be set via:
     - Command-line arguments
-    - Environment variables (RALPH_*)
-    - Configuration file (.ralph.conf)
+    - Environment variables (ULF_*)
+    - Configuration file (.ulf.conf)
     - Default values
     """
     
@@ -491,10 +491,10 @@ DANGEROUS_PATTERNS = [
 ### Basic Usage
 
 ```python
-from ralph_orchestrator import RalphOrchestrator, RalphConfig
+from ulf_orchestrator import UlfOrchestrator, UlfConfig
 
 # Create configuration
-config = RalphConfig(
+config = UlfConfig(
     agent=AgentType.CLAUDE,
     prompt_file="task.md",
     max_iterations=50,
@@ -502,7 +502,7 @@ config = RalphConfig(
 )
 
 # Initialize orchestrator
-orchestrator = RalphOrchestrator(config)
+orchestrator = UlfOrchestrator(config)
 
 # Run orchestration
 exit_code = orchestrator.run()
@@ -512,13 +512,13 @@ exit_code = orchestrator.run()
 
 ```python
 # Load from environment and add overrides
-config = RalphConfig()
+config = UlfConfig()
 config.max_iterations = 100
 config.checkpoint_interval = 10
 config.verbose = True
 
 # Initialize with custom config
-orchestrator = RalphOrchestrator(config)
+orchestrator = UlfOrchestrator(config)
 ```
 
 ### State Management
@@ -537,7 +537,7 @@ if state:
 
 ```python
 try:
-    orchestrator = RalphOrchestrator(config)
+    orchestrator = UlfOrchestrator(config)
     exit_code = orchestrator.run()
 except SecurityError as e:
     print(f"Security violation: {e}")

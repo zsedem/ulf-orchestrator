@@ -1,6 +1,6 @@
-# Building a CLI Tool with Ralph
+# Building a CLI Tool with Ulf
 
-This example shows how to use Ralph Orchestrator to create a command-line tool with argparse, subcommands, and proper packaging.
+This example shows how to use Ulf Orchestrator to create a command-line tool with argparse, subcommands, and proper packaging.
 
 ## Task Description
 
@@ -78,13 +78,13 @@ file-manager-cli/
 <!-- The orchestrator will continue iterations until all requirements are met -->
 ```
 
-## Running Ralph
+## Running Ulf
 
 ```bash
 # Initialize and run
-ralph init
+ulf init
 cp cli-tool-prompt.md PROMPT.md
-ralph run --agent claude --max-iterations 40
+ulf run --agent claude --max-iterations 40
 ```
 
 ## Expected Output

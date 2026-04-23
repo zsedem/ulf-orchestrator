@@ -1,7 +1,7 @@
 # Context: Add roo-cli as a Provider
 
 ## Project Structure
-- **ralph-adapters crate**: `crates/ralph-adapters/src/`
+- **ulf-adapters crate**: `crates/ulf-adapters/src/`
 - **Key files**: `cli_backend.rs` (backend definitions), `auto_detect.rs` (auto-detection), `lib.rs` (crate docs)
 - **Presets**: `presets/minimal/` (per-backend YAML configs)
 

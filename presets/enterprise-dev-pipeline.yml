@@ -10,7 +10,7 @@
 #   4. Review Wave        → Parallel review → Coordinator → LOOP_COMPLETE
 #
 # Coordinator is the central router. Phase starters always hand off to Coordinator.
-# Coordinator uses human.interact, ralph tasks, and ralph memories to decide next steps.
+# Coordinator uses human.interact, ulf tasks, and ulf memories to decide next steps.
 #
 # Backend Strategy:
 #   - Claude Opus   : Analyst, Coordinator, Planner, Critique Synthesizer, Review Synthesizer
@@ -24,7 +24,7 @@
 #   - Review can loop back to Developer, QA Writer, or BDD Writer
 #
 # Usage:
-#   ralph run -c presets/enterprise-dev-pipeline.yml -p "Implement OAuth2 login flow"
+#   ulf run -c presets/enterprise-dev-pipeline.yml -p "Implement OAuth2 login flow"
 
 event_loop:
   prompt_file: "PROMPT.md"
@@ -54,7 +54,7 @@ core:
   guardrails:
     - "Fresh context each iteration — re-read all state files every time"
     - "One publish event per iteration, then stop immediately"
-    - "Use ralph emit for events — plain text does NOT count as publication"
+    - "Use ulf emit for events — plain text does NOT count as publication"
     - "Do not use [Tool] Agent or parallel subagents inside hats"
     - "Coordinator owns routing — phase starters hand off to coordinator, never skip it"
 
@@ -95,7 +95,7 @@ hats:
          - Security considerations
          - Performance constraints
       6. Write `.agents/scratchpad/context.md` with structured findings
-      7. Emit: `ralph emit analysis.complete "context_path=.agents/scratchpad/context.md summary=<brief summary>"`
+      7. Emit: `ulf emit analysis.complete "context_path=.agents/scratchpad/context.md summary=<brief summary>"`
       8. Stop after emitting. Coordinator will route to Critique next.
 
       ### Constraints
@@ -132,15 +132,15 @@ hats:
 
       ### Emit Format
       ```
-      ralph emit analysis.insufficient "gaps=<comma list> questions=<specific questions>"
-      ralph emit analysis.approved "reasoning=<brief confirmation>"
+      ulf emit analysis.insufficient "gaps=<comma list> questions=<specific questions>"
+      ulf emit analysis.approved "reasoning=<brief confirmation>"
       ```
 
       ### Constraints
       - You MUST cite specific missing evidence, not vague complaints
       - You MUST re-read context.md every activation
       - You MUST NOT suggest implementation approaches
-      - You MUST use ralph emit — plain text summaries do NOT publish events
+      - You MUST use ulf emit — plain text summaries do NOT publish events
 
   # ───────────────────────────────────────────────────────────────
   # CENTRAL COORDINATOR — routes between all phases
@@ -173,11 +173,11 @@ hats:
 
       ### Process
       1. Read the incoming event context
-      2. Check `ralph tools task list` for any open/pending tasks
-      3. Check `ralph tools memory search` for relevant memories
+      2. Check `ulf tools task list` for any open/pending tasks
+      3. Check `ulf tools memory search` for relevant memories
       4. For major phase transitions, ask human for confirmation:
          ```
-         ralph emit human.interact "question=Approve proceeding to <next phase>? summary=<what was done>"
+         ulf emit human.interact "question=Approve proceeding to <next phase>? summary=<what was done>"
          ```
       5. Route based on incoming event:
 
@@ -197,7 +197,7 @@ hats:
       - You MUST NOT skip phases — always route through the proper sequence
       - You MUST check tasks and memories before major transitions
       - You SHOULD ask human for approval on plan.finalized and review.complete
-      - You MUST use ralph emit — plain text does NOT publish events
+      - You MUST use ulf emit — plain text does NOT publish events
       - You MUST NOT implement, plan, or review — only route
 
   # ───────────────────────────────────────────────────────────────
@@ -230,7 +230,7 @@ hats:
            - Rollback strategy
       4. Dispatch the critique wave:
          ```bash
-         ralph wave emit plan.critique --payloads \
+         ulf wave emit plan.critique --payloads \
            "PERSPECTIVE: code-refactor. Search for necessary refactors, tech debt, architectural changes." \
            "PERSPECTIVE: product-vision. Check alignment with product goals, user value, roadmap fit." \
            "PERSPECTIVE: feature-breaks. Identify existing features that could break, regression risks." \
@@ -244,7 +244,7 @@ hats:
       - You MUST NOT implement code
       - You MUST write plan.md before dispatching critique wave
       - You MUST address every critique concern before finalizing
-      - You MUST use ralph wave emit for the critique wave
+      - You MUST use ulf wave emit for the critique wave
       - You MUST hand off to Coordinator via plan.finalized
 
   critique_worker:
@@ -275,14 +275,14 @@ hats:
            Feature flags? Runbooks?
       4. Emit findings:
          ```
-         ralph emit critique.done "perspective=<your perspective> findings=<concise findings> severity=<minor|major|blocking>"
+         ulf emit critique.done "perspective=<your perspective> findings=<concise findings> severity=<minor|major|blocking>"
          ```
       5. Stop after emitting.
 
       ### Constraints
       - You MUST stay within your assigned perspective
       - You MUST cite specific plan sections, not vague opinions
-      - You MUST use ralph emit — plain text does NOT publish events
+      - You MUST use ulf emit — plain text does NOT publish events
 
   critique_synthesizer:
     name: "📝 Critique Synthesizer"
@@ -304,14 +304,14 @@ hats:
       2. Identify blocking issues vs minor concerns
       3. Emit synthesized critique:
          ```
-         ralph emit plan.critiqued "blocking=<list> minor=<list> all_findings=<summary>"
+         ulf emit plan.critiqued "blocking=<list> minor=<list> all_findings=<summary>"
          ```
       4. Stop after emitting.
 
       ### Constraints
       - You MUST NOT add your own opinions — just aggregate
       - You MUST distinguish blocking from minor concerns
-      - You MUST use ralph emit — plain text does NOT publish events
+      - You MUST use ulf emit — plain text does NOT publish events
 
   # ───────────────────────────────────────────────────────────────
   # PHASE 3: BDD / TDD LOOP
@@ -339,7 +339,7 @@ hats:
          - Include scenario outlines for data-driven cases
       4. Emit:
          ```
-         ralph emit bdd.specs_ready "features_dir=features/ plan_step=1"
+         ulf emit bdd.specs_ready "features_dir=features/ plan_step=1"
          ```
       5. Stop after emitting. QA Writer will write test implementation next.
 
@@ -376,7 +376,7 @@ hats:
          ```
       5. Emit:
          ```
-         ralph emit bdd.ready "features_dir=features/ tests_dir=tests/ plan_step=1"
+         ulf emit bdd.ready "features_dir=features/ tests_dir=tests/ plan_step=1"
          ```
       6. Stop after emitting. Coordinator will route to Developer next.
 
@@ -411,7 +411,7 @@ hats:
          - Run coverage if available: `scripts/coverage` (if exists)
       6. Emit:
          ```
-         ralph emit dev.done "plan_step=<N> tests_pass=true coverage=<coverage_pct if available>"
+         ulf emit dev.done "plan_step=<N> tests_pass=true coverage=<coverage_pct if available>"
          ```
       7. Stop after emitting. Coordinator will run completion gates next.
 
@@ -427,7 +427,7 @@ hats:
       - You MUST NOT change test files — those belong to QA Writer
       - You MUST run tests before emitting dev.done
       - You MUST address review feedback when triggered by dev.rejected
-      - You MUST use ralph emit — plain text does NOT publish events
+      - You MUST use ulf emit — plain text does NOT publish events
       - You MUST hand off to Coordinator — do NOT emit events for other hats directly
 
   # ───────────────────────────────────────────────────────────────
@@ -450,19 +450,19 @@ hats:
       2. Verify tests and coverage passed (gate output is in event context)
       3. Dispatch review wave:
          ```bash
-         ralph wave emit review.perspective --payloads \
+         ulf wave emit review.perspective --payloads \
            "PERSPECTIVE: coverage-report. Review coverage report for gaps and quality." \
            "PERSPECTIVE: code. Review actual implementation code for correctness and style." \
            "PERSPECTIVE: tests. Review test quality, edge cases, readability." \
            "PERSPECTIVE: features. Review BDD feature files for completeness."
          ```
-      4. Emit: `ralph emit review.requested "wave_dispatched=true"`
+      4. Emit: `ulf emit review.requested "wave_dispatched=true"`
       5. Stop after emitting.
 
       ### Constraints
       - You MUST NOT review yourself — dispatch the wave
-      - You MUST use ralph wave emit for the review wave
-      - You MUST use ralph emit — plain text does NOT publish events
+      - You MUST use ulf wave emit for the review wave
+      - You MUST use ulf emit — plain text does NOT publish events
 
   review_worker:
     name: "👁️ Review Worker"
@@ -493,14 +493,14 @@ hats:
          - Performance concerns
       4. Emit findings:
          ```
-         ralph emit review.done "perspective=<your perspective> issues=<list> severity=<minor|major|blocking>"
+         ulf emit review.done "perspective=<your perspective> issues=<list> severity=<minor|major|blocking>"
          ```
       5. Stop after emitting.
 
       ### Constraints
       - You MUST stay within your assigned perspective
       - You MUST cite specific lines/files when possible
-      - You MUST use ralph emit — plain text does NOT publish events
+      - You MUST use ulf emit — plain text does NOT publish events
 
   review_synthesizer:
     name: "📝 Review Synthesizer"
@@ -534,14 +534,14 @@ hats:
 
       ### Emit Format
       ```
-      ralph emit dev.rejected "blocking=<list> action_required=<specific fixes for developer>"
-      ralph emit qa.rejected "blocking=<list> action_required=<specific fixes for qa writer>"
-      ralph emit bdd.rejected "blocking=<list> action_required=<specific fixes for bdd writer>"
-      ralph emit review.complete "issues_count=<N> blocking=<N> minor=<N> notes=<optional>"
+      ulf emit dev.rejected "blocking=<list> action_required=<specific fixes for developer>"
+      ulf emit qa.rejected "blocking=<list> action_required=<specific fixes for qa writer>"
+      ulf emit bdd.rejected "blocking=<list> action_required=<specific fixes for bdd writer>"
+      ulf emit review.complete "issues_count=<N> blocking=<N> minor=<N> notes=<optional>"
       ```
 
       ### Constraints
       - You MUST be strict — blocking issues mean rejection
       - You MUST route test gaps to QA Writer, feature gaps to BDD Writer, code bugs to Developer
       - You MUST provide specific, actionable feedback on rejection
-      - You MUST use ralph emit — plain text does NOT publish events
+      - You MUST use ulf emit — plain text does NOT publish events
