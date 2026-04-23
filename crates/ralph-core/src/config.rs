@@ -146,6 +146,44 @@ where
     deserializer.deserialize_any(OptionalScratchpadConfigVisitor)
 }
 
+/// Configuration for a single completion gate.
+///
+/// Completion gates run when the agent emits the completion promise.
+/// If any gate exits non-zero, its output is injected as backpressure
+/// and the loop continues for another iteration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompletionGateConfig {
+    /// Stable identifier for this gate (used in backpressure messages).
+    pub name: String,
+
+    /// Command argv (`command[0]` executable + args).
+    pub command: Vec<String>,
+
+    /// Optional working directory override.
+    #[serde(default)]
+    pub cwd: Option<std::path::PathBuf>,
+
+    /// Optional environment variable overrides.
+    #[serde(default)]
+    pub env: HashMap<String, String>,
+
+    /// Maximum execution time in seconds (default: 60).
+    #[serde(default = "default_gate_timeout_seconds")]
+    pub timeout_seconds: u64,
+
+    /// Maximum stdout/stderr bytes stored per stream (default: 8192).
+    #[serde(default = "default_gate_max_output_bytes")]
+    pub max_output_bytes: u64,
+}
+
+fn default_gate_timeout_seconds() -> u64 {
+    60
+}
+
+fn default_gate_max_output_bytes() -> u64 {
+    8192
+}
+
 /// Top-level configuration for Ralph Orchestrator.
 ///
 /// Supports both v1.x flat format and v2.0 nested format:
@@ -162,7 +200,6 @@ pub struct RalphConfig {
     #[serde(default)]
     pub cli: CliConfig,
 
-    /// Core paths and settings shared across all hats.
     #[serde(default)]
     pub core: CoreConfig,
 
@@ -593,6 +630,9 @@ impl RalphConfig {
         // Validate hooks config semantics (v1 guardrails)
         self.validate_hooks()?;
 
+        // Validate completion gates
+        self.validate_completion_gates()?;
+
         // Check for required description field on all hats
         for (hat_id, hat_config) in &self.hats {
             if hat_config
@@ -730,6 +770,47 @@ impl RalphConfig {
 
                 Self::validate_non_v1_hook_fields(&hook_field_base, &hook.extra)?;
                 Self::validate_mutation_contract(&hook_field_base, &hook.mutate)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn validate_completion_gates(&self) -> Result<(), ConfigError> {
+        for (index, gate) in self.event_loop.completion_gates.iter().enumerate() {
+            let gate_field_base = format!("event_loop.completion_gates[{index}]");
+
+            if gate.name.trim().is_empty() {
+                return Err(ConfigError::HookValidation {
+                    field: format!("{gate_field_base}.name"),
+                    message: "is required and must be non-empty".to_string(),
+                });
+            }
+
+            if gate
+                .command
+                .first()
+                .is_none_or(|command| command.trim().is_empty())
+            {
+                return Err(ConfigError::HookValidation {
+                    field: format!("{gate_field_base}.command"),
+                    message: "is required and must include an executable at command[0]"
+                        .to_string(),
+                });
+            }
+
+            if gate.timeout_seconds == 0 {
+                return Err(ConfigError::HookValidation {
+                    field: format!("{gate_field_base}.timeout_seconds"),
+                    message: "must be greater than 0".to_string(),
+                });
+            }
+
+            if gate.max_output_bytes == 0 {
+                return Err(ConfigError::HookValidation {
+                    field: format!("{gate_field_base}.max_output_bytes"),
+                    message: "must be greater than 0".to_string(),
+                });
             }
         }
 
@@ -942,6 +1023,13 @@ pub struct EventLoopConfig {
     /// `{hat_id}.scope_violation` diagnostic events. Defaults to false (permissive).
     #[serde(default)]
     pub enforce_hat_scope: bool,
+
+    /// Completion gates that run when the agent emits the completion promise.
+    ///
+    /// If any gate exits non-zero, its output is injected as backpressure
+    /// and the loop continues for another iteration.
+    #[serde(default)]
+    pub completion_gates: Vec<CompletionGateConfig>,
 }
 
 fn default_prompt_file() -> String {
@@ -982,6 +1070,7 @@ impl Default for EventLoopConfig {
             required_events: Vec::new(),
             cancellation_promise: String::new(),
             enforce_hat_scope: false,
+            completion_gates: Vec::new(),
         }
     }
 }

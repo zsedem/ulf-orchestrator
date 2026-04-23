@@ -715,8 +715,10 @@ impl CliBackend {
                     Self::build_roo_prompt_file(&mut args, prompt)
                 } else {
                     // Use temp file for large prompts (>7000 chars) to avoid shell ARG_MAX limits
+                    // Create in current dir (not system temp) so sandboxed agents like opencode
+                    // can read it — opencode auto-rejects /tmp/* external_directory access.
                     let (prompt_text, temp_file) = if prompt.len() > 7000 {
-                        match NamedTempFile::new() {
+                        match NamedTempFile::new_in(".") {
                             Ok(mut file) => {
                                 if let Err(e) = file.write_all(prompt.as_bytes()) {
                                     tracing::warn!("Failed to write prompt to temp file: {}", e);

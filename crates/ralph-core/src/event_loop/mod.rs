@@ -8,6 +8,9 @@ mod tests;
 
 pub use loop_state::LoopState;
 
+use crate::completion_gates::{
+    CompletionGateResult, CompletionGateRunner, build_gate_backpressure_payload,
+};
 use crate::config::{HatBackend, InjectMode, RalphConfig, ScratchpadConfig};
 use crate::event_parser::{EventParser, MutationEvidence, MutationStatus};
 use crate::event_reader::EventReader;
@@ -485,6 +488,57 @@ impl EventLoop {
         &self.registry
     }
 
+    /// Checks whether the agent emitted at least one event matching this hat's
+    /// `publishes` list in the current iteration.
+    pub fn hat_publishes_satisfied(&self, hat_id: &HatId) -> bool {
+        let Some(hat) = self.registry.get(hat_id) else {
+            return true; // Unknown hat — no restriction
+        };
+        if hat.publishes.is_empty() {
+            return true; // No publishes expected
+        }
+        self.state.last_iteration_topics.iter().any(|topic| {
+            hat.publishes.iter().any(|pub_topic| pub_topic.matches_str(topic))
+        })
+    }
+
+    /// Builds backpressure text for a hat that did not emit a valid publish event.
+    /// Returns `None` when the hat has no publishes to list.
+    pub fn build_missing_publish_backpressure(&self, hat_id: &HatId) -> Option<String> {
+        let hat = self.registry.get(hat_id)?;
+        let publishes: Vec<String> = hat.publishes.iter().map(|t| t.to_string()).collect();
+        if publishes.is_empty() {
+            return None;
+        }
+        let list = publishes.iter().map(|t| format!("* {t}")).collect::<Vec<_>>().join("\n");
+        let example = publishes.first().cloned().unwrap_or_else(|| "event.name".to_string());
+        Some(format!(
+            "You did not emit a valid event this iteration.\n\
+             You MUST choose one of these events to advance the workflow:\n\
+             {list}\n\n\
+             Use `ralph emit <event>` to publish. For example:\n\
+             ralph emit {example}\n\n\
+             Plain text summaries and LOOP_COMPLETE do NOT count as event publication \
+             unless LOOP_COMPLETE is explicitly listed in your publishable events."
+        ))
+    }
+
+    /// Injects publish backpressure for a hat and clears any pending completion request
+    /// so the loop continues instead of terminating.
+    pub fn inject_publish_backpressure(&mut self, hat_id: &HatId) -> bool {
+        let Some(backpressure) = self.build_missing_publish_backpressure(hat_id) else {
+            return false;
+        };
+        // Use a hat-specific backpressure topic so it is not filtered as a
+        // kickoff/recovery event by `effective_regular_events`.
+        let backpressure_topic = format!("{}.backpressure", hat_id.as_str());
+        let resume_event = Event::new(backpressure_topic.as_str(), &backpressure)
+            .with_target(hat_id.clone());
+        self.bus.publish(resume_event);
+        self.state.completion_requested = false;
+        true
+    }
+
     /// Records hook telemetry for diagnostics.
     pub fn log_hook_run_telemetry(&self, entry: crate::diagnostics::HookRunTelemetryEntry) {
         self.diagnostics.log_hook_run(entry);
@@ -697,6 +751,49 @@ impl EventLoop {
             }
         } else if let Ok(false) = self.verify_scratchpad_complete() {
             warn!("Completion event with pending scratchpad tasks - trusting agent decision");
+        }
+
+        // Run completion gates
+        if !self.config.event_loop.completion_gates.is_empty() {
+            let runner = CompletionGateRunner::new();
+            let workspace = self.config.core.workspace_root.clone();
+            let result = runner.run_gates(&self.config.event_loop.completion_gates, &workspace);
+
+            match result {
+                CompletionGateResult::AllPassed => {
+                    debug!("All completion gates passed");
+                }
+                CompletionGateResult::Failed {
+                    name,
+                    exit_code,
+                    stdout,
+                    stderr,
+                    timed_out,
+                } => {
+                    warn!(
+                        gate = %name,
+                        exit_code = ?exit_code,
+                        timed_out,
+                        "Rejecting completion: completion gate failed"
+                    );
+                    self.state.completion_requested = false;
+
+                    let payload = build_gate_backpressure_payload(
+                        &name, exit_code, &stdout, &stderr, timed_out,
+                    );
+                    self.bus.publish(Event::new("task.resume", payload));
+
+                    self.diagnostics.log_orchestration(
+                        self.state.iteration,
+                        "loop",
+                        crate::diagnostics::OrchestrationEvent::LoopTerminated {
+                            reason: format!("completion_gate_failed:{name}"),
+                        },
+                    );
+
+                    return None;
+                }
+            }
         }
 
         info!("Completion event detected - terminating");
@@ -2211,6 +2308,11 @@ impl EventLoop {
         &mut self,
         result: crate::event_reader::ParseResult,
     ) -> std::io::Result<ProcessedEvents> {
+        // Record all topics emitted this iteration (before any filtering)
+        // so downstream logic can check what the agent actually wrote.
+        self.state.last_iteration_topics =
+            result.events.iter().map(|e| e.topic.clone()).collect();
+
         // Handle malformed lines with backpressure
         for malformed in &result.malformed {
             let payload = format!(

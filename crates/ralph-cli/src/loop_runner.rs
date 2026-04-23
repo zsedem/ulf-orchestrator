@@ -2420,10 +2420,10 @@ pub async fn run_loop_impl(
             .await;
         }
 
-        // Inject default_publishes for active hats only when agent wrote no events.
+        // Fallback for hats that did not receive a valid publish event.
         // Prefer the displayed execution hat first so a non-emitting turn still
         // falls back to the hat the user actually saw in the banner.
-        if !agent_wrote_events && wave_events.is_empty() {
+        if wave_events.is_empty() {
             let mut fallback_hats = Vec::new();
             if display_hat.as_str() != "ralph" {
                 fallback_hats.push(display_hat.clone());
@@ -2435,9 +2435,23 @@ pub async fn run_loop_impl(
             }
 
             for active_hat_id in &fallback_hats {
+                // If the agent already emitted a valid event for this hat, nothing to do.
+                if event_loop.hat_publishes_satisfied(active_hat_id) {
+                    continue;
+                }
+
+                // Try explicit default_publishes first (auto-inject behaviour).
+                let had_pending_before = event_loop.has_pending_events();
                 event_loop.check_default_publishes(active_hat_id);
-                if event_loop.has_pending_events() {
-                    break; // One default is sufficient
+                if !had_pending_before && event_loop.has_pending_events() {
+                    break; // default_publishes was injected
+                }
+
+                // No default configured — send backpressure so the agent knows
+                // what events it can emit to advance the workflow.
+                if event_loop.inject_publish_backpressure(active_hat_id) {
+                    agent_wrote_events = true;
+                    break; // One backpressure event is sufficient
                 }
             }
         }

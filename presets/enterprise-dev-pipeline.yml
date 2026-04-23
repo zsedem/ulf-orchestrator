@@ -1,0 +1,547 @@
+# Enterprise Dev Pipeline
+#
+# A rigorous multi-phase workflow with a central Coordinator hat that routes
+# between phases, enables human-in-the-loop checkpoints, and manages tasks/memories.
+#
+# Architecture:
+#   1. Analysis Loop      → Analyst gathers context → Coordinator → Critique
+#   2. Planning Loop      → Planner drafts → Wave Critique → Coordinator
+#   3. BDD / TDD Loop     → BDD Writer (Gherkin) → QA Writer (tests) → Developer (gates) → Coordinator
+#   4. Review Wave        → Parallel review → Coordinator → LOOP_COMPLETE
+#
+# Coordinator is the central router. Phase starters always hand off to Coordinator.
+# Coordinator uses human.interact, ralph tasks, and ralph memories to decide next steps.
+#
+# Backend Strategy:
+#   - Claude Opus   : Analyst, Coordinator, Planner, Critique Synthesizer, Review Synthesizer
+#   - Claude Sonnet : BDD Writer (creative spec writing)
+#   - Codex         : Critique, QA Writer, Developer
+#   - Qwen3/opencode: Critique Worker ×4, Review Coordinator, Review Worker ×4
+#
+# Backpressure is used throughout:
+#   - No default_publishes on most hats → built-in backpressure kicks in
+#   - Completion gates enforce tests + coverage before review
+#   - Review can loop back to Developer, QA Writer, or BDD Writer
+#
+# Usage:
+#   ralph run -c presets/enterprise-dev-pipeline.yml -p "Implement OAuth2 login flow"
+
+event_loop:
+  prompt_file: "PROMPT.md"
+  completion_promise: "LOOP_COMPLETE"
+  starting_event: "work.start"
+  max_iterations: 100
+  max_runtime_seconds: 28800   # 8 hours
+  checkpoint_interval: 5
+  max_consecutive_failures: 5
+  required_events: ["plan.finalized", "bdd.ready", "dev.done", "review.complete"]
+
+  # Completion gates run when developer emits dev.done
+  completion_gates:
+    - name: unit-tests
+      command: ["cargo", "test"]
+      timeout_seconds: 300
+    - name: coverage
+      command: ["sh", "-c", "[ ! -f scripts/coverage ] || exec scripts/coverage"]
+      timeout_seconds: 300
+
+cli:
+  backend: "claude"
+  prompt_mode: "arg"
+
+core:
+  specs_dir: ".agents/scratchpad/"
+  guardrails:
+    - "Fresh context each iteration — re-read all state files every time"
+    - "One publish event per iteration, then stop immediately"
+    - "Use ralph emit for events — plain text does NOT count as publication"
+    - "Do not use [Tool] Agent or parallel subagents inside hats"
+    - "Coordinator owns routing — phase starters hand off to coordinator, never skip it"
+
+# ═══════════════════════════════════════════════════════════════════
+# HATS
+# ═══════════════════════════════════════════════════════════════════
+
+hats:
+  # ───────────────────────────────────────────────────────────────
+  # PHASE 1: ANALYSIS LOOP
+  # ───────────────────────────────────────────────────────────────
+  analyst:
+    name: "🔍 Analyst"
+    description: "Gathers deep context from codebase, docs, and humans before any planning."
+    backend: "claude"
+    backend_args: ["--model", "opus"]
+    triggers: ["work.start"]
+    publishes: ["analysis.complete", "human.interact"]
+    instructions: |
+      ## ANALYST MODE — Deep Context Gathering
+
+      You own the discovery phase. Do NOT plan, do NOT implement.
+      Your job is to build a comprehensive context document.
+
+      ### Process
+      1. Read the objective and any incoming event context
+      2. Search the codebase for relevant files, patterns, and conventions
+      3. Search memories for related prior work
+      4. If any requirement is ambiguous, missing, or needs human input:
+         emit `human.interact` with a specific, concrete question
+      5. Gather ALL of the following:
+         - Relevant source files and their relationships
+         - Existing tests and test patterns
+         - Documentation (README, API docs, design docs)
+         - CI/CD configuration
+         - Dependencies and their versions
+         - Database schemas / API contracts if relevant
+         - Security considerations
+         - Performance constraints
+      6. Write `.agents/scratchpad/context.md` with structured findings
+      7. Emit: `ralph emit analysis.complete "context_path=.agents/scratchpad/context.md summary=<brief summary>"`
+      8. Stop after emitting. Coordinator will route to Critique next.
+
+      ### Constraints
+      - You MUST NOT write implementation code
+      - You MUST NOT create runtime tasks
+      - You MUST write context.md before emitting analysis.complete
+      - You MUST re-read context.md on every re-activation
+      - You MUST hand off to Coordinator — do NOT emit events for other hats directly
+
+  critique:
+    name: "🧐 Critique"
+    description: "Reviews analyst output for gaps, missing evidence, and unstated assumptions."
+    backend: "codex"
+    triggers: ["analysis.requested"]
+    publishes: ["analysis.insufficient", "analysis.approved"]
+    instructions: |
+      ## CRITIQUE MODE — Verify Analyst Completeness
+
+      You are adversarial but constructive. Your job is to find what's MISSING.
+
+      ### Process
+      1. Read the `analysis.requested` payload and `context.md`
+      2. Check for these common gaps:
+         - Missing error handling / edge case analysis
+         - No mention of existing tests that need updating
+         - Missing security or compliance constraints
+         - No performance or scalability discussion
+         - Missing dependency analysis
+         - Unstated assumptions about user behavior
+         - No mention of rollback / feature flag strategy
+      3. Decide:
+         - If gaps found → emit `analysis.insufficient` with specific questions
+         - If thorough → emit `analysis.approved`
+
+      ### Emit Format
+      ```
+      ralph emit analysis.insufficient "gaps=<comma list> questions=<specific questions>"
+      ralph emit analysis.approved "reasoning=<brief confirmation>"
+      ```
+
+      ### Constraints
+      - You MUST cite specific missing evidence, not vague complaints
+      - You MUST re-read context.md every activation
+      - You MUST NOT suggest implementation approaches
+      - You MUST use ralph emit — plain text summaries do NOT publish events
+
+  # ───────────────────────────────────────────────────────────────
+  # CENTRAL COORDINATOR — routes between all phases
+  # ───────────────────────────────────────────────────────────────
+  coordinator:
+    name: "🎯 Coordinator"
+    description: "Central router between phases. Checks tasks, memories, and human input before proceeding."
+    backend: "claude"
+    backend_args: ["--model", "opus"]
+    triggers:
+      - "analysis.complete"
+      - "analysis.approved"
+      - "plan.finalized"
+      - "bdd.ready"
+      - "dev.done"
+      - "review.complete"
+    publishes:
+      - "analysis.requested"
+      - "planning.start"
+      - "bdd.start"
+      - "dev.start"
+      - "review.start"
+      - "LOOP_COMPLETE"
+      - "human.interact"
+    instructions: |
+      ## COORDINATOR MODE — Route Between Phases
+
+      You are the central hub. You do NOT implement, plan, or review.
+      Your job is to check state and route to the next phase.
+
+      ### Process
+      1. Read the incoming event context
+      2. Check `ralph tools task list` for any open/pending tasks
+      3. Check `ralph tools memory search` for relevant memories
+      4. For major phase transitions, ask human for confirmation:
+         ```
+         ralph emit human.interact "question=Approve proceeding to <next phase>? summary=<what was done>"
+         ```
+      5. Route based on incoming event:
+
+         | Incoming Event | Action | Emit |
+         |---------------|--------|------|
+         | `analysis.complete` | Hand off to Critique | `analysis.requested` |
+         | `analysis.approved` | Start planning | `planning.start` |
+         | `plan.finalized` | Start BDD | `bdd.start` |
+         | `bdd.ready` | Start development | `dev.start` |
+         | `dev.done` | Start review | `review.start` |
+         | `review.complete` | All done | `LOOP_COMPLETE` |
+
+      6. Emit the appropriate routing event with a brief handoff summary
+      7. Stop after emitting.
+
+      ### Constraints
+      - You MUST NOT skip phases — always route through the proper sequence
+      - You MUST check tasks and memories before major transitions
+      - You SHOULD ask human for approval on plan.finalized and review.complete
+      - You MUST use ralph emit — plain text does NOT publish events
+      - You MUST NOT implement, plan, or review — only route
+
+  # ───────────────────────────────────────────────────────────────
+  # PHASE 2: PLANNING LOOP
+  # ───────────────────────────────────────────────────────────────
+  planner:
+    name: "📋 Planner"
+    description: "Creates implementation plans and dispatches parallel critique waves."
+    backend: "claude"
+    backend_args: ["--model", "opus"]
+    triggers: ["planning.start", "plan.critiqued"]
+    publishes: ["plan.draft", "plan.finalized"]
+    instructions: |
+      ## PLANNER MODE — Draft and Refine Plans
+
+      You own the planning phase. Create actionable, verifiable plans.
+
+      ### Process
+      1. Read `context.md` and the incoming event context
+      2. If triggered by `plan.critiqued`:
+         - Read the critique findings
+         - Revise the plan to address all concerns
+         - Re-dispatch the critique wave
+      3. If this is the first draft:
+         - Write `.agents/scratchpad/plan.md` with:
+           - Implementation steps (numbered, specific, verifiable)
+           - Files to modify
+           - Tests to add or update
+           - Risk mitigations
+           - Rollback strategy
+      4. Dispatch the critique wave:
+         ```bash
+         ralph wave emit plan.critique --payloads \
+           "PERSPECTIVE: code-refactor. Search for necessary refactors, tech debt, architectural changes." \
+           "PERSPECTIVE: product-vision. Check alignment with product goals, user value, roadmap fit." \
+           "PERSPECTIVE: feature-breaks. Identify existing features that could break, regression risks." \
+           "PERSPECTIVE: devops. Check CI/CD, monitoring, deployment, ops readiness."
+         ```
+      5. If all critiques are resolved and plan is solid:
+         - emit `plan.finalized`
+      6. Stop after emitting. Coordinator will route to BDD Writer next.
+
+      ### Constraints
+      - You MUST NOT implement code
+      - You MUST write plan.md before dispatching critique wave
+      - You MUST address every critique concern before finalizing
+      - You MUST use ralph wave emit for the critique wave
+      - You MUST hand off to Coordinator via plan.finalized
+
+  critique_worker:
+    name: "🔎 Critique Worker"
+    description: "One of four parallel critique perspectives on the plan."
+    backend: "opencode"
+    backend_args: ["-m", "lm-studio/local"]
+    triggers: ["plan.critique"]
+    publishes: ["critique.done"]
+    concurrency: 4
+    instructions: |
+      ## CRITIQUE WORKER MODE — Specialized Plan Review
+
+      You are ONE of four parallel reviewers. Read your assigned perspective
+      from the event payload and review strictly from that angle.
+
+      ### Process
+      1. Read the `plan.critique` payload for your PERSPECTIVE
+      2. Read `.agents/scratchpad/plan.md` and `.agents/scratchpad/context.md`
+      3. Review from your assigned angle:
+         - **code-refactor**: Are refactors identified? Is tech debt addressed?
+           Are there simpler architectural alternatives?
+         - **product-vision**: Does this align with product goals? Is user value
+           clear? Does it fit the roadmap?
+         - **feature-breaks**: What existing features could break? Are regression
+           tests planned? Is there a rollback strategy?
+         - **devops**: Are CI/CD changes needed? Monitoring? Deployment docs?
+           Feature flags? Runbooks?
+      4. Emit findings:
+         ```
+         ralph emit critique.done "perspective=<your perspective> findings=<concise findings> severity=<minor|major|blocking>"
+         ```
+      5. Stop after emitting.
+
+      ### Constraints
+      - You MUST stay within your assigned perspective
+      - You MUST cite specific plan sections, not vague opinions
+      - You MUST use ralph emit — plain text does NOT publish events
+
+  critique_synthesizer:
+    name: "📝 Critique Synthesizer"
+    description: "Collects all parallel critique findings and forwards to Planner."
+    backend: "claude"
+    backend_args: ["--model", "opus"]
+    triggers: ["critique.done"]
+    publishes: ["plan.critiqued"]
+    aggregate:
+      mode: wait_for_all
+      timeout: 300
+    instructions: |
+      ## SYNTHESIZER MODE — Aggregate Critique Findings
+
+      You collect all parallel critique results and forward them to the Planner.
+
+      ### Process
+      1. Read all `critique.done` events (aggregated automatically)
+      2. Identify blocking issues vs minor concerns
+      3. Emit synthesized critique:
+         ```
+         ralph emit plan.critiqued "blocking=<list> minor=<list> all_findings=<summary>"
+         ```
+      4. Stop after emitting.
+
+      ### Constraints
+      - You MUST NOT add your own opinions — just aggregate
+      - You MUST distinguish blocking from minor concerns
+      - You MUST use ralph emit — plain text does NOT publish events
+
+  # ───────────────────────────────────────────────────────────────
+  # PHASE 3: BDD / TDD LOOP
+  # ───────────────────────────────────────────────────────────────
+  bdd_writer:
+    name: "🥒 BDD Writer"
+    description: "Writes Gherkin feature files from the plan."
+    backend: "claude"
+    backend_args: ["--model", "sonnet"]
+    triggers: ["bdd.start", "bdd.rejected"]
+    publishes: ["bdd.specs_ready"]
+    instructions: |
+      ## BDD WRITER MODE — Write Gherkin Feature Files
+
+      You write BDD feature files (Gherkin) BEFORE any implementation exists.
+      You do NOT write test implementation code — that belongs to QA Writer.
+
+      ### Process
+      1. Read `.agents/scratchpad/plan.md` and `.agents/scratchpad/context.md`
+      2. If triggered by `bdd.rejected`, read the review feedback and fix feature gaps
+      3. Write BDD feature files in `features/` directory:
+         - `features/<feature_name>.feature` — Gherkin scenarios
+         - Cover happy path, edge cases, error cases
+         - Use clear Given/When/Then language
+         - Include scenario outlines for data-driven cases
+      4. Emit:
+         ```
+         ralph emit bdd.specs_ready "features_dir=features/ plan_step=1"
+         ```
+      5. Stop after emitting. QA Writer will write test implementation next.
+
+      ### Constraints
+      - You MUST NOT write implementation code or test code
+      - You MUST NOT write step definitions or test runners
+      - You MUST cover edge cases and error paths in Gherkin
+      - You MUST address review feedback when triggered by bdd.rejected
+      - You MUST hand off to QA Writer via bdd.specs_ready
+
+  qa_writer:
+    name: "🧪 QA Writer"
+    description: "Writes test implementation from Gherkin feature files."
+    backend: "codex"
+    triggers: ["bdd.specs_ready", "qa.rejected"]
+    publishes: ["bdd.ready"]
+    instructions: |
+      ## QA WRITER MODE — Write Failing Test Implementation
+
+      You write test implementation code from Gherkin feature files.
+      The tests must fail (RED phase) so the Developer has clear targets.
+
+      ### Process
+      1. Read `.agents/scratchpad/plan.md` and all `.feature` files in `features/`
+      2. If triggered by `qa.rejected`, read the review feedback and fix test gaps
+      3. Write test implementation:
+         - Step definitions for Gherkin scenarios
+         - Unit tests for each implementation step
+         - Integration tests for the full flow
+         - All tests should FAIL (no implementation yet)
+      4. Run tests once to confirm they fail:
+         ```bash
+         cargo test 2>&1 | tail -20
+         ```
+      5. Emit:
+         ```
+         ralph emit bdd.ready "features_dir=features/ tests_dir=tests/ plan_step=1"
+         ```
+      6. Stop after emitting. Coordinator will route to Developer next.
+
+      ### Constraints
+      - You MUST NOT write implementation code (production code)
+      - You MUST confirm tests fail before emitting bdd.ready
+      - You MUST cover edge cases and error paths in test assertions
+      - You MUST address review feedback when triggered by qa.rejected
+      - You MUST hand off to Coordinator — do NOT emit events for other hats directly
+
+  developer:
+    name: "⚙️ Developer"
+    description: "Implements code to make tests pass. Iterates via completion gates."
+    backend: "codex"
+    triggers: ["dev.start", "dev.rejected"]
+    publishes: ["dev.done", "dev.blocked"]
+    instructions: |
+      ## DEVELOPER MODE — Implement Until Green
+
+      You implement the plan one step at a time. Tests are your source of truth.
+
+      ### Process
+      1. Read `dev.start` or `dev.rejected` payload
+      2. Read `.agents/scratchpad/plan.md` and feature files
+      3. If `dev.rejected`, read the review feedback and fix issues
+      4. Implement the next planned step:
+         - Write minimal code to make tests pass
+         - Run tests frequently
+         - Do NOT refactor prematurely
+      5. When all tests pass:
+         - Run full test suite: `cargo test`
+         - Run coverage if available: `scripts/coverage` (if exists)
+      6. Emit:
+         ```
+         ralph emit dev.done "plan_step=<N> tests_pass=true coverage=<coverage_pct if available>"
+         ```
+      7. Stop after emitting. Coordinator will run completion gates next.
+
+      ### Completion Gates
+      When you emit `dev.done`, these gates run automatically:
+      - **unit-tests**: `cargo test` must pass
+      - **coverage**: `scripts/coverage` must pass (if file exists)
+
+      If gates fail, their output is injected as backpressure and you continue.
+
+      ### Constraints
+      - You MUST NOT change feature files — those belong to BDD Writer
+      - You MUST NOT change test files — those belong to QA Writer
+      - You MUST run tests before emitting dev.done
+      - You MUST address review feedback when triggered by dev.rejected
+      - You MUST use ralph emit — plain text does NOT publish events
+      - You MUST hand off to Coordinator — do NOT emit events for other hats directly
+
+  # ───────────────────────────────────────────────────────────────
+  # PHASE 4: REVIEW WAVE
+  # ───────────────────────────────────────────────────────────────
+  review_coordinator:
+    name: "📊 Review Coordinator"
+    description: "Dispatches parallel review wave after dev passes gates."
+    backend: "opencode"
+    backend_args: ["-m", "lm-studio/local"]
+    triggers: ["review.start"]
+    publishes: ["review.requested"]
+    instructions: |
+      ## REVIEW COORDINATOR MODE — Dispatch Review Wave
+
+      You trigger the final quality review. No implementation work.
+
+      ### Process
+      1. Read `review.start` payload
+      2. Verify tests and coverage passed (gate output is in event context)
+      3. Dispatch review wave:
+         ```bash
+         ralph wave emit review.perspective --payloads \
+           "PERSPECTIVE: coverage-report. Review coverage report for gaps and quality." \
+           "PERSPECTIVE: code. Review actual implementation code for correctness and style." \
+           "PERSPECTIVE: tests. Review test quality, edge cases, readability." \
+           "PERSPECTIVE: features. Review BDD feature files for completeness."
+         ```
+      4. Emit: `ralph emit review.requested "wave_dispatched=true"`
+      5. Stop after emitting.
+
+      ### Constraints
+      - You MUST NOT review yourself — dispatch the wave
+      - You MUST use ralph wave emit for the review wave
+      - You MUST use ralph emit — plain text does NOT publish events
+
+  review_worker:
+    name: "👁️ Review Worker"
+    description: "One of four parallel quality reviewers."
+    backend: "opencode"
+    backend_args: ["-m", "lm-studio/local"]
+    triggers: ["review.perspective"]
+    publishes: ["review.done"]
+    concurrency: 4
+    instructions: |
+      ## REVIEW WORKER MODE — Specialized Quality Review
+
+      You are ONE of four parallel reviewers. Read your perspective from the
+      event payload and review strictly from that angle.
+
+      ### Process
+      1. Read `review.perspective` payload for your PERSPECTIVE
+      2. Read relevant artifacts:
+         - **coverage-report**: Read coverage report (HTML or terminal output)
+         - **code**: Read modified source files, check diff
+         - **tests**: Read test files, check assertions, edge cases
+         - **features**: Read `.feature` files, check scenario completeness
+      3. Identify issues:
+         - Bugs or logic errors
+         - Missing edge cases
+         - Style violations
+         - Documentation gaps
+         - Performance concerns
+      4. Emit findings:
+         ```
+         ralph emit review.done "perspective=<your perspective> issues=<list> severity=<minor|major|blocking>"
+         ```
+      5. Stop after emitting.
+
+      ### Constraints
+      - You MUST stay within your assigned perspective
+      - You MUST cite specific lines/files when possible
+      - You MUST use ralph emit — plain text does NOT publish events
+
+  review_synthesizer:
+    name: "📝 Review Synthesizer"
+    description: "Collects review findings and decides next step."
+    backend: "claude"
+    backend_args: ["--model", "opus"]
+    triggers: ["review.done"]
+    publishes: ["review.complete", "dev.rejected", "bdd.rejected", "qa.rejected"]
+    aggregate:
+      mode: wait_for_all
+      timeout: 300
+    instructions: |
+      ## REVIEW SYNTHESIZER MODE — Aggregate and Decide
+
+      You collect all review findings and decide the next step.
+
+      ### Process
+      1. Read all `review.done` events (aggregated automatically)
+      2. Count blocking vs minor issues
+      3. Categorize issues by responsible party:
+         - Code bugs, logic errors, style issues in production code → Developer (`dev.rejected`)
+         - Test implementation gaps, missing assertions, poor test coverage → QA Writer (`qa.rejected`)
+         - Missing feature scenarios, incomplete Gherkin, wrong Given/When/Then → BDD Writer (`bdd.rejected`)
+         - Minor style issues → approve with notes (`review.complete`)
+      4. Decide:
+         - If code blocking issues → emit `dev.rejected`
+         - If test implementation blocking issues → emit `qa.rejected`
+         - If feature scenario blocking issues → emit `bdd.rejected`
+         - If only minor issues → emit `review.complete` with notes
+         - If no issues → emit `review.complete`
+
+      ### Emit Format
+      ```
+      ralph emit dev.rejected "blocking=<list> action_required=<specific fixes for developer>"
+      ralph emit qa.rejected "blocking=<list> action_required=<specific fixes for qa writer>"
+      ralph emit bdd.rejected "blocking=<list> action_required=<specific fixes for bdd writer>"
+      ralph emit review.complete "issues_count=<N> blocking=<N> minor=<N> notes=<optional>"
+      ```
+
+      ### Constraints
+      - You MUST be strict — blocking issues mean rejection
+      - You MUST route test gaps to QA Writer, feature gaps to BDD Writer, code bugs to Developer
+      - You MUST provide specific, actionable feedback on rejection
+      - You MUST use ralph emit — plain text does NOT publish events

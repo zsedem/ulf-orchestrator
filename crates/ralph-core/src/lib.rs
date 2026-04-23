@@ -12,6 +12,7 @@
 
 #[cfg(feature = "recording")]
 mod cli_capture;
+mod completion_gates;
 mod config;
 pub mod diagnostics;
 mod event_logger;
@@ -60,10 +61,13 @@ pub mod worktree;
 
 #[cfg(feature = "recording")]
 pub use cli_capture::{CliCapture, CliCapturePair};
+pub use completion_gates::{
+    CompletionGateFailed, CompletionGateResult, CompletionGateRunner,
+};
 pub use config::{
-    CliConfig, ConfigError, CoreConfig, EventLoopConfig, EventMetadata, FeaturesConfig, HatBackend,
-    HatConfig, InjectMode, MemoriesConfig, MemoriesFilter, RalphConfig, ScratchpadConfig,
-    SkillOverride, SkillsConfig,
+    CliConfig, CompletionGateConfig, ConfigError, CoreConfig, EventLoopConfig, EventMetadata,
+    FeaturesConfig, HatBackend, HatConfig, InjectMode, MemoriesConfig, MemoriesFilter, RalphConfig,
+    ScratchpadConfig, SkillOverride, SkillsConfig,
 };
 // Re-export loop_name types (also available via FeaturesConfig.loop_naming)
 pub use diagnostics::DiagnosticsCollector;
