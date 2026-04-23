@@ -4465,3 +4465,174 @@ fn test_human_response_restart_request_creates_restart_signal_file() {
         "human.response restart request should create restart signal file"
     );
 }
+
+
+// ─────────────────────────────────────────────────────────────────────────
+// Completion Gates Tests
+// ─────────────────────────────────────────────────────────────────────────
+
+#[test]
+fn test_completion_gate_pass_allows_termination() {
+    use tempfile::TempDir;
+
+    let temp_dir = TempDir::new().unwrap();
+    let events_path = temp_dir.path().join("events.jsonl");
+
+    let mut config = RalphConfig::default();
+    config.event_loop.completion_gates = vec![crate::config::CompletionGateConfig {
+        name: "true-gate".to_string(),
+        command: vec!["true".to_string()],
+        cwd: None,
+        env: std::collections::HashMap::new(),
+        timeout_seconds: 30,
+        max_output_bytes: 1024,
+    }];
+
+    let mut event_loop = EventLoop::new(config);
+    event_loop.initialize("Test");
+    event_loop.event_reader = crate::event_reader::EventReader::new(&events_path);
+
+    write_event_to_jsonl(&events_path, "LOOP_COMPLETE", "Done");
+    let _ = event_loop.process_events_from_jsonl();
+    let reason = event_loop.check_completion_event();
+    assert_eq!(
+        reason,
+        Some(TerminationReason::CompletionPromise),
+        "Should terminate when completion gate passes"
+    );
+}
+
+#[test]
+fn test_completion_gate_failure_injects_task_resume() {
+    use tempfile::TempDir;
+
+    let temp_dir = TempDir::new().unwrap();
+    let events_path = temp_dir.path().join("events.jsonl");
+
+    let mut config = RalphConfig::default();
+    config.event_loop.completion_gates = vec![crate::config::CompletionGateConfig {
+        name: "false-gate".to_string(),
+        command: vec!["false".to_string()],
+        cwd: None,
+        env: std::collections::HashMap::new(),
+        timeout_seconds: 30,
+        max_output_bytes: 1024,
+    }];
+
+    let mut event_loop = EventLoop::new(config);
+    event_loop.initialize("Test");
+    event_loop.event_reader = crate::event_reader::EventReader::new(&events_path);
+
+    write_event_to_jsonl(&events_path, "LOOP_COMPLETE", "Done");
+    let _ = event_loop.process_events_from_jsonl();
+    let reason = event_loop.check_completion_event();
+    assert_eq!(
+        reason, None,
+        "Should reject completion when gate fails"
+    );
+
+    // Verify task.resume was injected
+    let ralph_id = ralph_proto::HatId::new("ralph");
+    let pending = event_loop.bus.take_pending(&ralph_id);
+    let resume_events: Vec<_> = pending
+        .iter()
+        .filter(|e| e.topic.as_str() == "task.resume")
+        .collect();
+    assert_eq!(
+        resume_events.len(),
+        1,
+        "Should inject exactly one task.resume event"
+    );
+    assert!(
+        resume_events[0].payload.contains("false-gate"),
+        "Backpressure should mention the gate name"
+    );
+    assert!(
+        resume_events[0].payload.contains("Fix the issue and emit LOOP_COMPLETE again"),
+        "Backpressure should instruct agent to retry"
+    );
+}
+
+#[test]
+fn test_completion_gate_failure_resets_completion_requested() {
+    use tempfile::TempDir;
+
+    let temp_dir = TempDir::new().unwrap();
+    let events_path = temp_dir.path().join("events.jsonl");
+
+    let mut config = RalphConfig::default();
+    config.event_loop.completion_gates = vec![crate::config::CompletionGateConfig {
+        name: "false-gate".to_string(),
+        command: vec!["false".to_string()],
+        cwd: None,
+        env: std::collections::HashMap::new(),
+        timeout_seconds: 30,
+        max_output_bytes: 1024,
+    }];
+
+    let mut event_loop = EventLoop::new(config);
+    event_loop.initialize("Test");
+    event_loop.event_reader = crate::event_reader::EventReader::new(&events_path);
+
+    write_event_to_jsonl(&events_path, "LOOP_COMPLETE", "Done");
+    let _ = event_loop.process_events_from_jsonl();
+    let _ = event_loop.check_completion_event();
+
+    assert!(
+        !event_loop.state.completion_requested,
+        "completion_requested should be reset after gate failure"
+    );
+
+    // Calling check_completion_event again should still return None
+    // because completion_requested was reset
+    let reason = event_loop.check_completion_event();
+    assert_eq!(reason, None, "Second check should also return None");
+}
+
+#[test]
+fn test_completion_gate_short_circuits_on_first_failure() {
+    use tempfile::TempDir;
+
+    let temp_dir = TempDir::new().unwrap();
+    let events_path = temp_dir.path().join("events.jsonl");
+
+    let mut config = RalphConfig::default();
+    config.event_loop.completion_gates = vec![
+        crate::config::CompletionGateConfig {
+            name: "false-gate".to_string(),
+            command: vec!["false".to_string()],
+            cwd: None,
+            env: std::collections::HashMap::new(),
+            timeout_seconds: 30,
+            max_output_bytes: 1024,
+        },
+        crate::config::CompletionGateConfig {
+            name: "true-gate".to_string(),
+            command: vec!["true".to_string()],
+            cwd: None,
+            env: std::collections::HashMap::new(),
+            timeout_seconds: 30,
+            max_output_bytes: 1024,
+        },
+    ];
+
+    let mut event_loop = EventLoop::new(config);
+    event_loop.initialize("Test");
+    event_loop.event_reader = crate::event_reader::EventReader::new(&events_path);
+
+    write_event_to_jsonl(&events_path, "LOOP_COMPLETE", "Done");
+    let _ = event_loop.process_events_from_jsonl();
+    let reason = event_loop.check_completion_event();
+    assert_eq!(reason, None, "Should reject on first failing gate");
+
+    let ralph_id = ralph_proto::HatId::new("ralph");
+    let pending = event_loop.bus.take_pending(&ralph_id);
+    let resume_events: Vec<_> = pending
+        .iter()
+        .filter(|e| e.topic.as_str() == "task.resume")
+        .collect();
+    assert!(
+        resume_events[0].payload.contains("false-gate"),
+        "Backpressure should come from first gate, not second"
+    );
+}

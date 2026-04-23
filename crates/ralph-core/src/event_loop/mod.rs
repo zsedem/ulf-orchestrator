@@ -8,6 +8,9 @@ mod tests;
 
 pub use loop_state::LoopState;
 
+use crate::completion_gates::{
+    CompletionGateResult, CompletionGateRunner, build_gate_backpressure_payload,
+};
 use crate::config::{HatBackend, InjectMode, RalphConfig, ScratchpadConfig};
 use crate::event_parser::{EventParser, MutationEvidence, MutationStatus};
 use crate::event_reader::EventReader;
@@ -697,6 +700,49 @@ impl EventLoop {
             }
         } else if let Ok(false) = self.verify_scratchpad_complete() {
             warn!("Completion event with pending scratchpad tasks - trusting agent decision");
+        }
+
+        // Run completion gates
+        if !self.config.event_loop.completion_gates.is_empty() {
+            let runner = CompletionGateRunner::new();
+            let workspace = self.config.core.workspace_root.clone();
+            let result = runner.run_gates(&self.config.event_loop.completion_gates, &workspace);
+
+            match result {
+                CompletionGateResult::AllPassed => {
+                    debug!("All completion gates passed");
+                }
+                CompletionGateResult::Failed {
+                    name,
+                    exit_code,
+                    stdout,
+                    stderr,
+                    timed_out,
+                } => {
+                    warn!(
+                        gate = %name,
+                        exit_code = ?exit_code,
+                        timed_out,
+                        "Rejecting completion: completion gate failed"
+                    );
+                    self.state.completion_requested = false;
+
+                    let payload = build_gate_backpressure_payload(
+                        &name, exit_code, &stdout, &stderr, timed_out,
+                    );
+                    self.bus.publish(Event::new("task.resume", payload));
+
+                    self.diagnostics.log_orchestration(
+                        self.state.iteration,
+                        "loop",
+                        crate::diagnostics::OrchestrationEvent::LoopTerminated {
+                            reason: format!("completion_gate_failed:{name}"),
+                        },
+                    );
+
+                    return None;
+                }
+            }
         }
 
         info!("Completion event detected - terminating");

@@ -214,6 +214,42 @@ publishes: ["build.done"]
 # The payload structure enforces evidence
 ```
 
+### Completion Gates (Automated)
+
+Completion gates are scripts that run automatically when the agent emits `LOOP_COMPLETE`. If any gate exits non-zero, its output is injected back into the session as a `task.resume` event, and the loop continues so the agent can fix the issue.
+
+```yaml
+event_loop:
+  completion_gates:
+    - name: tests-pass
+      command: ["cargo", "test"]
+      timeout_seconds: 120
+    - name: clean-working-tree
+      command: ["git", "diff", "--quiet", "--exit-code"]
+    - name: no-todos
+      command: ["grep", "-q", "TODO", "README.md"]
+```
+
+Gate rules:
+- Run **sequentially** in declaration order.
+- First failure short-circuits; its output becomes the backpressure event.
+- Exit code 0 = pass. Any non-zero exit = failure.
+- `timeout_seconds` defaults to 60, `max_output_bytes` defaults to 8192.
+- Gate output is formatted as:
+  ```
+  Completion gate '{name}' failed (exit code {code}).
+
+  ## stdout
+  {stdout}
+
+  ## stderr
+  {stderr}
+
+  Fix the issue and emit LOOP_COMPLETE again.
+  ```
+
+This is **hard corrective backpressure**: instead of trusting the agent to run checks, Ralph enforces them automatically at the boundary of loop completion.
+
 ## Backpressure Flow
 
 ```mermaid

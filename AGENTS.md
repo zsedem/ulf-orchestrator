@@ -92,6 +92,19 @@ frontend/      → Web dashboard (@ralph-web/dashboard) - React + Vite + Tailwin
 - ❌ Complex retry logic (fresh context handles recovery)
 - ❌ Detailed step-by-step instructions (use backpressure instead)
 - ❌ Scoping work at task selection time (scope at plan creation instead)
+
+### Completion Gates
+
+Automated backpressure scripts that run when the agent emits `LOOP_COMPLETE`:
+
+```yaml
+event_loop:
+  completion_gates:
+    - name: tests-pass
+      command: ["cargo", "test"]
+```
+
+If a gate exits non-zero, its output is injected as `task.resume` backpressure and the loop continues. See `docs/concepts/backpressure.md` for details.
 - ❌ Assuming functionality is missing without code verification
 
 ## Specs & Tasks
