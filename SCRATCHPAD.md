@@ -44,9 +44,10 @@ All Phase 1 changes committed as `297ba81`:
 ## ❌ Blocked / Not Started
 
 ### Setup Prompt Execution
-- Default setup prompt from `~/.ulf/config.yml` — partially implemented but not wired end-to-end
-- Background task spawning for setup execution (tokio::spawn from sync dispatch)
-- Status transition: Creating -> Ready/Error after setup completes
+- ✅ Default setup prompt from `~/.ulf/config.yml` — wired end-to-end in `workspace_cli.rs`
+- ✅ Background task spawning for setup execution — implemented in `dispatch.rs` with `tokio::spawn`
+- ✅ Status transition: Creating -> Ready/Error after setup completes — `run_workspace_setup` handles this
+- 🐛 Fixed conflicting CLI flags (`--autonomous` and `--no-tui` conflict in `ulf run`; removed `--no-tui` from setup spawn)
 
 ### Cargo Test Verification
 - ✅ `cargo test` passes fully (all crates green)
@@ -58,9 +59,12 @@ All Phase 1 changes committed as `297ba81`:
 - Decisions assumed but not formally ratified in code/docs
 
 ### Phase 2: Manager Agent & Attach
-- `ulf workspace attach` middle-manager command not implemented
-- Manager agent prompts not designed
-- ACP feedback loop from running loops back to manager not wired
+- ✅ `ulf workspace attach` middle-manager MVP — implemented with embedded prompt
+  - Verifies workspace is Ready before attaching
+  - Spawns interactive `ulf run` with middle-manager system prompt
+  - Prompt instructs agent to explore, plan, and background workflows via `nohup ulf run ... &`
+- ❌ Manager agent presets (dedicated YAML preset for middle-manager)
+- ❌ ACP feedback loop from running loops back to manager not wired
 
 ### Phase 3: Frontend & Polish
 - Frontend still shows "RO" in top-left corner (needs "ULF")
@@ -69,8 +73,7 @@ All Phase 1 changes committed as `297ba81`:
 - Frontend needs workspace context awareness or deprecation plan
 
 ### Daemon Auto-Start
-- `ulf workspace` commands assume daemon is running
-- Auto-start on first workspace command not yet implemented
+- ✅ Auto-start on first workspace command — implemented in `workspace_cli.rs` `execute()`
 
 ## 🔥 Immediate Next Steps
 

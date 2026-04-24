@@ -295,12 +295,41 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
     let result: WorkspaceResult = rpc_call("workspace.get", json!({ "id": args.id })).await?;
     let ws = result.workspace;
 
+    if ws.status != "ready" {
+        anyhow::bail!(
+            "workspace '{}' is not ready (status: {}). Wait for setup to complete or check errors with `ulf workspace get {}`",
+            ws.id,
+            ws.status,
+            ws.id
+        );
+    }
+
     println!("Attaching to workspace '{}' at {}", ws.id, ws.path);
 
-    // Spawn an interactive ulf session in the workspace directory.
-    // In Phase 4 this will become a dedicated Middle-Manager preset.
+    let prompt = format!(
+        "You are the Ulf Workspace Middle-Manager for workspace '{}' at {}.\n\n\
+        Your role is to help the user plan and execute coding tasks. You run inside the workspace directory, so you can inspect files and run commands directly.\n\n\
+        When the user describes a task:\n\
+        1. Explore the workspace to understand the codebase.\n\
+        2. Suggest a concrete plan with workflow commands.\n\
+        3. When the user agrees, execute the plan by running ulf commands.\n\n\
+        To start a background workflow that returns immediately, use:\n\
+          nohup ulf run --autonomous -p \"<workflow prompt\"> > .ulf/manager-loop.log 2>&1 &\n\
+        Then report the loop ID from the output.\n\n\
+        To check running loops:\n\
+          ulf loops\n\n\
+        Available presets:\n\
+          --config presets/code-assist.yml    (implementation tasks)\n\
+          --config presets/review.yml         (code review)\n\
+          --config presets/debug.yml          (debugging)\n\
+          --config presets/research.yml       (research)\n\n\
+        Start by asking the user what they'd like to work on.",
+        ws.id,
+        ws.path
+    );
+
     let status = std::process::Command::new("ulf")
-        .arg("run")
+        .args(["run", "-p", &prompt])
         .current_dir(&ws.path)
         .status()
         .with_context(|| format!("failed to spawn ulf in workspace directory '{}'", ws.path))?;

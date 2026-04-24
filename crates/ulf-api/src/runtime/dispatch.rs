@@ -550,7 +550,6 @@ async fn run_workspace_setup(
         .args([
             "run",
             "--autonomous",
-            "--no-tui",
             "-p",
             prompt,
         ])
