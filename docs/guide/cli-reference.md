@@ -365,6 +365,76 @@ ulf bot [OPTIONS] <COMMAND>
 - `token set <TOKEN> [--config <path>]`
 - `daemon`
 
+### ulf workspace
+
+Manage isolated workspaces for multi-workspace vibe-coding.
+
+```bash
+ulf workspace <COMMAND>
+```
+
+**Subcommands:**
+
+| Command | Description |
+|---------|-------------|
+| `create <ID>` | Create a new workspace |
+| `list` | List all workspaces |
+| `get <ID>` | Show workspace details |
+| `status` | Check status across all workspaces |
+| `attach <ID>` | Attach middle-manager to a workspace |
+| `delete <ID>` | Delete a workspace |
+
+**`ulf workspace create` options:**
+
+| Option | Description |
+|--------|-------------|
+| `<ID>` | Workspace identifier (`^[a-zA-Z0-9_.-]{1,64}$`) |
+| `--name <NAME>` | Human-readable name |
+| `--from <PATH or URL>` | Clone from git repo or copy from directory |
+| `--setup-prompt <TEXT>` | Prompt to run automatically on creation |
+| `--wait` | Block until setup completes |
+
+**Examples:**
+
+```bash
+# Create a simple workspace
+ulf workspace create jira-007 --name "Fix login bug"
+
+# Create from a git repo
+ulf workspace create feature-auth --from https://github.com/you/template.git
+
+# Create with auto-setup
+ulf workspace create new-api \
+  --name "Build REST API" \
+  --setup-prompt "Create a Fastify project with TypeScript"
+
+# Attach and work
+ulf workspace attach jira-007
+
+# List and manage
+ulf workspace list
+ulf workspace status
+ulf workspace delete jira-007 --remove-files
+```
+
+### ulf daemon
+
+Manage the workspace daemon.
+
+```bash
+ulf daemon <COMMAND>
+```
+
+**Subcommands:**
+
+| Command | Description |
+|---------|-------------|
+| `start` | Start the daemon |
+| `stop` | Stop the daemon |
+| `status` | Check daemon status |
+| `restart` | Restart the daemon |
+| `logs` | View daemon logs |
+
 ### ulf wave
 
 Dispatch wave events for parallel hat execution.

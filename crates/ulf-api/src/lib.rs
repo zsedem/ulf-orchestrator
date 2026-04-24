@@ -3,6 +3,7 @@ pub mod collection_domain;
 pub mod config;
 pub mod config_domain;
 pub mod errors;
+pub mod human_domain;
 pub mod idempotency;
 pub mod loop_domain;
 pub mod loop_side_effects;
@@ -14,6 +15,7 @@ pub mod protocol;
 pub mod runtime;
 pub mod stream_domain;
 pub mod task_domain;
+pub mod telegram_poller;
 pub mod transport;
 pub mod workspace_domain;
 

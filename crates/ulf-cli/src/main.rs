@@ -18,6 +18,7 @@ mod bot;
 mod config_resolution;
 mod daemon;
 mod daemon_client;
+mod daemon_robot;
 mod display;
 mod doctor;
 mod hats;

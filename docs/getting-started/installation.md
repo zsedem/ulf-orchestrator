@@ -101,6 +101,90 @@ export PATH="$PATH:$(pwd)/target/release"
 sudo ln -s $(pwd)/target/release/ulf /usr/local/bin/ulf
 ```
 
+## First-Time Setup
+
+After installing Ulf, run the interactive install agent for guided setup:
+
+```bash
+# Guided onboarding — asks about backends, workspaces, Telegram, hooks, etc.
+ulf run --config presets/install-agent.yml
+```
+
+This interactive agent will:
+1. Detect which AI backends you already have installed
+2. Help you install one if needed
+3. Ask about workspace mode, Telegram, hooks, preflight checks, shell completions
+4. Generate a complete `~/.ulf/config.yml` tailored to your choices
+5. Introduce key concepts and suggest your first tasks
+
+### Example Configurations
+
+Ulf ships with example configs you can copy and customize:
+
+```bash
+# Minimal workspace setup
+cp examples/configs/minimal-workspace.yml ~/.ulf/config.yml
+
+# Team shared config with guardrails
+cp examples/configs/team-shared.yml ~/.ulf/config.yml
+
+# Multi-backend with per-hat assignments
+cp examples/configs/multi-backend.yml ~/.ulf/config.yml
+
+# With Telegram integration
+cp examples/configs/with-telegram.yml ~/.ulf/config.yml
+
+# With lifecycle hooks
+cp examples/configs/with-hooks.yml ~/.ulf/config.yml
+
+# With Agent Waves for parallel execution
+cp examples/configs/with-waves.yml ~/.ulf/config.yml
+```
+
+### Manual Configuration
+
+Create your user configuration manually:
+
+```bash
+mkdir -p ~/.ulf
+
+cat > ~/.ulf/config.yml << 'EOF'
+# ~/.ulf/config.yml — User-level defaults
+# This file is loaded automatically for every Ulf session.
+
+cli:
+  backend: "claude"
+
+event_loop:
+  completion_promise: "LOOP_COMPLETE"
+  max_iterations: 100
+
+# Default setup prompt for new workspaces (multi-workspace mode)
+workspace:
+  default_setup_prompt: |
+    Create a CLAUDE.md for this workspace with:
+    - Project overview and tech stack
+    - Build, test, and lint commands
+    - Code style and architecture conventions
+
+  # Backend presets for per-workspace or per-session overrides
+  backend_presets:
+    claude-verbose:
+      backend: "claude"
+      args: ["--verbose"]
+    kiro-fast:
+      backend: "kiro"
+      idle_timeout_secs: 60
+
+  # Middle-manager prompt extensions
+  middle_manager:
+    backend_preset: "claude-verbose"
+    prompt_extensions:
+      - "Always run tests before suggesting the task is complete."
+      - "Prefer small, focused commits with descriptive messages."
+EOF
+```
+
 ## Verify Installation
 
 ```bash
@@ -112,6 +196,9 @@ ulf --help
 
 # List available presets
 ulf init --list-presets
+
+# Run environment diagnostics
+ulf doctor
 ```
 
 ## Migrating from v1 (Legacy)

@@ -421,6 +421,99 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
    # Should show: UTF-8 Unicode text
    ```
 
+### Workspace Issues
+
+#### Workspace Stuck in "Creating"
+
+**Problem**: Workspace status shows `Creating` for a long time
+
+**Solutions**:
+
+1. Check workspace details:
+
+   ```bash
+   ulf workspace get <id>
+   ```
+
+2. After 5 minutes, stuck workspaces auto-transition to `Error`. To recover:
+
+   ```bash
+   ulf workspace delete <id> --remove-files
+   ulf workspace create <id> --wait
+   ```
+
+3. Check daemon logs for setup errors:
+
+   ```bash
+   tail -f ~/.ulf/daemon/daemon.log
+   ```
+
+#### Daemon Not Responding
+
+**Problem**: `ulf workspace` commands fail with connection errors
+
+**Solutions**:
+
+1. Check if daemon is running:
+
+   ```bash
+   ulf daemon status
+   ```
+
+2. Start or restart the daemon:
+
+   ```bash
+   ulf daemon restart
+   ```
+
+3. Check daemon logs:
+
+   ```bash
+   tail -f ~/.ulf/daemon/daemon.log
+   ```
+
+#### Attach Fails
+
+**Problem**: `ulf workspace attach <id>` fails
+
+**Solutions**:
+
+1. Verify workspace exists and is Ready:
+
+   ```bash
+   ulf workspace get <id>
+   ```
+
+2. Check daemon health:
+
+   ```bash
+   ulf daemon status
+   ```
+
+3. Try with explicit backend:
+
+   ```bash
+   ulf workspace attach <id> --backend claude
+   ```
+
+#### Permission Denied on Workspace Files
+
+**Problem**: Cannot read/write workspace files
+
+**Solutions**:
+
+1. Check workspace directory permissions:
+
+   ```bash
+   ls -la ~/.ulf/workspaces/<id>/
+   ```
+
+2. Fix permissions:
+
+   ```bash
+   chmod -R u+rw ~/.ulf/workspaces/<id>/
+   ```
+
 ### Git Issues
 
 #### Checkpoint Failed
@@ -765,16 +858,22 @@ echo "============================"
 echo "Agents available:"
 which claude && echo "  ✓ Claude" || echo "  ✗ Claude"
 which gemini && echo "  ✓ Gemini" || echo "  ✗ Gemini"
-which q && echo "  ✓ Q" || echo "  ✗ Q"
+which kiro-cli && echo "  ✓ Kiro" || echo "  ✗ Kiro"
+echo ""
+echo "Daemon status:"
+ulf daemon status 2>/dev/null || echo "  Daemon not running"
+echo ""
+echo "Workspaces:"
+ulf workspace list 2>/dev/null || echo "  No workspaces or daemon down"
 echo ""
 echo "Git status:"
-git status --short
-echo ""
-echo "Ulf status:"
-./ulf status
+git status --short 2>/dev/null || echo "  Not a git repository"
 echo ""
 echo "Recent errors:"
 grep ERROR .agent/logs/*.log 2>/dev/null | tail -5
+echo ""
+echo "Daemon logs:"
+tail -5 ~/.ulf/daemon/daemon.log 2>/dev/null || echo "  No daemon logs"
 EOF
 chmod +x diagnose.sh
 ./diagnose.sh

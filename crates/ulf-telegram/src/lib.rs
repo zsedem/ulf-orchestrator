@@ -37,7 +37,7 @@ pub use state::{PendingQuestion, StateManager, TelegramState};
 ///
 /// Parses the URL and calls `set_api_url` on the bot. Warns on invalid URLs
 /// and returns the bot unchanged.
-pub(crate) fn apply_api_url(mut bot: teloxide::Bot, api_url: Option<&str>) -> teloxide::Bot {
+pub fn apply_api_url(mut bot: teloxide::Bot, api_url: Option<&str>) -> teloxide::Bot {
     if let Some(raw) = api_url {
         match url::Url::parse(raw) {
             Ok(parsed) => {

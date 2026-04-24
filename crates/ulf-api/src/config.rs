@@ -45,6 +45,11 @@ pub struct ApiConfig {
     pub daemon_state_dir: PathBuf,
     pub loop_process_interval_ms: u64,
     pub ulf_command: String,
+    /// RObot (human-in-the-loop) configuration.
+    pub robot_enabled: bool,
+    pub robot_timeout_secs: u64,
+    pub robot_bot_token: Option<String>,
+    pub robot_api_url: Option<String>,
 }
 
 impl Default for ApiConfig {
@@ -62,6 +67,10 @@ impl Default for ApiConfig {
             daemon_state_dir: home_dir().join(".ulf").join("daemon"),
             loop_process_interval_ms: 30_000,
             ulf_command: "ulf".to_string(),
+            robot_enabled: false,
+            robot_timeout_secs: 300,
+            robot_bot_token: None,
+            robot_api_url: None,
         }
     }
 }
@@ -118,6 +127,47 @@ impl ApiConfig {
             && !ulf_command.trim().is_empty()
         {
             config.ulf_command = ulf_command;
+        }
+
+        // Load RObot config from user config file (~/.ulf/config.yml) if present.
+        let user_config_path = home_dir().join(".ulf").join("config.yml");
+        if user_config_path.exists() {
+            if let Ok(user_config_str) = std::fs::read_to_string(&user_config_path) {
+                if let Ok(user_config) = serde_yaml::from_str::<serde_yaml::Value>(&user_config_str) {
+                    if let Some(robot) = user_config.get("RObot") {
+                        config.robot_enabled = robot
+                            .get("enabled")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(false);
+                        if config.robot_enabled {
+                            config.robot_timeout_secs = robot
+                                .get("timeout_seconds")
+                                .and_then(|v| v.as_u64())
+                                .unwrap_or(300);
+                            config.robot_bot_token = robot
+                                .get("telegram")
+                                .and_then(|t| t.get("bot_token"))
+                                .and_then(|v| v.as_str())
+                                .map(String::from)
+                                .or_else(|| env::var("ULF_TELEGRAM_BOT_TOKEN").ok());
+                            config.robot_api_url = robot
+                                .get("telegram")
+                                .and_then(|t| t.get("api_url"))
+                                .and_then(|v| v.as_str())
+                                .map(String::from)
+                                .or_else(|| env::var("ULF_TELEGRAM_API_URL").ok());
+                        }
+                    }
+                }
+            }
+        }
+
+        // Fallback to env vars for bot token if not loaded from config
+        if config.robot_bot_token.is_none() {
+            config.robot_bot_token = env::var("ULF_TELEGRAM_BOT_TOKEN").ok();
+        }
+        if config.robot_api_url.is_none() {
+            config.robot_api_url = env::var("ULF_TELEGRAM_API_URL").ok();
         }
 
         config.validate()?;

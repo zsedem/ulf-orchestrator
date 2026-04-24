@@ -504,6 +504,96 @@ core:
     - "Follow existing code patterns"
 ```
 
+## Workspace Configuration
+
+When using multi-workspace mode, the `workspace` section configures default behaviors for `ulf workspace create` and `ulf workspace attach`.
+
+### workspace
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `default_setup_prompt` | string | `null` | Prompt executed automatically when a workspace is created |
+| `backend_presets` | map | `{}` | Named backend configurations (see below) |
+| `middle_manager` | object | `{}` | Configuration for `ulf workspace attach` sessions |
+
+### workspace.backend_presets
+
+Named backend configurations referenced by `middle_manager.backend_preset` or `--backend-preset`.
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `backend` | string | Yes | Backend name (`claude`, `kiro`, `codex`, etc.) |
+| `args` | list | No | Extra CLI arguments for the backend |
+| `prompt_mode` | string | No | `arg` or `stdin` |
+| `prompt_flag` | string | No | Custom prompt flag (e.g., `-p`, `--prompt`) |
+| `idle_timeout_secs` | integer | No | Session idle timeout |
+
+Example:
+
+```yaml
+workspace:
+  backend_presets:
+    claude-thorough:
+      backend: "claude"
+      args: ["--verbose", "--allowedTools", "Bash", "Edit"]
+    kiro-minimal:
+      backend: "kiro"
+      args: ["--no-confirm"]
+      idle_timeout_secs: 300
+```
+
+### workspace.middle_manager
+
+Configuration for the interactive middle-manager session.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `backend_preset` | string | `null` | Name of a `backend_presets` entry to use |
+| `prompt_extensions` | list | `[]` | Extra instructions appended to every prompt |
+| `workflow_preset` | string | `null` | Hat collection preset to load (e.g., `code-assist`) |
+
+Example:
+
+```yaml
+workspace:
+  middle_manager:
+    backend_preset: "claude-thorough"
+    prompt_extensions:
+      - "Always run tests before suggesting the task is complete."
+      - "Prefer small, focused commits with descriptive messages."
+      - "Follow the existing code style in this repo."
+    workflow_preset: "code-assist"
+```
+
+### Full Workspace Config Example
+
+```yaml
+# ~/.ulf/config.yml — User-level workspace defaults
+workspace:
+  default_setup_prompt: |
+    Create a CLAUDE.md for this workspace with:
+    - Project overview and tech stack
+    - Build, test, and lint commands
+    - Code style and architecture conventions
+
+  backend_presets:
+    claude-verbose:
+      backend: "claude"
+      args: ["--verbose"]
+    codex-4o:
+      backend: "codex"
+      args: ["--model", "gpt-4o"]
+    kiro-fast:
+      backend: "kiro"
+      idle_timeout_secs: 60
+
+  middle_manager:
+    backend_preset: "claude-verbose"
+    prompt_extensions:
+      - "Always run tests before suggesting done."
+      - "Prefer descriptive commit messages."
+```
+
 ## Environment Variables
 
 | Variable | Description |
@@ -514,6 +604,7 @@ core:
 
 ## Next Steps
 
+- Read the [Multi-Workspace Guide](multi-workspace.md)
 - Explore [Presets](presets.md) for pre-configured workflows
 - Learn about [CLI Reference](cli-reference.md)
 - Understand [Backends](backends.md)

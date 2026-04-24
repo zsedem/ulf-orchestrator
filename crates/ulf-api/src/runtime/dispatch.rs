@@ -39,6 +39,7 @@ impl RpcRuntime {
             method if method.starts_with("collection.") => self.dispatch_collection(request),
             method if method.starts_with("workspace.") => self.dispatch_workspace(request),
             method if method.starts_with("stream.") => self.dispatch_stream(request, principal),
+            method if method.starts_with("human.") => self.dispatch_human(request),
             "_internal.publish" => self.dispatch_internal_publish(request),
             _ => {
                 warn!(
@@ -417,6 +418,41 @@ impl RpcRuntime {
         }
     }
 
+    fn dispatch_human(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
+        match request.method.as_str() {
+            "human.ask" => {
+                let params: HumanAskParams = self.parse_params(request)?;
+                let question_id = self.human_domain.ask(
+                    &params.workspace_id,
+                    &params.loop_id,
+                    &params.question,
+                )?;
+                Ok(json!({ "questionId": question_id, "status": "pending" }))
+            }
+            "human.get_response" => {
+                let params: HumanGetResponseParams = self.parse_params(request)?;
+                let timeout_secs = params.timeout_secs.unwrap_or(300);
+                match self.human_domain.get_response(&params.workspace_id, &params.loop_id, timeout_secs) {
+                    Some(response) => Ok(json!({ "status": "answered", "response": response })),
+                    None => Ok(json!({ "status": "pending" })),
+                }
+            }
+            "human.list_pending" => {
+                let pending = self.human_domain.list_pending();
+                Ok(json!({ "pending": pending }))
+            }
+            "human.cancel" => {
+                let params: HumanCancelParams = self.parse_params(request)?;
+                let cancelled = self.human_domain.cancel(&params.workspace_id, &params.loop_id)?;
+                Ok(json!({ "cancelled": cancelled }))
+            }
+            _ => Err(ApiError::service_unavailable(format!(
+                "method '{}' is recognized but not implemented",
+                request.method
+            ))),
+        }
+    }
+
     fn dispatch_stream(
         &self,
         request: &RpcRequestEnvelope,
@@ -447,6 +483,29 @@ impl RpcRuntime {
 }
 
 use serde::Deserialize as InternalDeserialize;
+
+#[derive(Debug, Clone, InternalDeserialize)]
+#[serde(rename_all = "camelCase")]
+struct HumanAskParams {
+    workspace_id: String,
+    loop_id: String,
+    question: String,
+}
+
+#[derive(Debug, Clone, InternalDeserialize)]
+#[serde(rename_all = "camelCase")]
+struct HumanGetResponseParams {
+    workspace_id: String,
+    loop_id: String,
+    timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, InternalDeserialize)]
+#[serde(rename_all = "camelCase")]
+struct HumanCancelParams {
+    workspace_id: String,
+    loop_id: String,
+}
 
 #[derive(Debug, Clone, InternalDeserialize)]
 #[serde(rename_all = "camelCase")]
@@ -559,6 +618,7 @@ async fn run_workspace_setup(
             prompt,
         ])
         .current_dir(workspace_path)
+        .env("ULF_WORKSPACE_ID", workspace_id)
         .status()
         .await;
 

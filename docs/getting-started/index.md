@@ -7,6 +7,7 @@ Welcome to Ulf Orchestrator! This section will help you get up and running quick
 1. **[Installation](installation.md)** — Install Ulf and its prerequisites
 2. **[Quick Start](quick-start.md)** — Run your first Ulf orchestration
 3. **[Your First Task](first-task.md)** — Create and configure a real task
+4. **[Multi-Workspace Guide](../guide/multi-workspace.md)** — Vibe-coding with isolated workspaces
 
 ## Prerequisites
 

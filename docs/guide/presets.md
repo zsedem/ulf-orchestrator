@@ -166,6 +166,107 @@ Run it:
 ulf run -c ulf.yml -H .ulf/hats/my-workflow.yml
 ```
 
+## Example Configurations by Use Case
+
+### Minimal Workspace Setup
+
+```yaml
+# ~/.ulf/config.yml — For vibe-coding with workspaces
+cli:
+  backend: "claude"
+
+workspace:
+  default_setup_prompt: |
+    Create a CLAUDE.md with build/test commands and code style.
+
+  middle_manager:
+    prompt_extensions:
+      - "Always run tests before suggesting done."
+```
+
+### Team Shared Config
+
+```yaml
+# ~/.ulf/config.yml — Shared team defaults
+cli:
+  backend: "claude"
+
+event_loop:
+  completion_promise: "LOOP_COMPLETE"
+  max_iterations: 50
+
+core:
+  guardrails:
+    - "Follow existing code patterns"
+    - "Never modify production database"
+    - "Always add tests for new functionality"
+
+workspace:
+  backend_presets:
+    claude-team:
+      backend: "claude"
+      args: ["--allowedTools", "Bash", "Edit", "Read"]
+
+  middle_manager:
+    backend_preset: "claude-team"
+    prompt_extensions:
+      - "Use the team's coding conventions from CLAUDE.md"
+      - "Prefer small, focused commits"
+```
+
+### Per-Project with Hats
+
+```yaml
+# ./ulf.yml — Project-specific core config
+cli:
+  backend: "claude"
+
+event_loop:
+  completion_promise: "LOOP_COMPLETE"
+  max_iterations: 100
+
+features:
+  preflight:
+    enabled: true
+    strict: true
+```
+
+```bash
+# Run with built-in hat collection
+ulf run -c ulf.yml -H builtin:code-assist -p "Add user authentication"
+```
+
+### Full-Stack Development Setup
+
+```yaml
+# ~/.ulf/config.yml
+cli:
+  backend: "claude"
+
+workspace:
+  backend_presets:
+    frontend:
+      backend: "claude"
+      args: ["--verbose"]
+    backend-api:
+      backend: "kiro"
+      idle_timeout_secs: 300
+
+  middle_manager:
+    backend_preset: "frontend"
+    prompt_extensions:
+      - "Run the full test suite before declaring done."
+      - "Follow the project's existing architecture patterns."
+
+hooks:
+  enabled: true
+  events:
+    post.loop.complete:
+      - name: notify-done
+        command: ["echo", "Task complete!"]
+        on_error: warn
+```
+
 ## Source of Truth and Sync
 
 - Canonical preset files: `presets/*.yml`

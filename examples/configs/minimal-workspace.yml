@@ -1,0 +1,20 @@
+# Minimal workspace configuration for vibe-coding
+# Copy to ~/.ulf/config.yml to use as your user-level defaults
+
+cli:
+  backend: "claude"
+
+event_loop:
+  completion_promise: "LOOP_COMPLETE"
+  max_iterations: 100
+
+workspace:
+  default_setup_prompt: |
+    Create a CLAUDE.md for this workspace with:
+    - Project overview and tech stack
+    - Build, test, and lint commands
+    - Code style and architecture conventions
+
+  middle_manager:
+    prompt_extensions:
+      - "Always run tests before suggesting the task is complete."

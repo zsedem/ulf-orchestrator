@@ -4,16 +4,70 @@ Let's walk through creating and running a complete task with Ulf.
 
 ## Choose Your Mode
 
-Ulf offers two modes. Choose based on your task complexity:
+Ulf offers three modes. Choose based on your task complexity:
 
 | Mode | When to Use |
 |------|-------------|
-| **Traditional** | Simple tasks, quick automation, getting started |
+| **Multi-Workspace** | Feature work, vibe-coding, isolated environments *(Recommended)* |
+| **Traditional** | Simple tasks, quick automation, existing projects |
 | **Hat-Based** | Complex workflows, multi-step processes, role separation |
 
-For this guide, we'll use traditional mode first, then show hat-based mode.
+For this guide, we'll start with multi-workspace mode (recommended), then show traditional and hat-based modes.
+
+## Multi-Workspace Example (Recommended)
+
+### 1. Start the Daemon
+
+```bash
+ulf daemon start
+```
+
+The daemon auto-starts on most `ulf workspace` commands, but starting it explicitly ensures it's ready.
+
+### 2. Create a Workspace
+
+```bash
+# Create a workspace for your task
+ulf workspace create calc-task --name "Build a calculator"
+
+# Or create with a setup prompt
+ulf workspace create calc-task \
+  --name "Build a calculator" \
+  --setup-prompt "Create a Rust project with cargo init and a CLAUDE.md"
+
+# Wait for setup to finish
+ulf workspace create calc-task --wait
+```
+
+### 3. Attach and Work
+
+```bash
+ulf workspace attach calc-task
+```
+
+Inside the middle-manager session, tell Ulf what to build:
+
+```
+Build a Rust calculator module with add, subtract, multiply, divide.
+Handle division by zero. Include unit tests. Run cargo test to verify.
+```
+
+### 4. Manage and Iterate
+
+```bash
+# Check workspace status
+ulf workspace status
+
+# List all workspaces
+ulf workspace list
+
+# When done, delete the workspace
+ulf workspace delete calc-task --remove-files
+```
 
 ## Traditional Mode Example
+
+For simple tasks directly in an existing project directory:
 
 ### 1. Initialize
 
@@ -233,6 +287,7 @@ kiro -p "Hello"
 
 ## Next Steps
 
+- Read the [Multi-Workspace Guide](../guide/multi-workspace.md) for vibe-coding workflows
 - Learn about [Hats & Events](../concepts/hats-and-events.md)
 - Explore [Presets](../guide/presets.md) for your workflow
 - Master [Writing Prompts](../guide/prompts.md)

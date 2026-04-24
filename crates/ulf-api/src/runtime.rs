@@ -14,6 +14,7 @@ use crate::collection_domain::CollectionDomain;
 use crate::config::ApiConfig;
 use crate::config_domain::ConfigDomain;
 use crate::errors::{ApiError, RpcErrorCode};
+use crate::human_domain::HumanDomain;
 use crate::idempotency::{
     IdempotencyCheck, IdempotencyStore, InMemoryIdempotencyStore, StoredResponse,
 };
@@ -41,9 +42,10 @@ pub struct WorkspaceRuntime {
 }
 
 impl WorkspaceRuntime {
-    pub fn new(config: &ApiConfig, workspace_root: &std::path::Path) -> Self {
+    pub fn new(config: &ApiConfig, workspace_id: &str, workspace_root: &std::path::Path) -> Self {
         let tasks = Arc::new(Mutex::new(TaskDomain::new(workspace_root)));
         let loops = Arc::new(Mutex::new(LoopDomain::new(
+            workspace_id,
             workspace_root,
             config.loop_process_interval_ms,
             config.ulf_command.clone(),
@@ -81,6 +83,8 @@ pub struct RpcRuntime {
     workspaces: Arc<Mutex<WorkspaceDomain>>,
     /// Per-workspace runtimes, created on demand.
     workspace_runtimes: Arc<Mutex<std::collections::HashMap<String, WorkspaceRuntime>>>,
+    /// Human-in-the-loop domain (daemon-global).
+    pub(crate) human_domain: Arc<HumanDomain>,
 }
 
 enum ExecutionOutcome {
@@ -108,6 +112,7 @@ impl RpcRuntime {
         let streams = StreamDomain::new();
         let workspaces = Arc::new(Mutex::new(WorkspaceDomain::new(&config.daemon_state_dir, &config.workspace_root)));
         let workspace_runtimes = Arc::new(Mutex::new(std::collections::HashMap::new()));
+        let human_domain = Arc::new(HumanDomain::new(&config.daemon_state_dir));
 
         Self {
             config,
@@ -116,6 +121,7 @@ impl RpcRuntime {
             streams,
             workspaces,
             workspace_runtimes,
+            human_domain,
         }
     }
 
@@ -172,7 +178,7 @@ impl RpcRuntime {
         let path = workspace.path.clone();
         drop(registry);
 
-        let runtime = WorkspaceRuntime::new(&self.config, &path);
+        let runtime = WorkspaceRuntime::new(&self.config, &id, &path);
         runtimes.insert(id, runtime.clone());
         Ok(runtime)
     }
@@ -195,6 +201,10 @@ impl RpcRuntime {
             "idempotency": {
                 "requiredForMutations": true,
                 "retentionSeconds": self.config.idempotency_ttl_secs
+            },
+            "robot": {
+                "enabled": self.config.robot_enabled,
+                "timeoutSeconds": self.config.robot_timeout_secs
             }
         })
     }
@@ -291,6 +301,11 @@ impl RpcRuntime {
         self.workspaces
             .lock()
             .map_err(|_| ApiError::internal("workspace domain lock poisoned"))
+    }
+
+    /// Get a clone of the workspaces Arc for external consumers (e.g., Telegram poller).
+    pub fn workspaces_arc(&self) -> Arc<Mutex<WorkspaceDomain>> {
+        self.workspaces.clone()
     }
 
     /// Extract `workspaceId` from request params, if present.

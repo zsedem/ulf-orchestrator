@@ -80,9 +80,13 @@ Events flow between hats, each contributing to the task.
 | **Backpressure** | Quality gate (tests, lint, typecheck) that rejects bad work |
 | **Memory** | Persistent learning stored in `.ulf/agent/memories.md` |
 | **Task** | Runtime work item stored in `.ulf/agent/tasks.jsonl` |
+| **Workspace** | Isolated environment under `~/.ulf/workspaces/` for vibe-coding |
+| **Daemon** | Central coordinator that manages workspace lifecycle |
+| **Middle-Manager** | Interactive session attached to a single workspace |
 
 ## Next Steps
 
 - Understand the [Ulf Wiggum Technique](ulf-wiggum-technique.md)
 - Learn the [Six Tenets](tenets.md) that guide Ulf's design
 - Master [Hats & Events](hats-and-events.md) for complex workflows
+- Read the [Multi-Workspace Guide](../guide/multi-workspace.md)

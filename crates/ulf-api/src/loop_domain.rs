@@ -78,6 +78,7 @@ pub struct TriggerMergeTaskResult {
 
 pub struct LoopDomain {
     workspace_root: PathBuf,
+    workspace_id: String,
     process_interval_ms: u64,
     ulf_command: String,
     last_processed_at: Option<String>,
@@ -85,12 +86,14 @@ pub struct LoopDomain {
 
 impl LoopDomain {
     pub fn new(
+        workspace_id: impl Into<String>,
         workspace_root: impl AsRef<Path>,
         process_interval_ms: u64,
         ulf_command: impl Into<String>,
     ) -> Self {
         Self {
             workspace_root: workspace_root.as_ref().to_path_buf(),
+            workspace_id: workspace_id.into(),
             process_interval_ms,
             ulf_command: ulf_command.into(),
             last_processed_at: None,
@@ -201,6 +204,7 @@ impl LoopDomain {
         let status = Command::new(&self.ulf_command)
             .args(["loops", "process"])
             .current_dir(&self.workspace_root)
+            .env("ULF_WORKSPACE_ID", &self.workspace_id)
             .status()
             .map_err(|error| {
                 ApiError::internal(format!(
@@ -260,7 +264,7 @@ impl LoopDomain {
             )));
         }
 
-        spawn_retry_merge_flow(&self.workspace_root, &self.ulf_command, &params.id)
+        spawn_retry_merge_flow(&self.workspace_root, &self.workspace_id, &self.ulf_command, &params.id)
     }
 
     pub fn discard(&self, id: &str) -> Result<(), ApiError> {

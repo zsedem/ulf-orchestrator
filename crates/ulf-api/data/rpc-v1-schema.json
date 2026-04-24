@@ -1666,6 +1666,62 @@
             "method",
             "params"
           ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "human.ask"
+            },
+            "params": {
+              "$ref": "#/$defs/humanAskParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "human.list_pending"
+            },
+            "params": {
+              "$ref": "#/$defs/humanListPendingParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "human.cancel"
+            },
+            "params": {
+              "$ref": "#/$defs/humanCancelParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "human.get_response"
+            },
+            "params": {
+              "$ref": "#/$defs/humanGetResponseParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
         }
       ]
     },
@@ -2867,6 +2923,62 @@
             "method",
             "result"
           ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "human.ask"
+            },
+            "result": {
+              "$ref": "#/$defs/humanAskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "human.list_pending"
+            },
+            "result": {
+              "$ref": "#/$defs/humanListPendingResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "human.cancel"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "human.get_response"
+            },
+            "result": {
+              "$ref": "#/$defs/humanAskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
         }
       ]
     },
@@ -3019,6 +3131,109 @@
         "writable",
         "hasGitRepo",
         "hasUlfConfig"
+      ]
+    },
+    "humanAskParams": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string"
+        },
+        "loopId": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "timeoutSecs": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "workspaceId",
+        "loopId",
+        "question",
+        "timeoutSecs"
+      ]
+    },
+    "humanListPendingParams": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string"
+        }
+      }
+    },
+    "humanCancelParams": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string"
+        },
+        "loopId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "workspaceId",
+        "loopId"
+      ]
+    },
+    "humanAskResult": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "response": {
+          "type": "string"
+        },
+        "timedOut": {
+          "type": "boolean"
+        }
+      }
+    },
+    "humanListPendingResult": {
+      "type": "object",
+      "properties": {
+        "pending": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "workspaceId": {
+                "type": "string"
+              },
+              "loopId": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "askedAt": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "humanGetResponseParams": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string"
+        },
+        "loopId": {
+          "type": "string"
+        },
+        "timeoutSecs": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "workspaceId",
+        "loopId"
       ]
     }
   }

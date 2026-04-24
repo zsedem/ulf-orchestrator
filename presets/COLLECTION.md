@@ -816,6 +816,7 @@ hats:
 
 | Preset | Use When |
 |--------|----------|
+| `install-agent` | First-time setup and onboarding |
 | `tdd-red-green` | Building new features with test coverage |
 | `adversarial-review` | Security-critical code |
 | `socratic-learning` | Learning a new codebase |

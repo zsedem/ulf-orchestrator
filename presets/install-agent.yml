@@ -1,0 +1,354 @@
+# Install Agent: Interactive Onboarding for First-Time Users
+# Pattern: Guided first-run experience that discovers user's setup and generates config
+#
+# This preset runs once during installation or first use to help users:
+# 1. Choose and install AI backends
+# 2. Configure multi-workspace mode
+# 3. Set up optional integrations (Telegram, hooks, web dashboard)
+# 4. Generate a complete ~/.ulf/config.yml tailored to their needs
+#
+# Usage:
+#   ulf run --config presets/install-agent.yml
+#
+# Or as part of the installer:
+#   curl ... | sh && ulf run --config presets/install-agent.yml
+
+event_loop:
+  prompt_file: "PROMPT.md"
+  completion_promise: "LOOP_COMPLETE"
+  starting_event: "install.start"
+  max_iterations: 30
+  max_runtime_seconds: 1800
+
+cli:
+  backend: "claude"
+  prompt_mode: "arg"
+
+core:
+  guardrails:
+    - "Be concise — onboarding should be quick, not a lecture"
+    - "Always suggest concrete next commands the user can run"
+    - "Explain 'why' briefly, then show 'how' immediately"
+    - "Never assume knowledge of Rust, AI, or orchestration"
+    - "Ask ONE question at a time, wait for answer, then proceed"
+    - "Generate a real ~/.ulf/config.yml file at the end based on their choices"
+
+memories:
+  enabled: true
+  inject: auto
+
+tasks:
+  enabled: true
+
+hats:
+  discovery:
+    name: "🔍 Discovery"
+    description: "Discovers what the user already has installed and what they want to set up."
+    triggers: ["install.start"]
+    publishes: ["install.backend_choice", "install.needs_backend"]
+    default_publishes: "install.needs_backend"
+    max_activations: 1
+    instructions: |
+      ## DISCOVERY MODE — Find What's Already Installed
+
+      Welcome the user to Ulf Orchestrator. Your first job is to discover their current environment.
+
+      ### Step 1: Check Installed Backends
+
+      Check which AI CLI tools are already installed by running these commands:
+
+      ```bash
+      which claude && claude --version 2>/dev/null || echo "Claude Code: not installed"
+      which kiro-cli && kiro-cli --version 2>/dev/null || echo "Kiro: not installed"
+      which gemini && gemini --version 2>/dev/null || echo "Gemini: not installed"
+      which codex && codex --version 2>/dev/null || echo "Codex: not installed"
+      which amp && amp --version 2>/dev/null || echo "Amp: not installed"
+      which copilot && copilot --version 2>/dev/null || echo "Copilot: not installed"
+      which opencode && opencode --version 2>/dev/null || echo "OpenCode: not installed"
+      which pi && pi --version 2>/dev/null || echo "Pi: not installed"
+      ```
+
+      Report back which backends are installed and their versions.
+
+      ### Step 2: Routing Decision
+
+      - If NO backends are installed → publish `install.needs_backend`
+      - If one or more backends are installed → publish `install.backend_choice` with the list of detected backends
+
+      Keep the discovery output concise. Just list what's found and what's missing.
+
+  backend_installer:
+    name: "📦 Backend Installer"
+    description: "Helps the user choose and install an AI backend."
+    triggers: ["install.needs_backend", "install.backend_choice"]
+    publishes: ["install.backend_ready", "install.needs_backend"]
+    default_publishes: "install.needs_backend"
+    instructions: |
+      ## BACKEND INSTALLER MODE — Get an AI Backend
+
+      Ulf needs at least one AI CLI tool to function. Help the user choose and install one.
+
+      ### If No Backends Detected
+
+      Present the options clearly:
+
+      ```
+      No AI backend detected. Choose one to install:
+
+      1. Claude Code (Recommended) — Best overall experience
+         npm install -g @anthropic-ai/claude-code
+         claude login
+
+      2. Kiro — Amazon/AWS assistant
+         Visit https://kiro.dev/
+
+      3. Gemini CLI — Google's AI
+         npm install -g @google/gemini-cli
+
+      4. Codex — OpenAI's code model
+         Visit https://github.com/openai/codex
+
+      5. Amp — Sourcegraph
+         Visit https://github.com/sourcegraph/amp
+
+      6. Copilot CLI — GitHub
+         npm install -g @github/copilot
+         copilot auth login
+
+      7. OpenCode — Multi-provider
+         curl -fsSL https://opencode.ai/install | bash
+
+      8. Pi — Multi-provider
+         npm install -g @mariozechner/pi-coding-agent
+      ```
+
+      Ask: "Which backend would you like to install? (Enter 1-8, or the name)"
+
+      ### If Backends Detected
+
+      Say: "Great! I found [backend names] installed. Would you like to install additional backends, or proceed with configuration?"
+
+      ### After Choice
+
+      If they chose to install, provide the exact commands for their choice and wait for confirmation that installation is complete.
+
+      Once at least one backend is confirmed working, publish `install.backend_ready`.
+
+  config_builder:
+    name: "⚙️ Config Builder"
+    description: "Asks about all optional features and builds a ~/.ulf/config.yml."
+    triggers: ["install.backend_ready"]
+    publishes: ["install.config_built"]
+    default_publishes: "install.config_built"
+    instructions: |
+      ## CONFIG BUILDER MODE — Build Your Perfect Config
+
+      Ask the user ONE question at a time about optional features. After each answer, note their choice and ask the next question.
+
+      ### Question 1: Workspace Mode
+      "Do you want to use multi-workspace mode? (y/n)
+       This creates isolated directories per task under ~/.ulf/workspaces/ — great for vibe-coding."
+
+      ### Question 2: Default Setup Prompt (if workspace mode)
+      "Would you like new workspaces to auto-initialize with a setup prompt? (y/n)
+       This runs automatically when you create a workspace to set up CLAUDE.md, etc."
+
+      ### Question 3: Backend Presets
+      "Would you like to configure backend presets? (y/n)
+       These are reusable backend configurations (e.g., 'claude-verbose', 'kiro-fast')."
+
+      ### Question 4: Middle-Manager Extensions
+      "Would you like to add default instructions for interactive workspace sessions? (y/n)
+       For example: 'Always run tests before suggesting done.'"
+
+      ### Question 5: Telegram / RObot
+      "Do you want to set up Telegram integration for human-in-the-loop? (y/n)
+       This lets the AI ask you questions and receive guidance during tasks."
+      
+      If yes, say: "Set ULF_TELEGRAM_BOT_TOKEN in your environment, then run: ulf bot onboard --telegram"
+
+      ### Question 6: Hooks
+      "Do you want to set up lifecycle hooks? (y/n)
+       Hooks run scripts at phases like 'before loop starts' or 'after loop completes'."
+
+      ### Question 7: Preflight Checks
+      "Do you want preflight checks to run automatically before each ulf run? (y/n)
+       This validates config, backend, git state, etc. before starting."
+
+      ### Question 8: Shell Completions
+      "Would you like shell completions? (bash/zsh/fish/none)"
+      
+      If they choose one, provide the command:
+      ```bash
+      # Bash
+      ulf completions bash > ~/.local/share/bash-completion/completions/ulf
+      
+      # Zsh
+      ulf completions zsh > ~/.zfunc/_ulf
+      
+      # Fish
+      ulf completions fish > ~/.config/fish/completions/ulf.fish
+      ```
+
+      ### Generate Config
+
+      After all questions, generate a REAL `~/.ulf/config.yml` file using the `WriteFile` tool with their choices.
+
+      The config MUST include:
+      - `cli.backend` set to their primary backend
+      - `workspace` section if they chose workspace mode
+      - `workspace.default_setup_prompt` if they chose yes
+      - `workspace.backend_presets` if they chose yes
+      - `workspace.middle_manager.prompt_extensions` if they chose yes
+      - `RObot` section if they chose Telegram
+      - `hooks` section if they chose hooks
+      - `features.preflight` if they chose preflight
+
+      Use sensible defaults for anything they didn't explicitly configure.
+
+      After writing the file, show them the contents and confirm it was created.
+
+      Publish `install.config_built` when done.
+
+  concept_teacher:
+    name: "📚 Concept Teacher"
+    description: "Briefly introduces key Ulf concepts based on what the user configured."
+    triggers: ["install.config_built"]
+    publishes: ["install.concepts_done"]
+    default_publishes: "install.concepts_done"
+    instructions: |
+      ## CONCEPT TEACHER MODE — Concepts That Matter to You
+
+      Based on what the user configured, explain ONLY the relevant concepts briefly.
+
+      ### If they chose workspace mode:
+      Explain in 3 sentences:
+      - **Workspace**: One folder per task under ~/.ulf/workspaces/
+      - **Daemon**: Background process managing workspaces (auto-starts)
+      - **Middle-Manager**: Interactive session when you `ulf workspace attach`
+
+      Show the core workflow:
+      ```bash
+      ulf workspace create my-task --name "My task"
+      ulf workspace attach my-task
+      # Describe what you want, let Ulf iterate
+      ```
+
+      ### If they chose traditional mode (no workspaces):
+      Explain in 2 sentences:
+      - `ulf run` starts an iteration loop in the current directory
+      - The AI reads PROMPT.md and iterates until LOOP_COMPLETE
+
+      ### Everyone gets these basics:
+      - **Loop**: Ulf runs the AI repeatedly until done or limits reached
+      - **Completion Promise**: The string that ends the loop (default: LOOP_COMPLETE)
+      - **Backpressure**: Optional quality gates (tests, lint) that reject bad work
+
+      ### If they chose hats/hooks/preflight:
+      Mention those briefly (1 sentence each).
+
+      Keep the entire concept section under 200 words.
+
+      Publish `install.concepts_done` when done.
+
+  workflow_suggester:
+    name: "🛠️ Workflow Suggester"
+    description: "Suggests concrete first tasks and workflows."
+    triggers: ["install.concepts_done"]
+    publishes: ["install.ready"]
+    default_publishes: "install.ready"
+    instructions: |
+      ## WORKFLOW SUGGESTER MODE — Your First Tasks
+
+      Suggest 2-3 concrete first tasks based on their setup.
+
+      ### For workspace users:
+      ```bash
+      # Try these to get familiar:
+
+      # 1. Hello World workspace
+      ulf workspace create hello --name "Hello Ulf"
+      ulf workspace attach hello
+      # Inside: "Create a small script that prints hello world"
+
+      # 2. Explore a repo
+      ulf workspace create explore --from https://github.com/torvalds/linux.git
+      ulf workspace attach explore
+      # Inside: "Explore the repo structure and create a summary"
+
+      # 3. Your actual task
+      ulf workspace create my-task --name "My real task"
+      ulf workspace attach my-task
+      ```
+
+      ### For traditional mode users:
+      ```bash
+      # 1. Create a project
+      mkdir my-project && cd my-project && git init
+      ulf init --backend claude
+      echo "Create a CLI tool that converts JSON to YAML" > PROMPT.md
+      ulf run
+
+      # 2. With hats
+      ulf run -H builtin:code-assist -p "Add input validation"
+      ```
+
+      ### Quick Reference Card
+
+      Give them a compact reference:
+
+      ```
+      WORKSPACE MODE:
+        create   ulf workspace create <id> [--name ...] [--from ...]
+        attach   ulf workspace attach <id>
+        list     ulf workspace list
+        status   ulf workspace status
+        delete   ulf workspace delete <id> [--remove-files]
+
+      DAEMON:
+        start    ulf daemon start
+        stop     ulf daemon stop
+        status   ulf daemon status
+
+      TRADITIONAL:
+        init     ulf init --backend claude
+        run      ulf run [-p "prompt"] [-c config.yml]
+        plan     ulf plan "Feature description"
+
+      INFO:
+        doctor   ulf doctor
+        --help   ulf --help
+      ```
+
+      Publish `install.ready` when done.
+
+  closer:
+    name: "✅ Closer"
+    description: "Final wrap-up with resources and next steps."
+    triggers: ["install.ready"]
+    publishes: ["LOOP_COMPLETE"]
+    default_publishes: "LOOP_COMPLETE"
+    max_activations: 1
+    instructions: |
+      ## CLOSER MODE — Final Wrap-Up
+
+      Congratulate the user. Give them the essentials to continue.
+
+      ```
+      🎉 You're all set up!
+
+      Your config is at: ~/.ulf/config.yml
+      Your workspaces will be at: ~/.ulf/workspaces/
+      Daemon logs: ~/.ulf/daemon/daemon.log
+
+      Documentation:
+        Quick Start:     https://mikeyobrien.github.io/ulf-orchestrator/getting-started/quick-start/
+      Multi-Workspace: https://mikeyobrien.github.io/ulf-orchestrator/guide/multi-workspace/
+      Configuration:   https://mikeyobrien.github.io/ulf-orchestrator/guide/configuration/
+      Backends:        https://mikeyobrien.github.io/ulf-orchestrator/guide/backends/
+      Presets:         https://mikeyobrien.github.io/ulf-orchestrator/guide/presets/
+
+      Get help anytime: ulf --help
+      ```
+
+      Output `LOOP_COMPLETE` immediately after the final message.

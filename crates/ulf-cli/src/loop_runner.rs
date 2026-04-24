@@ -232,11 +232,29 @@ pub async fn run_loop_impl(
     // Initialize event loop with context for proper path resolution
     let mut event_loop = EventLoop::with_context(config.clone(), ctx.clone());
 
-    // Inject robot service (Telegram) for human-in-the-loop communication
-    if config.robot.enabled
-        && ctx.is_primary()
-        && let Some(service) = create_robot_service(&config, &ctx)
-    {
+    // Inject robot service for human-in-the-loop communication.
+    // Workspace-attached loops use the daemon's RObot (no local Telegram polling).
+    // Standalone loops use the local TelegramService.
+    let robot_service = if let Some(workspace_id) = std::env::var("ULF_WORKSPACE_ID").ok() {
+        // Workspace mode: try daemon-backed RObot
+        match create_daemon_robot_service(&workspace_id, &ctx, &config).await {
+            Some(service) => {
+                info!(workspace_id, "using daemon RObot for human-in-the-loop");
+                Some(service)
+            }
+            None => {
+                warn!(workspace_id, "daemon RObot not available; running without human-in-the-loop");
+                None
+            }
+        }
+    } else if config.robot.enabled && ctx.is_primary() {
+        // Standalone mode: use local TelegramService
+        create_robot_service(&config, &ctx)
+    } else {
+        None
+    };
+
+    if let Some(service) = robot_service {
         event_loop.set_robot_service(service);
     }
 
@@ -4824,9 +4842,11 @@ pub fn process_pending_merges_cli(repo_root: &Path) {
 /// Start a loop from an external caller (e.g., the bot daemon).
 ///
 /// Loads config from `ulf.yml`, applies the given prompt, acquires the
-/// loop lock, and runs the orchestration loop headlessly. The caller is
-/// responsible for Telegram interaction — the spawned loop has `robot.enabled`
-/// disabled to prevent a second Telegram poller from conflicting.
+/// loop lock, and runs the orchestration loop headlessly.
+///
+/// In workspace mode (`ULF_WORKSPACE_ID` is set), human-in-the-loop is
+/// delegated to the daemon via `DaemonRobotClient`. In standalone mode,
+/// the local `TelegramService` is used when `robot.enabled` is true.
 ///
 /// Returns `Ok(TerminationReason)` on completion or `Err` on fatal errors.
 pub async fn start_loop(
@@ -4847,11 +4867,6 @@ pub async fn start_loop(
     // Apply the prompt
     config.event_loop.prompt = Some(prompt);
     config.event_loop.prompt_file = String::new();
-
-    // Keep robot.enabled as-is from config. When the daemon starts a loop,
-    // the loop's own TelegramService handles all Telegram interaction
-    // (commands, guidance, responses, check-ins). The daemon stops polling
-    // while the loop runs, so there's no conflict.
 
     // Force autonomous headless mode (no TUI, no interactive)
     config.cli.default_mode = "autonomous".to_string();
@@ -4950,6 +4965,31 @@ fn create_robot_service(
             None
         }
     }
+}
+
+/// Creates a daemon-backed robot service for workspace-attached loops.
+///
+/// Returns `None` if the daemon does not have RObot enabled or is unreachable.
+async fn create_daemon_robot_service(
+    workspace_id: &str,
+    context: &LoopContext,
+    config: &UlfConfig,
+) -> Option<Box<dyn ulf_proto::RobotService>> {
+    if !crate::daemon_robot::DaemonRobotClient::is_robot_available().await {
+        return None;
+    }
+
+    let loop_id = context
+        .loop_id()
+        .map(String::from)
+        .unwrap_or_else(|| "main".to_string());
+    let timeout_secs = config.robot.timeout_seconds.unwrap_or(300);
+
+    Some(Box::new(crate::daemon_robot::DaemonRobotClient::new(
+        workspace_id.to_string(),
+        loop_id,
+        timeout_secs,
+    )))
 }
 
 // ── Wave Execution ──────────────────────────────────────────────────────────

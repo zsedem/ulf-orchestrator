@@ -1,0 +1,34 @@
+# Configuration with lifecycle hooks for CI/CD integration
+# Hooks run at specific lifecycle phases of the orchestration loop
+
+cli:
+  backend: "claude"
+
+event_loop:
+  completion_promise: "LOOP_COMPLETE"
+  max_iterations: 100
+
+hooks:
+  enabled: true
+  defaults:
+    timeout_seconds: 30
+    max_output_bytes: 8192
+    on_error: warn
+  events:
+    pre.loop.start:
+      - name: env-check
+        command: ["./scripts/hooks/env-check.sh"]
+        on_error: block
+    post.loop.complete:
+      - name: notify-success
+        command: ["./scripts/hooks/notify.sh", "success"]
+        on_error: warn
+    post.loop.error:
+      - name: notify-failure
+        command: ["./scripts/hooks/notify.sh", "failure"]
+        on_error: warn
+
+workspace:
+  middle_manager:
+    prompt_extensions:
+      - "Always run tests before suggesting the task is complete."

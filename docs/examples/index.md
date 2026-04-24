@@ -15,6 +15,22 @@ Practical examples showing Ulf in action.
 
 ## Quick Examples
 
+### Multi-Workspace Mode
+
+Create an isolated workspace and attach a middle-manager:
+
+```bash
+# Create a workspace for your task
+ulf workspace create factorial-task --name "Build factorial function"
+
+# Attach and start coding
+ulf workspace attach factorial-task
+# Inside: "Write a function that calculates factorial. Include tests."
+
+# Check on it later
+ulf workspace status
+```
+
 ### Traditional Mode
 
 Simple loop until completion:
@@ -67,7 +83,18 @@ ulf run --max-iterations 50 -p "Refactor the authentication module"
 
 ## Example Workflows
 
-### Feature Development
+### Feature Development (Multi-Workspace)
+
+```bash
+# Create a workspace for the feature
+ulf workspace create user-dashboard --name "User Dashboard"
+
+# Attach and describe the feature
+ulf workspace attach user-dashboard
+# Inside: "Add a user dashboard with profile summary, activity feed, and quick actions"
+```
+
+### Feature Development (Traditional)
 
 ```bash
 # Initialize core config

@@ -1,12 +1,11 @@
-//! Telegram daemon adapter.
+//! Telegram daemon adapter (legacy standalone mode).
 //!
 //! Implements [`DaemonAdapter`] for Telegram, providing a persistent process
 //! that listens for messages and starts orchestration loops on demand.
 //!
-//! Uses a **turn-taking model**: the daemon polls Telegram while idle, but
-//! stops polling when a loop starts — the loop's own [`TelegramService`]
-//! takes over for the full Telegram feature set (commands, guidance,
-//! responses, check-ins). When the loop finishes, the daemon resumes.
+//! This is the **standalone** bot daemon. For multi-workspace mode,
+//! human-in-the-loop is handled centrally by the `ulf-api` daemon;
+//! workspace loops delegate via RPC and do not run a local poller.
 
 use std::path::PathBuf;
 use std::sync::Arc;

@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::TelegramResult;
 
-/// Persistent state for the Telegram bot, stored at `.ulf/telegram-state.json`.
+/// Persistent state for the Telegram bot, stored at `.ulf/telegram-state.json`
+/// (per-workspace) or `~/.ulf/daemon/telegram-state.json` (daemon-global).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TelegramState {
     /// The chat ID for the human operator (auto-detected from first message).
@@ -20,8 +21,14 @@ pub struct TelegramState {
     pub last_update_id: Option<i32>,
 
     /// Pending questions keyed by loop ID, tracking which message awaits a reply.
+    /// Legacy field — used for per-workspace state.
     #[serde(default)]
     pub pending_questions: HashMap<String, PendingQuestion>,
+
+    /// Pending questions keyed by workspace ID, then loop ID.
+    /// Used for daemon-global state in multi-workspace mode.
+    #[serde(default)]
+    pub workspace_pending_questions: HashMap<String, HashMap<String, PendingQuestion>>,
 }
 
 /// A question sent to the human that is awaiting a response.
@@ -76,6 +83,7 @@ impl StateManager {
             last_seen: None,
             last_update_id: None,
             pending_questions: HashMap::new(),
+            workspace_pending_questions: HashMap::new(),
         }))
     }
 
@@ -106,7 +114,7 @@ impl StateManager {
         self.save(state)
     }
 
-    /// Given a reply_to_message_id, find which loop it belongs to.
+    /// Given a reply_to_message_id, find which loop it belongs to (legacy per-workspace).
     pub fn get_loop_for_reply(
         &self,
         state: &TelegramState,
@@ -117,6 +125,60 @@ impl StateManager {
             .iter()
             .find(|(_, q)| q.message_id == reply_message_id)
             .map(|(loop_id, _)| loop_id.clone())
+    }
+
+    /// Given a reply_to_message_id, find which (workspace, loop) it belongs to (daemon-global).
+    pub fn get_workspace_loop_for_reply(
+        &self,
+        state: &TelegramState,
+        reply_message_id: i32,
+    ) -> Option<(String, String)> {
+        for (workspace_id, loop_questions) in &state.workspace_pending_questions {
+            for (loop_id, question) in loop_questions {
+                if question.message_id == reply_message_id {
+                    return Some((workspace_id.clone(), loop_id.clone()));
+                }
+            }
+        }
+        None
+    }
+
+    /// Add a pending question for a workspace + loop in daemon-global state.
+    pub fn add_workspace_pending_question(
+        &self,
+        state: &mut TelegramState,
+        workspace_id: &str,
+        loop_id: &str,
+        message_id: i32,
+    ) -> TelegramResult<()> {
+        state
+            .workspace_pending_questions
+            .entry(workspace_id.to_string())
+            .or_default()
+            .insert(
+                loop_id.to_string(),
+                PendingQuestion {
+                    asked_at: Utc::now(),
+                    message_id,
+                },
+            );
+        self.save(state)
+    }
+
+    /// Remove a pending question for a workspace + loop in daemon-global state.
+    pub fn remove_workspace_pending_question(
+        &self,
+        state: &mut TelegramState,
+        workspace_id: &str,
+        loop_id: &str,
+    ) -> TelegramResult<()> {
+        if let Some(loop_map) = state.workspace_pending_questions.get_mut(workspace_id) {
+            loop_map.remove(loop_id);
+            if loop_map.is_empty() {
+                state.workspace_pending_questions.remove(workspace_id);
+            }
+        }
+        self.save(state)
     }
 
     /// Return the path to the state file.
@@ -150,6 +212,7 @@ mod tests {
             last_seen: Some(Utc::now()),
             last_update_id: Some(101),
             pending_questions: HashMap::new(),
+            workspace_pending_questions: HashMap::new(),
         };
         mgr.save(&state).unwrap();
 

@@ -65,6 +65,10 @@ pub const KNOWN_METHODS: &[&str] = &[
     "workspace.delete",
     "workspace.status",
     "workspace.update_status",
+    "human.ask",
+    "human.get_response",
+    "human.list_pending",
+    "human.cancel",
 ];
 
 pub const MUTATING_METHODS: &[&str] = &[
@@ -98,6 +102,8 @@ pub const MUTATING_METHODS: &[&str] = &[
     "workspace.create",
     "workspace.delete",
     "workspace.update_status",
+    "human.ask",
+    "human.cancel",
 ];
 
 pub const STREAM_TOPICS: &[&str] = &[

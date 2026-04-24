@@ -197,6 +197,7 @@ mod tests {
             last_seen: None,
             last_update_id: None,
             pending_questions: HashMap::new(),
+            workspace_pending_questions: HashMap::new(),
         };
         (handler, dir, state)
     }

@@ -20,10 +20,11 @@ Ulf implements the [Ulf Wiggum technique](https://ghuntley.com/ulf/) — autonom
 
 > "The orchestrator is a thin coordination layer, not a platform. Ulf is smart; let Ulf do the work."
 
-### Two Modes of Operation
+### Three Modes of Operation
 
 | Mode | Description | Best For |
 |------|-------------|----------|
+| **Multi-Workspace** | Isolated workspaces per task, daemon-managed | Vibe-coding, feature work, isolation |
 | **Traditional** | Simple loop — Ulf iterates until done | Quick tasks, simple automation |
 | **Hat-Based** | Specialized personas coordinate through events | Complex workflows, multi-step processes |
 
@@ -55,9 +56,26 @@ Ulf implements the [Ulf Wiggum technique](https://ghuntley.com/ulf/) — autonom
 
     A small set of supported built-in workflows plus a larger catalog of documented examples
 
+-   :material-folder: **Multi-Workspace**
+
+    Isolated workspaces per task with daemon-managed lifecycle and interactive middle-managers
+
 </div>
 
 ## Quick Example
+
+### Multi-Workspace Mode (Recommended)
+
+```bash
+# Create an isolated workspace for your task
+ulf workspace create my-api --name "Build REST API"
+
+# Attach the middle-manager and start coding
+ulf workspace attach my-api
+# Inside: "Build a REST API with user CRUD endpoints using Express.js"
+```
+
+### Traditional Mode
 
 ```bash
 # Initialize with traditional mode
@@ -99,6 +117,10 @@ Ulf iterates until it outputs `LOOP_COMPLETE` or hits the iteration limit.
 -   :material-rocket-launch: **[Quick Start](getting-started/quick-start.md)**
 
     Get up and running in 5 minutes
+
+-   :material-folder: **[Multi-Workspace](guide/multi-workspace.md)**
+
+    Vibe-coding with isolated workspaces
 
 -   :material-book-open: **[Concepts](concepts/index.md)**
 

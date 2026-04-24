@@ -7,6 +7,7 @@ Practical guides for using Ulf Orchestrator effectively.
 | Guide | Description |
 |-------|-------------|
 | [Configuration](configuration.md) | Full core config reference |
+| [Multi-Workspace](multi-workspace.md) | Vibe-coding with isolated workspaces |
 | [Presets](presets.md) | Built-in hat collections |
 | [CLI Reference](cli-reference.md) | Command-line interface |
 | [Backends](backends.md) | Supported AI backends |
@@ -48,7 +49,15 @@ Practical guides for using Ulf Orchestrator effectively.
 
 ## Common Tasks
 
-### Start a New Feature
+### Start a New Feature (Multi-Workspace)
+
+```bash
+ulf workspace create feat-oauth --name "Add OAuth login"
+ulf workspace attach feat-oauth
+# Inside: "Build OAuth2 login with Google and GitHub providers"
+```
+
+### Start a New Feature (Traditional)
 
 ```bash
 ulf init --backend claude
@@ -58,7 +67,9 @@ ulf run -c ulf.yml -H builtin:code-assist -p "Add OAuth login"
 ### Debug an Issue
 
 ```bash
-ulf run -c ulf.yml -H builtin:debug -p "Investigate why user authentication fails on mobile"
+ulf workspace create bug-auth --name "Fix auth failure"
+ulf workspace attach bug-auth
+# Inside: "Investigate why user authentication fails on mobile"
 ```
 
 ### Review Code

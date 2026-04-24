@@ -4347,6 +4347,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "teloxide",
  "tempfile",
  "thiserror 2.0.17",
  "tokio",
@@ -4354,6 +4355,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "ulf-core",
+ "ulf-telegram",
  "uuid",
 ]
 

@@ -13,12 +13,14 @@ pub struct ResolvedLoop {
 
 pub fn spawn_retry_merge_flow(
     workspace_root: &Path,
+    workspace_id: &str,
     ulf_command: &str,
     loop_id: &str,
 ) -> Result<(), ApiError> {
     let status = Command::new(ulf_command)
         .args(["loops", "retry", loop_id])
         .current_dir(workspace_root)
+        .env("ULF_WORKSPACE_ID", workspace_id)
         .status()
         .map_err(|error| {
             ApiError::internal(format!(

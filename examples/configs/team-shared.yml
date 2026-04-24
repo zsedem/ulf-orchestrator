@@ -1,0 +1,39 @@
+# Team-shared configuration with guardrails and backend presets
+# Copy to ~/.ulf/config.yml or commit as repo-level ulf.yml
+
+cli:
+  backend: "claude"
+
+event_loop:
+  completion_promise: "LOOP_COMPLETE"
+  max_iterations: 50
+  max_runtime_seconds: 7200  # 2 hours
+
+core:
+  guardrails:
+    - "Follow existing code patterns in the codebase"
+    - "Never modify production database schemas"
+    - "Always add tests for new functionality"
+    - "Prefer small, focused commits with descriptive messages"
+
+workspace:
+  backend_presets:
+    claude-safe:
+      backend: "claude"
+      args: ["--allowedTools", "Bash", "Edit", "Read"]
+    kiro-fast:
+      backend: "kiro"
+      idle_timeout_secs: 60
+
+  middle_manager:
+    backend_preset: "claude-safe"
+    prompt_extensions:
+      - "Use the team's coding conventions from CLAUDE.md"
+      - "Run the full test suite before declaring done"
+      - "Ask for clarification on ambiguous requirements"
+
+features:
+  preflight:
+    enabled: true
+    strict: false
+    skip: []

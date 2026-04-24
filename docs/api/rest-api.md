@@ -222,10 +222,23 @@ All error responses follow this structure:
 }
 ```
 
-## Running the Legacy Server
+## Web Dashboard
+
+The web dashboard launches the Rust RPC API (port 3000) and the React frontend (port 5173):
 
 ```bash
-ulf web --legacy-node-api  # Launch deprecated Node backend + frontend
+ulf web                      # Rust backend + frontend + opens browser
+ulf web --no-open            # Skip browser auto-open
+ulf web --backend-port 4000  # Custom RPC API port
+```
+
+## Legacy Node Server (Deprecated)
+
+The old Node tRPC backend is deprecated. Use the Rust backend above.
+
+```bash
+# Only if you specifically need the old Node backend:
+ulf web --legacy-node-api    # Deprecated Node backend + frontend
 npm run dev:legacy-server    # Node backend only
 ```
 

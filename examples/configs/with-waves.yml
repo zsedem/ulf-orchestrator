@@ -1,0 +1,36 @@
+# Configuration with Agent Waves for parallel execution
+# Waves enable a single hat to process multiple work items in parallel
+
+event_loop:
+  completion_promise: "LOOP_COMPLETE"
+  starting_event: "review.start"
+  max_iterations: 50
+
+cli:
+  backend: "claude"
+
+hats:
+  coordinator:
+    name: "Coordinator"
+    triggers: ["review.start"]
+    publishes: ["review.file"]
+    instructions: |
+      Identify all files that need review and emit review.file for each.
+
+  reviewer:
+    name: "Reviewer"
+    triggers: ["review.file"]
+    publishes: ["review.done"]
+    concurrency: 4  # Enable wave execution
+    instructions: |
+      Review the assigned file for correctness, style, and potential bugs.
+
+  synthesizer:
+    name: "Synthesizer"
+    triggers: ["review.done"]
+    publishes: ["LOOP_COMPLETE"]
+    aggregate:
+      mode: wait_for_all
+      timeout: 300
+    instructions: |
+      Collect all review results and synthesize into a final report.

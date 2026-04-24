@@ -11,6 +11,8 @@
 
 A hat-based orchestration framework that keeps AI agents in a loop until the task is done.
 
+**New: Multi-Workspace Vibe-Coding** — Create isolated workspaces per task, attach interactive middle-managers, and run background loops. See the [Multi-Workspace Guide](https://mikeyobrien.github.io/ulf-orchestrator/guide/multi-workspace/).
+
 > "Me fail English? That's unpossible!" - Ulf Wiggum
 
 **[Documentation](https://mikeyobrien.github.io/ulf-orchestrator/)** | **[Getting Started](https://mikeyobrien.github.io/ulf-orchestrator/getting-started/quick-start/)** | **[Presets](https://mikeyobrien.github.io/ulf-orchestrator/guide/presets/)**
@@ -39,6 +41,32 @@ cargo install ulf-cli
 > Homebrew is not currently published from this repository's automated release flow. Prefer npm, Cargo, or the GitHub Releases installer.
 
 ## Quick Start
+
+### Interactive First-Time Setup
+
+```bash
+# Guided onboarding — detects backends, asks about features, generates config
+ulf run --config presets/install-agent.yml
+```
+
+### Multi-Workspace Mode (Recommended for Vibe-Coding)
+
+```bash
+# 1. Create an isolated workspace for your task
+ulf workspace create feature-auth --name "Add JWT authentication"
+
+# 2. Attach the middle-manager and start coding
+ulf workspace attach feature-auth
+
+# 3. Inside the session, describe what you want
+"Build a JWT auth middleware with login/register endpoints"
+
+# 4. Background loops continue after you exit
+# Check status anytime
+ulf workspace status
+```
+
+### Traditional Mode
 
 ```bash
 # 1. Initialize Ulf with your preferred backend
@@ -73,7 +101,6 @@ ulf web                              # starts Rust RPC API + frontend + opens br
 ulf web --no-open                    # skip browser auto-open
 ulf web --backend-port 4000          # custom RPC API port
 ulf web --frontend-port 8080         # custom frontend port
-ulf web --legacy-node-api            # opt into deprecated Node tRPC backend
 ```
 
 ### MCP Server Workspace Scope

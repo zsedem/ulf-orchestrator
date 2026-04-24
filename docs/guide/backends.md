@@ -412,12 +412,79 @@ claude -p "test"
 ulf run
 ```
 
+## Backend Presets in Config
+
+Define reusable backend configurations in `~/.ulf/config.yml`:
+
+```yaml
+# ~/.ulf/config.yml
+workspace:
+  backend_presets:
+    # Default Claude with verbose output
+    claude-verbose:
+      backend: "claude"
+      args: ["--verbose"]
+
+    # Claude restricted to Bash and Edit tools
+    claude-safe:
+      backend: "claude"
+      args: ["--allowedTools", "Bash", "Edit"]
+
+    # Kiro with short timeout
+    kiro-fast:
+      backend: "kiro"
+      idle_timeout_secs: 60
+
+    # Gemini for quick tasks
+    gemini-quick:
+      backend: "gemini"
+      args: ["--model", "gemini-pro"]
+
+    # Codex with specific model
+    codex-4o:
+      backend: "codex"
+      args: ["--model", "gpt-4o"]
+
+    # Pi with Anthropic provider
+    pi-anthropic:
+      backend: "pi"
+      args: ["--provider", "anthropic"]
+
+  # Use a preset for middle-manager sessions
+  middle_manager:
+    backend_preset: "claude-verbose"
+```
+
+Use a preset when attaching to a workspace:
+
+```bash
+ulf workspace attach my-project --backend-preset claude-safe
+```
+
+Or set per-hat backend in a hat collection:
+
+```yaml
+hats:
+  planner:
+    backend: "claude"
+    instructions: "Create a plan..."
+
+  coder:
+    backend: "kiro"
+    instructions: "Implement the plan..."
+
+  reviewer:
+    backend: "gemini"
+    instructions: "Review the code..."
+```
+
 ## Best Practices
 
 1. **Pick one primary backend** — Consistency helps
 2. **Test backend directly** — Before using with Ulf
 3. **Use per-hat overrides sparingly** — Can complicate debugging
 4. **Keep backends updated** — New features, bug fixes
+5. **Create backend presets** — For common backend configurations you reuse
 
 ## Next Steps
 

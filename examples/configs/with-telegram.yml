@@ -1,0 +1,25 @@
+# Configuration with Telegram human-in-the-loop integration
+# Requires: ULF_TELEGRAM_BOT_TOKEN environment variable
+
+cli:
+  backend: "claude"
+
+event_loop:
+  completion_promise: "LOOP_COMPLETE"
+  max_iterations: 100
+
+RObot:
+  enabled: true
+  timeout_seconds: 300
+  telegram:
+    bot_token: "${ULF_TELEGRAM_BOT_TOKEN}"
+
+workspace:
+  default_setup_prompt: |
+    Create a CLAUDE.md for this workspace with:
+    - Project overview and tech stack
+    - Build, test, and lint commands
+
+  middle_manager:
+    prompt_extensions:
+      - "Use human.interact when you need clarification on requirements."

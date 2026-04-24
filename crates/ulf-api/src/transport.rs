@@ -14,9 +14,12 @@ use tokio::net::TcpListener;
 use tokio::sync::broadcast::error::RecvError;
 use tracing::{error, info, warn};
 
+use std::sync::Arc;
+
 use crate::config::ApiConfig;
 use crate::runtime::RpcRuntime;
 use crate::stream_domain::KEEPALIVE_INTERVAL_MS;
+use crate::telegram_poller;
 
 #[derive(Clone)]
 struct AppState {
@@ -85,10 +88,23 @@ where
         .context("failed to read listener local_addr")?;
     info!(%local_addr, "ulf-api listening");
 
+    // Spawn daemon Telegram poller if RObot is configured.
+    let robot_shutdown = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    telegram_poller::spawn_if_configured(
+        runtime.config.robot_bot_token.clone(),
+        runtime.config.robot_api_url.clone(),
+        runtime.human_domain.clone(),
+        runtime.workspaces_arc(),
+        robot_shutdown.clone(),
+    );
+
     axum::serve(listener, router(runtime))
         .with_graceful_shutdown(shutdown)
         .await
-        .context("axum server terminated with error")
+        .context("axum server terminated with error")?;
+
+    robot_shutdown.store(true, std::sync::atomic::Ordering::Relaxed);
+    Ok(())
 }
 
 async fn health_handler(State(state): State<AppState>) -> Json<serde_json::Value> {

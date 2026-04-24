@@ -1,0 +1,47 @@
+# Multi-backend configuration with per-hat backend assignments
+# Use different backends for different roles in a hat-based workflow
+
+cli:
+  backend: "claude"
+
+event_loop:
+  completion_promise: "LOOP_COMPLETE"
+  starting_event: "task.start"
+  max_iterations: 100
+
+workspace:
+  backend_presets:
+    claude-planner:
+      backend: "claude"
+      args: ["--verbose"]
+    kiro-coder:
+      backend: "kiro"
+      idle_timeout_secs: 300
+    gemini-reviewer:
+      backend: "gemini"
+      args: ["--model", "gemini-pro"]
+
+hats:
+  planner:
+    name: "Planner"
+    backend: "claude"
+    triggers: ["task.start"]
+    publishes: ["plan.ready"]
+    instructions: |
+      Create a detailed implementation plan.
+
+  builder:
+    name: "Builder"
+    backend: "kiro"
+    triggers: ["plan.ready"]
+    publishes: ["build.done"]
+    instructions: |
+      Implement the plan using TDD.
+
+  reviewer:
+    name: "Reviewer"
+    backend: "gemini"
+    triggers: ["build.done"]
+    publishes: ["review.done"]
+    instructions: |
+      Review the implementation for correctness and style.

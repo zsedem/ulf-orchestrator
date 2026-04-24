@@ -391,6 +391,7 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
             .unwrap_or("ulf"),
     );
     cmd.arg("run").arg("-P").arg(&prompt_file).current_dir(&ws.path);
+    cmd.env("ULF_WORKSPACE_ID", &ws.id);
 
     // Apply preset args before the -P argument.
     if let Some(p) = preset {
