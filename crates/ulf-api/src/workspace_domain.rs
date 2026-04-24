@@ -1,6 +1,55 @@
 use std::collections::HashMap;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
+
+/// Maximum age (in minutes) a workspace may remain in `Creating` before being
+/// considered stale on daemon restart.
+const STALE_CREATING_MINUTES: i64 = 5;
+
+/// Valid workspace IDs: alphanumeric, hyphen, underscore, dot only.
+fn is_valid_workspace_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 64
+        && id.chars()
+            .all(|c| c.is_alphanumeric() || c == '-' || c == '_' || c == '.')
+}
+
+/// Reject paths that contain `..` components, which could escape the intended
+/// sandbox.
+fn has_path_traversal(path: &str) -> bool {
+    Path::new(path).components().any(|c| matches!(c, std::path::Component::ParentDir))
+}
+
+/// Validate that a local `from` path is safe to copy from.
+fn validate_from_path(from: &str) -> Result<PathBuf, ApiError> {
+    if has_path_traversal(from) {
+        return Err(ApiError::invalid_params(
+            "'from' path cannot contain '..' components",
+        ));
+    }
+    let src = PathBuf::from(from);
+    if !src.exists() {
+        return Err(ApiError::invalid_params(format!(
+            "source path '{}' does not exist",
+            src.display()
+        )));
+    }
+    // Ensure the source is under the current working directory or the user's home
+    // directory to prevent copying arbitrary system paths.
+    let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| cwd.clone());
+    let canonical_src = src.canonicalize().unwrap_or_else(|_| src.clone());
+    let canonical_cwd = cwd.canonicalize().unwrap_or_else(|_| cwd.clone());
+    let canonical_home = home.canonicalize().unwrap_or_else(|_| home.clone());
+    if !canonical_src.starts_with(&canonical_cwd) && !canonical_src.starts_with(&canonical_home) {
+        return Err(ApiError::forbidden(format!(
+            "source path '{}' is outside the current directory or home directory",
+            src.display()
+        )));
+    }
+    Ok(src)
+}
 
 use serde::{Deserialize, Serialize};
 use ulf_core::{Workspace, WorkspaceRegistryData, WorkspaceRegistryError, WorkspaceStatus};
@@ -68,30 +117,62 @@ impl WorkspaceDomain {
         if let Err(e) = domain.load() {
             tracing::warn!(error = %e, "failed to load workspace registry, starting fresh");
         }
+        domain.recover_stale_workspaces();
         domain
     }
 
-    pub fn create(&mut self, params: WorkspaceCreateParams) -> Result<Workspace, ApiError> {
-        if self.workspaces.contains_key(&params.id) {
+    /// Quick check that a workspace ID is available (does not do I/O).
+    pub fn validate_id(&self, id: &str) -> Result<(), ApiError> {
+        if !is_valid_workspace_id(id) {
+            return Err(ApiError::invalid_params(
+                "workspace id must be 1-64 characters of alphanumeric, hyphen, or underscore",
+            ));
+        }
+        if self.workspaces.contains_key(id) {
             return Err(ApiError::invalid_params(format!(
                 "workspace '{}' already exists",
-                params.id
+                id
             )));
         }
+        Ok(())
+    }
 
-        let path = match params.path {
-            Some(p) => PathBuf::from(p),
-            None => self.default_workspace_path(&params.id),
+    /// Perform slow I/O to prepare the workspace directory.
+    ///
+    /// This is a static method so it can be called without holding the registry
+    /// mutex, avoiding blocking concurrent reads during `git clone`.
+    pub fn create_workspace_dir(params: &WorkspaceCreateParams) -> Result<Workspace, ApiError> {
+        if !is_valid_workspace_id(&params.id) {
+            return Err(ApiError::invalid_params(
+                "workspace id must be 1-64 characters of alphanumeric, hyphen, or underscore",
+            ));
+        }
+
+        let path = match params.path.as_deref() {
+            Some(p) => {
+                if has_path_traversal(p) {
+                    return Err(ApiError::invalid_params(
+                        "workspace path cannot contain '..' components",
+                    ));
+                }
+                PathBuf::from(p)
+            }
+            None => Self::default_workspace_path_static(&params.id),
         };
 
         // If `from` is provided, clone/copy into the target path.
         if let Some(ref from) = params.from {
-            if from.starts_with("http://") || from.starts_with("https://") || from.starts_with("git@") {
+            if from.starts_with("http://")
+                || from.starts_with("https://")
+                || from.starts_with("git@")
+            {
                 // Git clone
                 let status = std::process::Command::new("git")
                     .args(["clone", from, &path.display().to_string()])
                     .status()
-                    .map_err(|e| ApiError::internal(format!("failed to spawn git clone: {}", e)))?;
+                    .map_err(|e| {
+                        ApiError::internal(format!("failed to spawn git clone: {}", e))
+                    })?;
                 if !status.success() {
                     return Err(ApiError::internal(format!(
                         "git clone failed for source '{}'",
@@ -100,13 +181,7 @@ impl WorkspaceDomain {
                 }
             } else {
                 // Local path — recursive copy
-                let src = PathBuf::from(from);
-                if !src.exists() {
-                    return Err(ApiError::invalid_params(format!(
-                        "source path '{}' does not exist",
-                        src.display()
-                    )));
-                }
+                let src = validate_from_path(from)?;
                 copy_dir_all(&src, &path).map_err(|e| {
                     ApiError::internal(format!(
                         "failed to copy from '{}' to '{}': {}",
@@ -129,12 +204,23 @@ impl WorkspaceDomain {
         }
 
         let mut workspace = Workspace::new(&params.id, &params.name, &path);
-        workspace.setup_prompt = params.setup_prompt;
-
-        self.workspaces.insert(params.id, workspace.clone());
-        self.save()?;
+        workspace.setup_prompt = params.setup_prompt.clone();
 
         Ok(workspace)
+    }
+
+    pub fn create(&mut self, params: WorkspaceCreateParams) -> Result<Workspace, ApiError> {
+        self.validate_id(&params.id)?;
+        let workspace = Self::create_workspace_dir(&params)?;
+        self.register(workspace.clone())?;
+        Ok(workspace)
+    }
+
+    /// Insert a workspace into the registry and persist atomically.
+    pub fn register(&mut self, workspace: Workspace) -> Result<(), ApiError> {
+        self.workspaces.insert(workspace.id.clone(), workspace);
+        self.save()?;
+        Ok(())
     }
 
     pub fn list(&self) -> Vec<Workspace> {
@@ -156,14 +242,13 @@ impl WorkspaceDomain {
 
         let directory_exists = path.exists();
         let readable = directory_exists && fs::read_dir(path).is_ok();
-        let writable = directory_exists
-            && fs::OpenOptions::new()
-                .write(true)
-                .create(true)
-                .truncate(true)
-                .open(path.join(".ulf-health-check.tmp"))
-                .and_then(|_| fs::remove_file(path.join(".ulf-health-check.tmp")))
-                .is_ok();
+        let writable = if directory_exists {
+            tempfile::NamedTempFile::new_in(path)
+                .map(|_| true)
+                .unwrap_or(false)
+        } else {
+            false
+        };
         let has_git_repo = path.join(".git").exists();
         let has_ulf_config = path.join("ulf.yml").exists();
 
@@ -281,9 +366,42 @@ impl WorkspaceDomain {
             ApiError::internal(format!("failed to serialize workspace registry: {}", e))
         })?;
 
-        fs::write(&self.store_path, content).map_err(|e| {
+        // Atomic write: write to temp file, then rename.
+        let temp_path = self.store_path.with_extension("tmp");
+        {
+            let mut temp_file = fs::File::create(&temp_path).map_err(|e| {
+                ApiError::internal(format!(
+                    "failed to create temp registry file '{}': {}",
+                    temp_path.display(),
+                    e
+                ))
+            })?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let mut perms = fs::metadata(&temp_path).map_err(|e| {
+                    ApiError::internal(format!("failed to stat temp registry file: {}", e))
+                })?.permissions();
+                perms.set_mode(0o600);
+                fs::set_permissions(&temp_path, perms).map_err(|e| {
+                    ApiError::internal(format!("failed to set registry permissions: {}", e))
+                })?;
+            }
+            temp_file.write_all(content.as_bytes()).map_err(|e| {
+                ApiError::internal(format!(
+                    "failed to write temp registry file '{}': {}",
+                    temp_path.display(),
+                    e
+                ))
+            })?;
+            temp_file.sync_all().map_err(|e| {
+                ApiError::internal(format!("failed to sync temp registry file: {}", e))
+            })?;
+        }
+
+        fs::rename(&temp_path, &self.store_path).map_err(|e| {
             ApiError::internal(format!(
-                "failed to write workspace registry '{}': {}",
+                "failed to rename temp registry file to '{}': {}",
                 self.store_path.display(),
                 e
             ))
@@ -293,12 +411,38 @@ impl WorkspaceDomain {
     }
 
     fn default_workspace_path(&self, id: &str) -> PathBuf {
+        Self::default_workspace_path_static(id)
+    }
+
+    fn default_workspace_path_static(id: &str) -> PathBuf {
         std::env::var("HOME")
             .map(PathBuf::from)
             .unwrap_or_else(|_| PathBuf::from("."))
             .join(".ulf")
             .join("workspaces")
             .join(id)
+    }
+
+    /// On startup, transition any `Creating` workspaces that are older than
+    /// `STALE_CREATING_MINUTES` to `Error` so they don't remain zombies after a
+    /// daemon crash.
+    fn recover_stale_workspaces(&mut self) {
+        let now = chrono::Utc::now();
+        let threshold = chrono::Duration::minutes(STALE_CREATING_MINUTES);
+        let mut changed = false;
+        for workspace in self.workspaces.values_mut() {
+            if workspace.status == ulf_core::WorkspaceStatus::Creating
+                && now.signed_duration_since(workspace.created_at) > threshold
+            {
+                workspace.mark_error("setup did not complete before daemon restart");
+                changed = true;
+            }
+        }
+        if changed {
+            if let Err(e) = self.save() {
+                tracing::warn!(error = ?e, "failed to save registry after stale workspace recovery");
+            }
+        }
     }
 }
 

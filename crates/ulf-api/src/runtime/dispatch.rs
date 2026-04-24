@@ -341,15 +341,23 @@ impl RpcRuntime {
     }
 
     fn dispatch_workspace(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
-        let mut workspaces = self.workspace_domain_mut()?;
         match request.method.as_str() {
             "workspace.create" => {
                 let params: WorkspaceCreateParams = self.parse_params(request)?;
                 let setup_prompt = params.setup_prompt.clone();
-                let workspace = workspaces.create(params)?;
+
+                // B10: Drop the mutex before slow I/O (git clone / copy).
+                {
+                    let workspaces = self.workspace_domain_mut()?;
+                    workspaces.validate_id(&params.id)?;
+                }
+                let workspace = crate::workspace_domain::WorkspaceDomain::create_workspace_dir(&params)?;
                 let workspace_id = workspace.id.clone();
                 let workspace_path = workspace.path.clone();
-                drop(workspaces);
+                {
+                    let mut workspaces = self.workspace_domain_mut()?;
+                    workspaces.register(workspace.clone())?;
+                }
 
                 if let Some(prompt) = setup_prompt {
                     let workspaces = self.workspaces.clone();
@@ -357,56 +365,44 @@ impl RpcRuntime {
                     tokio::spawn(async move {
                         run_workspace_setup(workspaces, &workspace_id, &workspace_path, &ulf_cmd, &prompt).await;
                     });
+                } else {
+                    // B5: No setup prompt — mark Ready immediately.
+                    let mut workspaces = self.workspace_domain_mut().expect("workspace domain lock");
+                    let _ = workspaces.update_status(&workspace_id, ulf_core::WorkspaceStatus::Ready, None);
                 }
 
                 Ok(json!({ "workspace": workspace }))
             }
             "workspace.list" => {
+                let workspaces = self.workspace_domain_mut()?;
                 let workspaces_list = workspaces.list();
                 Ok(json!({ "workspaces": workspaces_list }))
             }
             "workspace.get" => {
+                let workspaces = self.workspace_domain_mut()?;
                 let params: IdOnlyParams = self.parse_params(request)?;
                 let workspace = workspaces.get(&params.id)?;
                 Ok(json!({ "workspace": workspace }))
             }
             "workspace.status" => {
+                let workspaces = self.workspace_domain_mut()?;
                 let params: IdOnlyParams = self.parse_params(request)?;
                 let status = workspaces.status(&params.id)?;
                 Ok(json!(status))
             }
             "workspace.delete" => {
+                let mut workspaces = self.workspace_domain_mut()?;
                 let params: WorkspaceDeleteParams = self.parse_params(request)?;
                 workspaces.delete(params)?;
                 Ok(json!({ "success": true }))
             }
             "workspace.update_status" => {
-                let object = request.params.as_object().ok_or_else(|| {
-                    ApiError::invalid_params("workspace.update_status params must be an object")
-                })?;
-                let id = object
-                    .get("id")
-                    .and_then(Value::as_str)
-                    .ok_or_else(|| ApiError::invalid_params("workspace.update_status requires 'id'"))?;
-                let status_str = object
-                    .get("status")
-                    .and_then(Value::as_str)
-                    .ok_or_else(|| ApiError::invalid_params("workspace.update_status requires 'status'"))?;
-                let status = match status_str {
-                    "creating" => ulf_core::WorkspaceStatus::Creating,
-                    "ready" => ulf_core::WorkspaceStatus::Ready,
-                    "error" => ulf_core::WorkspaceStatus::Error,
-                    "archived" => ulf_core::WorkspaceStatus::Archived,
-                    _ => {
-                        return Err(ApiError::invalid_params(format!(
-                            "invalid workspace status '{}'",
-                            status_str
-                        )))
-                    }
-                };
-                let error_message = object.get("errorMessage").and_then(Value::as_str).map(String::from);
-                let workspace = workspaces.update_status(id, status, error_message)?;
-                Ok(json!({ "workspace": workspace }))
+                // B6: This endpoint is intentionally disabled for external callers.
+                // Status updates are performed internally by the daemon via direct
+                // WorkspaceDomain method calls (e.g. from the background setup task).
+                Err(ApiError::forbidden(
+                    "workspace.update_status is not callable via RPC",
+                ))
             }
             _ => Err(ApiError::service_unavailable(format!(
                 "method '{}' is recognized but not implemented",
@@ -538,11 +534,12 @@ async fn run_workspace_setup(
 
     // Write the prompt into a file so the `ulf` invocation can reference it.
     let prompt_file = workspace_path.join(".ulf").join("setup-prompt.txt");
-    if let Some(parent) = prompt_file.parent()
-        && let Err(e) = std::fs::create_dir_all(parent) {
+    if let Some(parent) = prompt_file.parent() {
+        if let Err(e) = tokio::fs::create_dir_all(parent).await {
             warn!(workspace_id, error = %e, "failed to create .ulf directory for setup prompt");
         }
-    if let Err(e) = std::fs::write(&prompt_file, prompt) {
+    }
+    if let Err(e) = tokio::fs::write(&prompt_file, prompt).await {
         warn!(workspace_id, error = %e, "failed to write setup prompt file");
     }
 
@@ -550,11 +547,12 @@ async fn run_workspace_setup(
         .args([
             "run",
             "--autonomous",
+            "--max-iterations",
+            "10",
             "-p",
             prompt,
         ])
         .current_dir(workspace_path)
-        .kill_on_drop(true)
         .status()
         .await;
 

@@ -292,6 +292,13 @@ async fn workspace_status() -> Result<()> {
 }
 
 async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
+    // B8: Validate ID before use to prevent prompt injection.
+    if !is_valid_workspace_id(&args.id) {
+        anyhow::bail!(
+            "workspace id must be 1-64 characters of alphanumeric, hyphen, or underscore"
+        );
+    }
+
     let result: WorkspaceResult = rpc_call("workspace.get", json!({ "id": args.id })).await?;
     let ws = result.workspace;
 
@@ -306,6 +313,9 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
 
     println!("Attaching to workspace '{}' at {}", ws.id, ws.path);
 
+    // Escape the path for safe inclusion in the prompt text.
+    let safe_path = ws.path.replace('"', "\\\"");
+
     let prompt = format!(
         "You are the Ulf Workspace Middle-Manager for workspace '{}' at {}.\n\n\
         Your role is to help the user plan and execute coding tasks. You run inside the workspace directory, so you can inspect files and run commands directly.\n\n\
@@ -314,7 +324,7 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
         2. Suggest a concrete plan with workflow commands.\n\
         3. When the user agrees, execute the plan by running ulf commands.\n\n\
         To start a background workflow that returns immediately, use:\n\
-          nohup ulf run --autonomous -p \"<workflow prompt\"> > .ulf/manager-loop.log 2>&1 &\n\
+          nohup ulf run --autonomous -P \"<prompt_file>\" > .ulf/manager-loop.log 2>&1 &\n\
         Then report the loop ID from the output.\n\n\
         To check running loops:\n\
           ulf loops\n\n\
@@ -325,7 +335,7 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
           --config presets/research.yml       (research)\n\n\
         Start by asking the user what they'd like to work on.",
         ws.id,
-        ws.path
+        safe_path
     );
 
     let status = std::process::Command::new("ulf")
@@ -339,4 +349,11 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Valid workspace IDs: alphanumeric, hyphen, underscore, dot only.
+fn is_valid_workspace_id(id: &str) -> bool {
+    !id.is_empty() && id.len() <= 64
+        && id.chars()
+            .all(|c| c.is_alphanumeric() || c == '-' || c == '_' || c == '.')
 }

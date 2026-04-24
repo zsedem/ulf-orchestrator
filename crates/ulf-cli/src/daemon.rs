@@ -57,10 +57,25 @@ pub async fn start_daemon() -> Result<()> {
             .with_context(|| format!("failed to create daemon state dir: {}", parent.display()))?;
     }
 
+    let log_file = std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join(".ulf")
+        .join("daemon")
+        .join("daemon.log");
+    if let Some(parent) = log_file.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let log = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_file)
+        .with_context(|| format!("failed to open daemon log file: {}", log_file.display()))?;
+
     let mut cmd = Command::new("ulf-api");
     cmd.stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
+        .stdout(log.try_clone().with_context(|| "failed to clone log handle for stdout")?)
+        .stderr(log);
 
     // If ulf-api is not in PATH, try to find it next to the current binary
     if Command::new("ulf-api").arg("--version").output().is_err()
@@ -68,10 +83,15 @@ pub async fn start_daemon() -> Result<()> {
             && let Some(bin_dir) = current_exe.parent() {
                 let local_api = bin_dir.join("ulf-api");
                 if local_api.exists() {
+                    let log2 = std::fs::OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(&log_file)
+                        .with_context(|| format!("failed to open daemon log file: {}", log_file.display()))?;
                     cmd = Command::new(local_api);
                     cmd.stdin(Stdio::null())
-                        .stdout(Stdio::null())
-                        .stderr(Stdio::null());
+                        .stdout(log2.try_clone().with_context(|| "failed to clone log handle for stdout")?)
+                        .stderr(log2);
                 }
             }
 
