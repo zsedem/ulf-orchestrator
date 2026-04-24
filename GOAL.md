@@ -31,7 +31,7 @@ Middle-Manager:
   - Exiting the middle-manager session does NOT stop the loop
 ```
 
-## Architectural Decisions to Finalize
+## Architectural Decisions
 
 1. **Backend Consolidation**: Rust `ulf-api` (Axum) is the single backend; deprecate Node backend.
 2. **ACP Transport**: WebSocket via `tokio-tungstenite` through Axum.
@@ -47,16 +47,12 @@ Middle-Manager:
 - Daemon auto-start when `ulf workspace` commands are invoked without a running daemon
 - Default setup prompt loaded from `~/.ulf/config.yml`
 
-## Model Assignments (Future Preset)
+## New Requirements (Configurability)
 
-| Role | Model |
-|------|-------|
-| Coordinator / Planner | Claude Opus |
-| BDD Writer (Gherkin) | Claude Sonnet |
-| QA / Test Writer | Codex |
-| Developer | Codex |
-| Critique | Codex |
-| Analyst | (local LLM via LM Studio for cost savings) |
+- `backends-presets` config section for reusable backend configurations (e.g. per-client, per-environment CLI settings)
+- Per-workspace and per-middle-manager backend preset selection
+- Composable middle-manager prompt (base template + user `prompt_extensions` from config)
+- Workflow preset context — middle-manager loads a hat collection or preset file to inform planning
 
 ## Completion Criteria
 
@@ -67,3 +63,7 @@ Middle-Manager:
 - [x] Middle-manager `ulf workspace attach` MVP exists
 - [x] Frontend understands workspace context (or is deprecated)
 - [x] All Ralph references removed/replaced with Ulf
+- [ ] **Devil's Advocate Audit passed** — 5+ critical review agents find no Critical or High severity issues
+- [ ] **Security blockers resolved** — path traversal, arbitrary file copy, unauthorized status updates, prompt injection, unsandboxed RCE all mitigated
+- [ ] **Reliability blockers resolved** — atomic registry writes, zombie workspaces on crash, setup task survivability, daemon log visibility all fixed
+- [ ] **Configurability implemented** — `BackendPresetConfig`, `MiddleManagerConfig`, per-workspace backend preset resolution, composable prompts

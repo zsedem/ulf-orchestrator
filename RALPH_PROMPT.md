@@ -31,9 +31,12 @@ Read GOAL.md and SCRATCHPAD.md. Pick the highest-priority incomplete item and im
 4. If `target/` exceeds 6GB, run `cargo clean` before continuing. Check with: `du -sm target/ | cut -f1`
 5. Prefer `cargo test --no-run` to compile tests, then run only the relevant test binary. Only run full `cargo test --workspace` when you are ready to verify everything. This avoids rebuilding all 9 workspace crates on every iteration.
 
-## Immediate Priority Order
+## Critical Gate: Devil's Advocate Audit
 
-1. Finish wiring default setup prompt from `~/.ulf/config.yml`
-2. Implement setup prompt background execution with status tracking
-3. Implement daemon auto-start for `ulf workspace` commands
-4. Start Phase 2: `ulf workspace attach` middle-manager MVP
+Before declaring the GOAL reached, you MUST spawn at least 5 parallel devil's advocate subagents to critically review the implementation. Each agent must adopt a distinct persona (e.g. Security Engineer, SRE/Reliability Engineer, CLI UX Purist, AI Systems Researcher, Distributed Systems Engineer, Configurability Architect).
+
+The GOAL is NOT reached until:
+- All completion criteria in GOAL.md are checked off, AND
+- The devil's advocate audit reports zero Critical or High severity issues
+
+If major issues are found, add them to SCRATCHPAD.md as blockers and continue fixing them.
