@@ -26,6 +26,11 @@ Read GOAL.md and SCRATCHPAD.md. Pick the highest-priority incomplete item and im
 - Follow existing code style
 - Backwards compatibility doesn't matter
 
+## Disk Management Rules (Prevent 18GB target/ bloat)
+
+4. If `target/` exceeds 6GB, run `cargo clean` before continuing. Check with: `du -sm target/ | cut -f1`
+5. Prefer `cargo test --no-run` to compile tests, then run only the relevant test binary. Only run full `cargo test --workspace` when you are ready to verify everything. This avoids rebuilding all 9 workspace crates on every iteration.
+
 ## Immediate Priority Order
 
 1. Finish wiring default setup prompt from `~/.ulf/config.yml`
