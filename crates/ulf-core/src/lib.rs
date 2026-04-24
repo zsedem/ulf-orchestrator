@@ -57,6 +57,7 @@ pub mod wave_detection;
 pub mod wave_prompt;
 pub mod wave_tracker;
 pub mod workspace;
+pub mod workspaces;
 pub mod worktree;
 
 #[cfg(feature = "recording")]
@@ -139,6 +140,9 @@ pub use wave_tracker::{CompletedWave, WaveFailure, WaveProgress, WaveResult, Wav
 pub use workspace::{
     CleanupPolicy, TaskWorkspace, VerificationResult, WorkspaceError, WorkspaceInfo,
     WorkspaceManager,
+};
+pub use workspaces::{
+    Workspace, WorkspaceRegistryData, WorkspaceRegistryError, WorkspaceStatus,
 };
 pub use worktree::{
     SyncStats, Worktree, WorktreeConfig, WorktreeError, create_worktree, ensure_gitignore,

@@ -58,7 +58,7 @@ export function Sidebar() {
       >
         <div className="flex items-center gap-3">
           <UlfLogo className="h-6 w-6 text-primary flex-shrink-0" />
-          {sidebarOpen && <span className="font-bold text-lg tracking-tight">RO</span>}
+          {sidebarOpen && <span className="font-bold text-lg tracking-tight">ULF</span>}
         </div>
         {sidebarOpen && (
           <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
