@@ -2236,12 +2236,106 @@ pub struct WorkspaceConfig {
     /// Default setup prompt applied to new workspaces when no explicit prompt is given.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_setup_prompt: Option<String>,
+
+    /// Reusable backend presets for workspace operations and middle-manager sessions.
+    /// Each preset defines a backend configuration (CLI command, args, mode, etc.)
+    /// that can be referenced by name.
+    #[serde(default)]
+    pub backend_presets: HashMap<String, BackendPresetConfig>,
+
+    /// Middle-manager configuration (prompt extensions, preset selection, etc.).
+    #[serde(default)]
+    pub middle_manager: MiddleManagerConfig,
 }
 
 impl Default for WorkspaceConfig {
     fn default() -> Self {
         Self {
             default_setup_prompt: None,
+            backend_presets: HashMap::new(),
+            middle_manager: MiddleManagerConfig::default(),
+        }
+    }
+}
+
+/// A reusable backend preset that can be selected per-workspace or per-session.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BackendPresetConfig {
+    /// Backend to use: "claude", "kiro", "gemini", "codex", "amp", "pi", or "custom".
+    pub backend: String,
+
+    /// Command override. Required for "custom" backend.
+    pub command: Option<String>,
+
+    /// How to pass prompts: "arg" or "stdin".
+    #[serde(default = "default_preset_prompt_mode")]
+    pub prompt_mode: String,
+
+    /// Execution mode when --interactive not specified.
+    #[serde(default = "default_preset_mode")]
+    pub default_mode: String,
+
+    /// Idle timeout in seconds for interactive mode.
+    #[serde(default = "default_preset_idle_timeout")]
+    pub idle_timeout_secs: u32,
+
+    /// Custom arguments to pass to the CLI command.
+    #[serde(default)]
+    pub args: Vec<String>,
+
+    /// Custom prompt flag for arg mode.
+    #[serde(default)]
+    pub prompt_flag: Option<String>,
+}
+
+fn default_preset_prompt_mode() -> String {
+    "arg".to_string()
+}
+
+fn default_preset_mode() -> String {
+    "autonomous".to_string()
+}
+
+fn default_preset_idle_timeout() -> u32 {
+    30
+}
+
+impl Default for BackendPresetConfig {
+    fn default() -> Self {
+        Self {
+            backend: default_backend(),
+            command: None,
+            prompt_mode: default_preset_prompt_mode(),
+            default_mode: default_preset_mode(),
+            idle_timeout_secs: default_preset_idle_timeout(),
+            args: Vec::new(),
+            prompt_flag: None,
+        }
+    }
+}
+
+/// Middle-manager configuration for composable prompts and backend selection.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MiddleManagerConfig {
+    /// Name of the backend preset to use for middle-manager sessions.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub backend_preset: Option<String>,
+
+    /// Additional prompt fragments appended to the base middle-manager template.
+    #[serde(default)]
+    pub prompt_extensions: Vec<String>,
+
+    /// Path to a hat collection or preset file to load as workflow context.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workflow_preset: Option<String>,
+}
+
+impl Default for MiddleManagerConfig {
+    fn default() -> Self {
+        Self {
+            backend_preset: None,
+            prompt_extensions: Vec::new(),
+            workflow_preset: None,
         }
     }
 }

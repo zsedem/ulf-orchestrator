@@ -295,7 +295,7 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
     // B8: Validate ID before use to prevent prompt injection.
     if !is_valid_workspace_id(&args.id) {
         anyhow::bail!(
-            "workspace id must be 1-64 characters of alphanumeric, hyphen, or underscore"
+            "workspace id must be 1-64 characters of alphanumeric, hyphen, underscore, or dot"
         );
     }
 
@@ -313,10 +313,17 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
 
     println!("Attaching to workspace '{}' at {}", ws.id, ws.path);
 
-    // Escape the path for safe inclusion in the prompt text.
-    let safe_path = ws.path.replace('"', "\\\"");
+    // Load user config for middle-manager presets and prompt extensions.
+    let user_config = load_user_config().unwrap_or_default();
+    let mm_config = &user_config.workspace.middle_manager;
+    let preset = mm_config
+        .backend_preset
+        .as_deref()
+        .and_then(|name| user_config.workspace.backend_presets.get(name));
 
-    let prompt = format!(
+    // Build composable prompt: base template + user extensions.
+    let safe_path = ws.path.replace('"', "\\\"");
+    let mut prompt = format!(
         "You are the Ulf Workspace Middle-Manager for workspace '{}' at {}.\n\n\
         Your role is to help the user plan and execute coding tasks. You run inside the workspace directory, so you can inspect files and run commands directly.\n\n\
         When the user describes a task:\n\
@@ -332,15 +339,67 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
           --config presets/code-assist.yml    (implementation tasks)\n\
           --config presets/review.yml         (code review)\n\
           --config presets/debug.yml          (debugging)\n\
-          --config presets/research.yml       (research)\n\n\
-        Start by asking the user what they'd like to work on.",
+          --config presets/research.yml       (research)\n\n",
         ws.id,
         safe_path
     );
 
-    let status = std::process::Command::new("ulf")
-        .args(["run", "-p", &prompt])
-        .current_dir(&ws.path)
+    if let Some(workflow_preset) = &mm_config.workflow_preset {
+        prompt.push_str(&format!(
+            "Workflow context preset loaded from: {}\n\n",
+            workflow_preset
+        ));
+    }
+
+    for extension in &mm_config.prompt_extensions {
+        prompt.push_str(extension);
+        prompt.push('\n');
+    }
+
+    prompt.push_str("Start by asking the user what they'd like to work on.");
+
+    // Write prompt to a file so we can use -P instead of -p (avoids shell escaping issues).
+    let prompt_file = PathBuf::from(&ws.path).join(".ulf").join("manager-prompt.txt");
+    if let Some(parent) = prompt_file.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    std::fs::write(&prompt_file, &prompt)
+        .with_context(|| format!("failed to write manager prompt file: {}", prompt_file.display()))?;
+
+    // Build the ulf command using the resolved backend preset (if any).
+    let mut cmd = std::process::Command::new(
+        preset
+            .and_then(|p| p.command.as_deref())
+            .unwrap_or("ulf"),
+    );
+    cmd.arg("run").arg("-P").arg(&prompt_file).current_dir(&ws.path);
+
+    // Apply preset args before the -P argument.
+    if let Some(p) = preset {
+        if !p.args.is_empty() {
+            // Insert preset args after "run" but before -P
+            let preset_args: Vec<String> = p.args.clone();
+            let mut new_args: Vec<std::ffi::OsString> = vec!["run".into()];
+            for a in &preset_args {
+                new_args.push(a.into());
+            }
+            new_args.push("-P".into());
+            new_args.push(prompt_file.as_os_str().to_os_string());
+            let mut cleared = false;
+            for arg in new_args {
+                if !cleared {
+                    cmd = std::process::Command::new(
+                        p.command.as_deref().unwrap_or("ulf"),
+                    );
+                    cleared = true;
+                }
+                cmd.arg(arg);
+            }
+            cmd.current_dir(&ws.path);
+        }
+    }
+
+    let status = cmd
         .status()
         .with_context(|| format!("failed to spawn ulf in workspace directory '{}'", ws.path))?;
 
@@ -349,6 +408,13 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn load_user_config() -> Option<ulf_core::UlfConfig> {
+    let home = std::env::var_os("HOME").map(PathBuf::from)?;
+    let path = home.join(".ulf").join("config.yml");
+    let content = std::fs::read_to_string(path).ok()?;
+    serde_yaml::from_str(&content).ok()
 }
 
 /// Valid workspace IDs: alphanumeric, hyphen, underscore, dot only.
