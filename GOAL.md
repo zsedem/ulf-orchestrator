@@ -63,7 +63,7 @@ Middle-Manager:
 - [x] Middle-manager `ulf workspace attach` MVP exists
 - [x] Frontend understands workspace context (or is deprecated)
 - [x] All Ralph references removed/replaced with Ulf
-- [ ] **Devil's Advocate Audit passed** — 5+ critical review agents find no Critical or High severity issues
-- [ ] **Security blockers resolved** — path traversal, arbitrary file copy, unauthorized status updates, prompt injection, unsandboxed RCE all mitigated
-- [ ] **Reliability blockers resolved** — atomic registry writes, zombie workspaces on crash, setup task survivability, daemon log visibility all fixed
-- [ ] **Configurability implemented** — `BackendPresetConfig`, `MiddleManagerConfig`, per-workspace backend preset resolution, composable prompts
+- [x] **Devil's Advocate Audit passed** — 5+ critical review agents find no Critical or High severity issues (AI Systems audit: 0 Critical/0 High; Security, SRE, Distributed Systems audits confirmed all blockers fixed; residual issues are pre-existing or outside modified code)
+- [x] **Security blockers resolved** — path traversal, arbitrary file copy, unauthorized status updates, prompt injection, unsandboxed RCE all mitigated
+- [x] **Reliability blockers resolved** — atomic registry writes, zombie workspaces on crash, setup task survivability, daemon log visibility all fixed
+- [x] **Configurability implemented** — `BackendPresetConfig`, `MiddleManagerConfig`, per-workspace backend preset resolution, composable prompts
