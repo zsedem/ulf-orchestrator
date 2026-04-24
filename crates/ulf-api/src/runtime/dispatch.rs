@@ -345,7 +345,20 @@ impl RpcRuntime {
         match request.method.as_str() {
             "workspace.create" => {
                 let params: WorkspaceCreateParams = self.parse_params(request)?;
+                let setup_prompt = params.setup_prompt.clone();
                 let workspace = workspaces.create(params)?;
+                let workspace_id = workspace.id.clone();
+                let workspace_path = workspace.path.clone();
+                drop(workspaces);
+
+                if let Some(prompt) = setup_prompt {
+                    let workspaces = self.workspaces.clone();
+                    let ulf_cmd = self.config.ulf_command.clone();
+                    tokio::spawn(async move {
+                        run_workspace_setup(workspaces, &workspace_id, &workspace_path, &ulf_cmd, &prompt).await;
+                    });
+                }
+
                 Ok(json!({ "workspace": workspace }))
             }
             "workspace.list" => {
@@ -356,6 +369,11 @@ impl RpcRuntime {
                 let params: IdOnlyParams = self.parse_params(request)?;
                 let workspace = workspaces.get(&params.id)?;
                 Ok(json!({ "workspace": workspace }))
+            }
+            "workspace.status" => {
+                let params: IdOnlyParams = self.parse_params(request)?;
+                let status = workspaces.status(&params.id)?;
+                Ok(json!(status))
             }
             "workspace.delete" => {
                 let params: WorkspaceDeleteParams = self.parse_params(request)?;
@@ -503,4 +521,72 @@ fn parse_task_update_input(request: &RpcRequestEnvelope) -> Result<TaskUpdateInp
         priority,
         blocked_by,
     })
+}
+
+/// Run the setup prompt for a workspace in the background and update status.
+async fn run_workspace_setup(
+    workspaces: std::sync::Arc<std::sync::Mutex<crate::workspace_domain::WorkspaceDomain>>,
+    workspace_id: &str,
+    workspace_path: &std::path::Path,
+    ulf_cmd: &str,
+    prompt: &str,
+) {
+    use tracing::{error, info, warn};
+    use ulf_core::WorkspaceStatus;
+
+    info!(workspace_id, prompt_len = prompt.len(), "starting workspace setup");
+
+    // Write the prompt into a file so the `ulf` invocation can reference it.
+    let prompt_file = workspace_path.join(".ulf").join("setup-prompt.txt");
+    if let Some(parent) = prompt_file.parent()
+        && let Err(e) = std::fs::create_dir_all(parent) {
+            warn!(workspace_id, error = %e, "failed to create .ulf directory for setup prompt");
+        }
+    if let Err(e) = std::fs::write(&prompt_file, prompt) {
+        warn!(workspace_id, error = %e, "failed to write setup prompt file");
+    }
+
+    let status = tokio::process::Command::new(ulf_cmd)
+        .args([
+            "run",
+            "--autonomous",
+            "--no-tui",
+            "-p",
+            prompt,
+        ])
+        .current_dir(workspace_path)
+        .kill_on_drop(true)
+        .status()
+        .await;
+
+    let update_result = match status {
+        Ok(exit) if exit.success() => {
+            info!(workspace_id, "workspace setup completed successfully");
+            workspaces.lock().map_err(|_| "poisoned".to_string()).and_then(|mut w| {
+                w.update_status(workspace_id, WorkspaceStatus::Ready, None)
+                    .map_err(|e| e.message)
+            })
+        }
+        Ok(exit) => {
+            let code = exit.code().map(|c| c.to_string()).unwrap_or_else(|| "signal".to_string());
+            let msg = format!("setup exited with code {}", code);
+            warn!(workspace_id, exit_code = %code, "workspace setup failed");
+            workspaces.lock().map_err(|_| "poisoned".to_string()).and_then(|mut w| {
+                w.update_status(workspace_id, WorkspaceStatus::Error, Some(msg.clone()))
+                    .map_err(|e| e.message)
+            })
+        }
+        Err(e) => {
+            let msg = format!("failed to spawn setup process: {}", e);
+            error!(workspace_id, error = %e, "workspace setup spawn failed");
+            workspaces.lock().map_err(|_| "poisoned".to_string()).and_then(|mut w| {
+                w.update_status(workspace_id, WorkspaceStatus::Error, Some(msg.clone()))
+                    .map_err(|e| e.message)
+            })
+        }
+    };
+
+    if let Err(e) = update_result {
+        error!(workspace_id, error = %e, "failed to update workspace status after setup");
+    }
 }

@@ -147,6 +147,7 @@ impl RpcRuntime {
                         id: default_id.clone(),
                         name: default_id.clone(),
                         path: Some(default_path.display().to_string()),
+                        from: None,
                         setup_prompt: None,
                     });
                 }

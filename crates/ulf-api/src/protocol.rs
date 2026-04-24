@@ -63,6 +63,7 @@ pub const KNOWN_METHODS: &[&str] = &[
     "workspace.list",
     "workspace.get",
     "workspace.delete",
+    "workspace.status",
     "workspace.update_status",
 ];
 

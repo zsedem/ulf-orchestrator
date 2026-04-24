@@ -45,7 +45,7 @@ pub async fn execute(args: DaemonArgs) -> Result<()> {
     }
 }
 
-async fn start_daemon() -> Result<()> {
+pub async fn start_daemon() -> Result<()> {
     if is_daemon_running().await {
         println!("Daemon is already running at {}", daemon_url());
         return Ok(());
@@ -63,9 +63,9 @@ async fn start_daemon() -> Result<()> {
         .stderr(Stdio::null());
 
     // If ulf-api is not in PATH, try to find it next to the current binary
-    if Command::new("ulf-api").arg("--version").output().is_err() {
-        if let Ok(current_exe) = std::env::current_exe() {
-            if let Some(bin_dir) = current_exe.parent() {
+    if Command::new("ulf-api").arg("--version").output().is_err()
+        && let Ok(current_exe) = std::env::current_exe()
+            && let Some(bin_dir) = current_exe.parent() {
                 let local_api = bin_dir.join("ulf-api");
                 if local_api.exists() {
                     cmd = Command::new(local_api);
@@ -74,8 +74,6 @@ async fn start_daemon() -> Result<()> {
                         .stderr(Stdio::null());
                 }
             }
-        }
-    }
 
     let child = cmd.spawn().with_context(|| {
         "failed to start ulf-api daemon.\n\

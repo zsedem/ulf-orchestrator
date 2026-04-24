@@ -2,12 +2,15 @@
 //!
 //! Manage multi-workspace environments via the central daemon.
 
-use anyhow::Result;
+use std::path::PathBuf;
+
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
-use serde_json::json;
+use serde_json::{Value, json};
 
 use crate::daemon_client::{is_daemon_running, rpc_call, rpc_mutate};
+use crate::daemon::start_daemon;
 
 /// Manage workspaces.
 #[derive(Parser, Debug)]
@@ -55,12 +58,16 @@ pub struct WorkspaceCreateArgs {
     pub path: Option<String>,
 
     /// Setup prompt to run after creation
-    #[arg(short, long)]
+    #[arg(short = 'P', long)]
     pub prompt: Option<String>,
 
     /// Run setup prompt autonomously (no TUI)
     #[arg(long)]
     pub autonomous: bool,
+
+    /// Wait for setup to complete (blocks until Ready or Error)
+    #[arg(long)]
+    pub wait: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -104,13 +111,25 @@ struct WorkspaceOutput {
     error_message: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct WorkspaceStatusResult {
+    workspace: WorkspaceOutput,
+    health: WorkspaceHealth,
+}
+
+#[derive(Debug, Deserialize)]
+struct WorkspaceHealth {
+    directory_exists: bool,
+    readable: bool,
+    writable: bool,
+    has_git_repo: bool,
+    has_ulf_config: bool,
+}
+
 pub async fn execute(args: WorkspaceArgs) -> Result<()> {
     if !is_daemon_running().await {
-        anyhow::bail!(
-            "ulf daemon is not running.\n\
-             Start it with: ulf daemon start\n\
-             Or set ULF_API_URL to a running daemon."
-        );
+        eprintln!("ulf daemon is not running — starting it now...");
+        start_daemon().await?;
     }
 
     match args.command {
@@ -126,23 +145,73 @@ pub async fn execute(args: WorkspaceArgs) -> Result<()> {
 async fn create_workspace(args: WorkspaceCreateArgs) -> Result<()> {
     let name = args.name.unwrap_or_else(|| args.id.clone());
 
-    let result: WorkspaceResult = rpc_mutate(
-        "workspace.create",
-        json!({
-            "id": args.id,
-            "name": name,
-            "path": args.path,
-            "setupPrompt": args.prompt,
-        }),
-    )
-    .await?;
+    // Resolve setup prompt: explicit flag > global config default > none
+    let setup_prompt = args.prompt.or_else(|| {
+        let home = std::env::var_os("HOME").map(PathBuf::from)?;
+        let user_config_path = home.join(".ulf").join("config.yml");
+        let content = std::fs::read_to_string(user_config_path).ok()?;
+        let config: ulf_core::UlfConfig = serde_yaml::from_str(&content).ok()?;
+        config.workspace.default_setup_prompt
+    });
+
+    let mut params = serde_json::Map::new();
+    params.insert("id".to_string(), json!(args.id));
+    params.insert("name".to_string(), json!(name));
+    if let Some(path) = args.path {
+        params.insert("path".to_string(), json!(path));
+    }
+    if let Some(from) = args.from {
+        params.insert("from".to_string(), json!(from));
+    }
+    if let Some(prompt) = setup_prompt {
+        params.insert("setupPrompt".to_string(), json!(prompt));
+    }
+
+    let result: WorkspaceResult = rpc_mutate("workspace.create", Value::Object(params))
+        .await?;
 
     let ws = result.workspace;
     println!("Created workspace '{}' at {}", ws.id, ws.path);
     println!("Status: {}", ws.status);
 
-    // TODO: Phase 3 — run setup prompt if provided
-    // TODO: Phase 2 — clone from `--from` if provided
+    if args.wait && ws.status == "creating" {
+        println!("Waiting for setup to complete...");
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(2));
+        let timeout = std::time::Duration::from_secs(300);
+        let start = std::time::Instant::now();
+
+        loop {
+            interval.tick().await;
+            if start.elapsed() > timeout {
+                anyhow::bail!("timed out waiting for workspace setup");
+            }
+
+            let status: WorkspaceStatusResult = rpc_call(
+                "workspace.status",
+                json!({ "id": ws.id }),
+            )
+            .await?;
+
+            match status.workspace.status.as_str() {
+                "ready" => {
+                    println!("Workspace '{}' is ready!", ws.id);
+                    return Ok(());
+                }
+                "error" => {
+                    anyhow::bail!(
+                        "workspace '{}' setup failed: {}",
+                        ws.id,
+                        status.workspace.error_message.unwrap_or_else(|| "unknown error".to_string())
+                    );
+                }
+                _ => {
+                    print!(".");
+                    use std::io::Write;
+                    let _ = std::io::stdout().flush();
+                }
+            }
+        }
+    }
 
     Ok(())
 }
@@ -156,7 +225,7 @@ async fn list_workspaces() -> Result<()> {
         return Ok(());
     }
 
-    println!("{:<20} {:<12} {}", "ID", "STATUS", "PATH");
+    println!("{:<20} {:<12} PATH", "ID", "STATUS");
     for ws in result.workspaces {
         println!("{:<20} {:<12} {}", ws.id, ws.status, ws.path);
     }
@@ -214,14 +283,31 @@ async fn workspace_status() -> Result<()> {
         println!();
         println!("  {} — {}", ws.id, ws.status);
         println!("    path: {}", ws.path);
+        if ws.error_message.is_some() {
+            println!("    error: {}", ws.error_message.unwrap());
+        }
     }
 
     Ok(())
 }
 
 async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
-    // Phase 4: spawn Middle-Manager session
-    println!("Attaching to workspace '{}'...", args.id);
-    println!("(Middle-Manager not yet implemented — Phase 4)");
+    let result: WorkspaceResult = rpc_call("workspace.get", json!({ "id": args.id })).await?;
+    let ws = result.workspace;
+
+    println!("Attaching to workspace '{}' at {}", ws.id, ws.path);
+
+    // Spawn an interactive ulf session in the workspace directory.
+    // In Phase 4 this will become a dedicated Middle-Manager preset.
+    let status = std::process::Command::new("ulf")
+        .arg("run")
+        .current_dir(&ws.path)
+        .status()
+        .with_context(|| format!("failed to spawn ulf in workspace directory '{}'", ws.path))?;
+
+    if !status.success() {
+        anyhow::bail!("ulf session exited with status: {:?}", status.code());
+    }
+
     Ok(())
 }

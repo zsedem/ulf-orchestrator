@@ -16,58 +16,59 @@
     "methodName": {
       "type": "string",
       "enum": [
-        "system.health",
-        "system.version",
-        "system.capabilities",
-        "task.list",
-        "task.get",
-        "task.ready",
-        "task.create",
-        "task.update",
-        "task.close",
-        "task.archive",
-        "task.unarchive",
-        "task.delete",
-        "task.clear",
-        "task.run",
-        "task.run_all",
-        "task.retry",
-        "task.cancel",
-        "task.status",
+        "collection.create",
+        "collection.delete",
+        "collection.export",
+        "collection.get",
+        "collection.import",
+        "collection.list",
+        "collection.update",
+        "config.get",
+        "config.update",
+        "loop.discard",
         "loop.list",
-        "loop.status",
+        "loop.merge",
+        "loop.merge_button_state",
         "loop.process",
         "loop.prune",
         "loop.retry",
-        "loop.discard",
+        "loop.status",
         "loop.stop",
-        "loop.merge",
-        "loop.merge_button_state",
         "loop.trigger_merge_task",
-        "planning.list",
+        "planning.delete",
         "planning.get",
-        "planning.start",
+        "planning.get_artifact",
+        "planning.list",
         "planning.respond",
         "planning.resume",
-        "planning.delete",
-        "planning.get_artifact",
-        "config.get",
-        "config.update",
+        "planning.start",
         "preset.list",
-        "collection.list",
-        "collection.get",
-        "collection.create",
-        "collection.update",
-        "collection.delete",
-        "collection.import",
-        "collection.export",
+        "stream.ack",
         "stream.subscribe",
         "stream.unsubscribe",
-        "stream.ack",
+        "system.capabilities",
+        "system.health",
+        "system.version",
+        "task.archive",
+        "task.cancel",
+        "task.clear",
+        "task.close",
+        "task.create",
+        "task.delete",
+        "task.get",
+        "task.list",
+        "task.ready",
+        "task.retry",
+        "task.run",
+        "task.run_all",
+        "task.status",
+        "task.unarchive",
+        "task.update",
         "workspace.create",
-        "workspace.list",
-        "workspace.get",
         "workspace.delete",
+        "workspace.get",
+        "workspace.list",
+        "workspace.status",
         "workspace.update_status"
       ]
     },
@@ -346,7 +347,12 @@
     "emptyParams": {
       "type": "object",
       "maxProperties": 0,
-      "additionalProperties": false
+      "additionalProperties": false,
+      "properties": {
+        "workspaceId": {
+          "type": "string"
+        }
+      }
     },
     "idOnlyParams": {
       "type": "object",
@@ -355,6 +361,9 @@
         "id": {
           "type": "string",
           "minLength": 1
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -373,6 +382,9 @@
       "properties": {
         "id": {
           "$ref": "#/$defs/planningSessionId"
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -383,62 +395,152 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "path": { "type": "string", "minLength": 1 },
-        "status": { "type": "string", "enum": ["creating", "ready", "error", "archived"] },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" },
-        "setupPrompt": { "type": ["string", "null"] },
-        "errorMessage": { "type": ["string", "null"] }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "creating",
+            "ready",
+            "error",
+            "archived"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "setupPrompt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "errorMessage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       },
-      "required": ["id", "name", "path", "status", "createdAt", "updatedAt"]
+      "required": [
+        "id",
+        "name",
+        "path",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
     },
     "workspaceCreateParams": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "path": { "type": "string" },
-        "setupPrompt": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string"
+        },
+        "setupPrompt": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        }
       },
-      "required": ["id", "name"]
+      "required": [
+        "id",
+        "name"
+      ]
     },
     "workspaceDeleteParams": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "removeFiles": { "type": "boolean" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "removeFiles": {
+          "type": "boolean"
+        }
       },
-      "required": ["id"]
+      "required": [
+        "id"
+      ]
     },
     "workspaceUpdateStatusParams": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "status": { "type": "string", "enum": ["creating", "ready", "error", "archived"] },
-        "errorMessage": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "creating",
+            "ready",
+            "error",
+            "archived"
+          ]
+        },
+        "errorMessage": {
+          "type": "string"
+        }
       },
-      "required": ["id", "status"]
+      "required": [
+        "id",
+        "status"
+      ]
     },
     "workspaceListResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace" } }
+        "workspaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/workspace"
+          }
+        }
       },
-      "required": ["workspaces"]
+      "required": [
+        "workspaces"
+      ]
     },
     "workspaceResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "workspace": { "$ref": "#/$defs/workspace" }
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        }
       },
-      "required": ["workspace"]
+      "required": [
+        "workspace"
+      ]
     },
     "taskListParams": {
       "type": "object",
@@ -452,6 +554,9 @@
         },
         "pagination": {
           "$ref": "#/$defs/pagination"
+        },
+        "workspaceId": {
+          "type": "string"
         }
       }
     },
@@ -489,6 +594,9 @@
         },
         "mergeLoopPrompt": {
           "type": "string"
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -521,6 +629,9 @@
             "string",
             "null"
           ]
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -533,6 +644,9 @@
       "properties": {
         "includeTerminal": {
           "type": "boolean"
+        },
+        "workspaceId": {
+          "type": "string"
         }
       }
     },
@@ -544,6 +658,9 @@
           "type": "string"
         },
         "steeringInput": {
+          "type": "string"
+        },
+        "workspaceId": {
           "type": "string"
         }
       },
@@ -560,6 +677,9 @@
         },
         "force": {
           "type": "boolean"
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -571,6 +691,9 @@
       "additionalProperties": false,
       "properties": {
         "loopId": {
+          "type": "string"
+        },
+        "workspaceId": {
           "type": "string"
         }
       },
@@ -585,6 +708,9 @@
         "prompt": {
           "type": "string",
           "minLength": 1
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -602,6 +728,9 @@
           "type": "string"
         },
         "response": {
+          "type": "string"
+        },
+        "workspaceId": {
           "type": "string"
         }
       },
@@ -623,6 +752,9 @@
           "minLength": 1,
           "maxLength": 255,
           "pattern": "^[A-Za-z0-9._-]+$"
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -637,6 +769,9 @@
         "content": {
           "type": "string",
           "minLength": 1
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -656,6 +791,9 @@
         },
         "graph": {
           "type": "object"
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -679,6 +817,9 @@
         },
         "graph": {
           "type": "object"
+        },
+        "workspaceId": {
+          "type": "string"
         }
       },
       "required": [
@@ -698,6 +839,9 @@
           "minLength": 1
         },
         "description": {
+          "type": "string"
+        },
+        "workspaceId": {
           "type": "string"
         }
       },
@@ -767,77 +911,783 @@
     },
     "requestByMethod": {
       "oneOf": [
-        { "properties": { "method": { "const": "system.health" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "system.version" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "system.capabilities" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-
-        { "properties": { "method": { "const": "task.list" }, "params": { "$ref": "#/$defs/taskListParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.get" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.ready" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.create" }, "params": { "$ref": "#/$defs/taskCreateParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.update" }, "params": { "$ref": "#/$defs/taskUpdateParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.close" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.archive" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.unarchive" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.delete" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.clear" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.run" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.run_all" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.retry" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.cancel" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "task.status" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-
-        { "properties": { "method": { "const": "loop.list" }, "params": { "$ref": "#/$defs/loopListParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "loop.status" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "loop.process" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "loop.prune" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "loop.retry" }, "params": { "$ref": "#/$defs/loopRetryParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "loop.discard" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "loop.stop" }, "params": { "$ref": "#/$defs/loopStopMergeParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "loop.merge" }, "params": { "$ref": "#/$defs/loopStopMergeParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "loop.merge_button_state" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "loop.trigger_merge_task" }, "params": { "$ref": "#/$defs/loopTriggerMergeTaskParams" } }, "required": ["method", "params"] },
-
-        { "properties": { "method": { "const": "planning.list" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "planning.get" }, "params": { "$ref": "#/$defs/planningSessionIdParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "planning.start" }, "params": { "$ref": "#/$defs/planningStartParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "planning.respond" }, "params": { "$ref": "#/$defs/planningRespondParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "planning.resume" }, "params": { "$ref": "#/$defs/planningSessionIdParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "planning.delete" }, "params": { "$ref": "#/$defs/planningSessionIdParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "planning.get_artifact" }, "params": { "$ref": "#/$defs/planningGetArtifactParams" } }, "required": ["method", "params"] },
-
-        { "properties": { "method": { "const": "config.get" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "config.update" }, "params": { "$ref": "#/$defs/configUpdateParams" } }, "required": ["method", "params"] },
-
-        { "properties": { "method": { "const": "preset.list" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-
-        { "properties": { "method": { "const": "collection.list" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "collection.get" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "collection.create" }, "params": { "$ref": "#/$defs/collectionCreateParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "collection.update" }, "params": { "$ref": "#/$defs/collectionUpdateParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "collection.delete" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "collection.import" }, "params": { "$ref": "#/$defs/collectionImportParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "collection.export" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-
-        { "properties": { "method": { "const": "stream.subscribe" }, "params": { "$ref": "#/$defs/streamSubscribeParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "stream.unsubscribe" }, "params": { "$ref": "#/$defs/streamUnsubscribeParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "stream.ack" }, "params": { "$ref": "#/$defs/streamAckParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "workspace.create" }, "params": { "$ref": "#/$defs/workspaceCreateParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "workspace.list" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "workspace.get" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "workspace.delete" }, "params": { "$ref": "#/$defs/workspaceDeleteParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "workspace.update_status" }, "params": { "$ref": "#/$defs/workspaceUpdateStatusParams" } }, "required": ["method", "params"] }
+        {
+          "properties": {
+            "method": {
+              "const": "system.health"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "system.version"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "system.capabilities"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.list"
+            },
+            "params": {
+              "$ref": "#/$defs/taskListParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.get"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.ready"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.create"
+            },
+            "params": {
+              "$ref": "#/$defs/taskCreateParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.update"
+            },
+            "params": {
+              "$ref": "#/$defs/taskUpdateParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.close"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.archive"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.unarchive"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.delete"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.clear"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.run"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.run_all"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.retry"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.cancel"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.status"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.list"
+            },
+            "params": {
+              "$ref": "#/$defs/loopListParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.status"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.process"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.prune"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.retry"
+            },
+            "params": {
+              "$ref": "#/$defs/loopRetryParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.discard"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.stop"
+            },
+            "params": {
+              "$ref": "#/$defs/loopStopMergeParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.merge"
+            },
+            "params": {
+              "$ref": "#/$defs/loopStopMergeParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.merge_button_state"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.trigger_merge_task"
+            },
+            "params": {
+              "$ref": "#/$defs/loopTriggerMergeTaskParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.list"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.get"
+            },
+            "params": {
+              "$ref": "#/$defs/planningSessionIdParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.start"
+            },
+            "params": {
+              "$ref": "#/$defs/planningStartParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.respond"
+            },
+            "params": {
+              "$ref": "#/$defs/planningRespondParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.resume"
+            },
+            "params": {
+              "$ref": "#/$defs/planningSessionIdParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.delete"
+            },
+            "params": {
+              "$ref": "#/$defs/planningSessionIdParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.get_artifact"
+            },
+            "params": {
+              "$ref": "#/$defs/planningGetArtifactParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "config.get"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "config.update"
+            },
+            "params": {
+              "$ref": "#/$defs/configUpdateParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "preset.list"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.list"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.get"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.create"
+            },
+            "params": {
+              "$ref": "#/$defs/collectionCreateParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.update"
+            },
+            "params": {
+              "$ref": "#/$defs/collectionUpdateParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.delete"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.import"
+            },
+            "params": {
+              "$ref": "#/$defs/collectionImportParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.export"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "stream.subscribe"
+            },
+            "params": {
+              "$ref": "#/$defs/streamSubscribeParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "stream.unsubscribe"
+            },
+            "params": {
+              "$ref": "#/$defs/streamUnsubscribeParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "stream.ack"
+            },
+            "params": {
+              "$ref": "#/$defs/streamAckParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.create"
+            },
+            "params": {
+              "$ref": "#/$defs/workspaceCreateParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.list"
+            },
+            "params": {
+              "$ref": "#/$defs/emptyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.get"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.delete"
+            },
+            "params": {
+              "$ref": "#/$defs/workspaceDeleteParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.update_status"
+            },
+            "params": {
+              "$ref": "#/$defs/workspaceUpdateStatusParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.status"
+            },
+            "params": {
+              "$ref": "#/$defs/idOnlyParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ]
+        }
       ]
     },
     "requestEnvelope": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "apiVersion": { "$ref": "#/$defs/apiVersion" },
-        "id": { "$ref": "#/$defs/requestId" },
-        "method": { "$ref": "#/$defs/methodName" },
-        "params": { "type": "object" },
-        "meta": { "$ref": "#/$defs/requestMeta" }
+        "apiVersion": {
+          "$ref": "#/$defs/apiVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "method": {
+          "$ref": "#/$defs/methodName"
+        },
+        "params": {
+          "type": "object"
+        },
+        "meta": {
+          "$ref": "#/$defs/requestMeta"
+        }
       },
       "required": [
         "apiVersion",
@@ -846,7 +1696,9 @@
         "params"
       ],
       "allOf": [
-        { "$ref": "#/$defs/requestByMethod" },
+        {
+          "$ref": "#/$defs/requestByMethod"
+        },
         {
           "if": {
             "properties": {
@@ -877,19 +1729,38 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "status": { "type": "string", "enum": ["ok", "degraded"] },
-        "timestamp": { "type": "string", "format": "date-time" }
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "degraded"
+          ]
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
       },
-      "required": ["status", "timestamp"]
+      "required": [
+        "status",
+        "timestamp"
+      ]
     },
     "systemVersionResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "apiVersion": { "$ref": "#/$defs/apiVersion" },
-        "serverVersion": { "type": "string" }
+        "apiVersion": {
+          "$ref": "#/$defs/apiVersion"
+        },
+        "serverVersion": {
+          "type": "string"
+        }
       },
-      "required": ["apiVersion", "serverVersion"]
+      "required": [
+        "apiVersion",
+        "serverVersion"
+      ]
     },
     "systemCapabilitiesResult": {
       "type": "object",
@@ -897,264 +1768,1127 @@
       "properties": {
         "methods": {
           "type": "array",
-          "items": { "$ref": "#/$defs/methodName" }
+          "items": {
+            "$ref": "#/$defs/methodName"
+          }
         },
         "streamTopics": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       },
-      "required": ["methods", "streamTopics"]
+      "required": [
+        "methods",
+        "streamTopics"
+      ]
     },
     "taskListResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "tasks": { "type": "array", "items": { "$ref": "#/$defs/task" } }
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/task"
+          }
+        }
       },
-      "required": ["tasks"]
+      "required": [
+        "tasks"
+      ]
     },
     "taskResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "task": { "$ref": "#/$defs/task" }
+        "task": {
+          "$ref": "#/$defs/task"
+        }
       },
-      "required": ["task"]
+      "required": [
+        "task"
+      ]
     },
     "successResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "success": { "type": "boolean" }
+        "success": {
+          "type": "boolean"
+        }
       },
-      "required": ["success"]
+      "required": [
+        "success"
+      ]
     },
     "taskRunResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "success": { "type": "boolean" },
-        "queuedTaskId": { "type": "string" },
-        "task": { "$ref": "#/$defs/task" }
+        "success": {
+          "type": "boolean"
+        },
+        "queuedTaskId": {
+          "type": "string"
+        },
+        "task": {
+          "$ref": "#/$defs/task"
+        }
       },
-      "required": ["success", "queuedTaskId"]
+      "required": [
+        "success",
+        "queuedTaskId"
+      ]
     },
     "taskRunAllResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "enqueued": { "type": "integer", "minimum": 0 },
-        "errors": { "type": "array", "items": { "type": "string" } }
+        "enqueued": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       },
-      "required": ["enqueued", "errors"]
+      "required": [
+        "enqueued",
+        "errors"
+      ]
     },
     "taskStatusResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "isQueued": { "type": "boolean" },
-        "queuePosition": { "type": "integer", "minimum": 0 },
-        "runnerPid": { "type": ["integer", "null"] }
+        "isQueued": {
+          "type": "boolean"
+        },
+        "queuePosition": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runnerPid": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
       },
-      "required": ["isQueued"]
+      "required": [
+        "isQueued"
+      ]
     },
     "loopListResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "loops": { "type": "array", "items": { "$ref": "#/$defs/loop" } }
+        "loops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/loop"
+          }
+        }
       },
-      "required": ["loops"]
+      "required": [
+        "loops"
+      ]
     },
     "loopStatusResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "running": { "type": "boolean" },
-        "intervalMs": { "type": "integer", "minimum": 0 },
-        "lastProcessedAt": { "type": "string", "format": "date-time" }
+        "running": {
+          "type": "boolean"
+        },
+        "intervalMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastProcessedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
       },
-      "required": ["running", "intervalMs"]
+      "required": [
+        "running",
+        "intervalMs"
+      ]
     },
     "loopMergeButtonStateResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "enabled": { "type": "boolean" },
-        "reason": { "type": "string" },
-        "action": { "type": "string" }
+        "enabled": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        }
       },
-      "required": ["enabled"]
+      "required": [
+        "enabled"
+      ]
     },
     "loopTriggerMergeTaskResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "success": { "type": "boolean" },
-        "taskId": { "type": "string" },
-        "queuedTaskId": { "type": "string" }
+        "success": {
+          "type": "boolean"
+        },
+        "taskId": {
+          "type": "string"
+        },
+        "queuedTaskId": {
+          "type": "string"
+        }
       },
-      "required": ["success", "taskId"]
+      "required": [
+        "success",
+        "taskId"
+      ]
     },
     "planningListResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "sessions": { "type": "array", "items": { "$ref": "#/$defs/session" } }
+        "sessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/session"
+          }
+        }
       },
-      "required": ["sessions"]
+      "required": [
+        "sessions"
+      ]
     },
     "planningSessionResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "session": { "$ref": "#/$defs/session" }
+        "session": {
+          "$ref": "#/$defs/session"
+        }
       },
-      "required": ["session"]
+      "required": [
+        "session"
+      ]
     },
     "artifactResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "filename": { "type": "string" },
-        "content": { "type": "string" }
+        "filename": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
       },
-      "required": ["filename", "content"]
+      "required": [
+        "filename",
+        "content"
+      ]
     },
     "configGetResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "raw": { "type": "string" },
-        "parsed": { "type": "object" }
+        "raw": {
+          "type": "string"
+        },
+        "parsed": {
+          "type": "object"
+        }
       },
-      "required": ["raw", "parsed"]
+      "required": [
+        "raw",
+        "parsed"
+      ]
     },
     "configUpdateResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "success": { "type": "boolean" },
-        "parsed": { "type": "object" }
+        "success": {
+          "type": "boolean"
+        },
+        "parsed": {
+          "type": "object"
+        }
       },
-      "required": ["success", "parsed"]
+      "required": [
+        "success",
+        "parsed"
+      ]
     },
     "presetListResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "presets": { "type": "array", "items": { "$ref": "#/$defs/preset" } }
+        "presets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset"
+          }
+        }
       },
-      "required": ["presets"]
+      "required": [
+        "presets"
+      ]
     },
     "collectionListResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "collections": { "type": "array", "items": { "$ref": "#/$defs/collectionSummary" } }
+        "collections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/collectionSummary"
+          }
+        }
       },
-      "required": ["collections"]
+      "required": [
+        "collections"
+      ]
     },
     "collectionResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "collection": { "$ref": "#/$defs/collection" }
+        "collection": {
+          "$ref": "#/$defs/collection"
+        }
       },
-      "required": ["collection"]
+      "required": [
+        "collection"
+      ]
     },
     "collectionExportResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "yaml": { "type": "string", "minLength": 1 }
+        "yaml": {
+          "type": "string",
+          "minLength": 1
+        }
       },
-      "required": ["yaml"]
+      "required": [
+        "yaml"
+      ]
     },
     "streamSubscribeResult": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "subscriptionId": { "type": "string" },
-        "acceptedTopics": { "type": "array", "items": { "type": "string" } },
-        "cursor": { "type": "string" }
+        "subscriptionId": {
+          "type": "string"
+        },
+        "acceptedTopics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cursor": {
+          "type": "string"
+        }
       },
-      "required": ["subscriptionId", "acceptedTopics", "cursor"]
+      "required": [
+        "subscriptionId",
+        "acceptedTopics",
+        "cursor"
+      ]
     },
     "responseByMethod": {
       "oneOf": [
-        { "properties": { "method": { "const": "system.health" }, "result": { "$ref": "#/$defs/systemHealthResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "system.version" }, "result": { "$ref": "#/$defs/systemVersionResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "system.capabilities" }, "result": { "$ref": "#/$defs/systemCapabilitiesResult" } }, "required": ["method", "result"] },
-
-        { "properties": { "method": { "const": "task.list" }, "result": { "$ref": "#/$defs/taskListResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.get" }, "result": { "$ref": "#/$defs/taskResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.ready" }, "result": { "$ref": "#/$defs/taskListResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.create" }, "result": { "$ref": "#/$defs/taskResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.update" }, "result": { "$ref": "#/$defs/taskResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.close" }, "result": { "$ref": "#/$defs/taskResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.archive" }, "result": { "$ref": "#/$defs/taskResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.unarchive" }, "result": { "$ref": "#/$defs/taskResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.delete" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.clear" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.run" }, "result": { "$ref": "#/$defs/taskRunResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.run_all" }, "result": { "$ref": "#/$defs/taskRunAllResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.retry" }, "result": { "$ref": "#/$defs/taskRunResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.cancel" }, "result": { "$ref": "#/$defs/taskResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "task.status" }, "result": { "$ref": "#/$defs/taskStatusResult" } }, "required": ["method", "result"] },
-
-        { "properties": { "method": { "const": "loop.list" }, "result": { "$ref": "#/$defs/loopListResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "loop.status" }, "result": { "$ref": "#/$defs/loopStatusResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "loop.process" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "loop.prune" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "loop.retry" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "loop.discard" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "loop.stop" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "loop.merge" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "loop.merge_button_state" }, "result": { "$ref": "#/$defs/loopMergeButtonStateResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "loop.trigger_merge_task" }, "result": { "$ref": "#/$defs/loopTriggerMergeTaskResult" } }, "required": ["method", "result"] },
-
-        { "properties": { "method": { "const": "planning.list" }, "result": { "$ref": "#/$defs/planningListResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "planning.get" }, "result": { "$ref": "#/$defs/planningSessionResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "planning.start" }, "result": { "$ref": "#/$defs/planningSessionResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "planning.respond" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "planning.resume" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "planning.delete" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "planning.get_artifact" }, "result": { "$ref": "#/$defs/artifactResult" } }, "required": ["method", "result"] },
-
-        { "properties": { "method": { "const": "config.get" }, "result": { "$ref": "#/$defs/configGetResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "config.update" }, "result": { "$ref": "#/$defs/configUpdateResult" } }, "required": ["method", "result"] },
-
-        { "properties": { "method": { "const": "preset.list" }, "result": { "$ref": "#/$defs/presetListResult" } }, "required": ["method", "result"] },
-
-        { "properties": { "method": { "const": "collection.list" }, "result": { "$ref": "#/$defs/collectionListResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "collection.get" }, "result": { "$ref": "#/$defs/collectionResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "collection.create" }, "result": { "$ref": "#/$defs/collectionResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "collection.update" }, "result": { "$ref": "#/$defs/collectionResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "collection.delete" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "collection.import" }, "result": { "$ref": "#/$defs/collectionResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "collection.export" }, "result": { "$ref": "#/$defs/collectionExportResult" } }, "required": ["method", "result"] },
-
-        { "properties": { "method": { "const": "stream.subscribe" }, "result": { "$ref": "#/$defs/streamSubscribeResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "stream.unsubscribe" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "stream.ack" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "workspace.create" }, "result": { "$ref": "#/$defs/workspaceResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "workspace.list" }, "result": { "$ref": "#/$defs/workspaceListResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "workspace.get" }, "result": { "$ref": "#/$defs/workspaceResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "workspace.delete" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "workspace.update_status" }, "result": { "$ref": "#/$defs/workspaceResult" } }, "required": ["method", "result"] }
+        {
+          "properties": {
+            "method": {
+              "const": "system.health"
+            },
+            "result": {
+              "$ref": "#/$defs/systemHealthResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "system.version"
+            },
+            "result": {
+              "$ref": "#/$defs/systemVersionResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "system.capabilities"
+            },
+            "result": {
+              "$ref": "#/$defs/systemCapabilitiesResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.list"
+            },
+            "result": {
+              "$ref": "#/$defs/taskListResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.get"
+            },
+            "result": {
+              "$ref": "#/$defs/taskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.ready"
+            },
+            "result": {
+              "$ref": "#/$defs/taskListResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.create"
+            },
+            "result": {
+              "$ref": "#/$defs/taskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.update"
+            },
+            "result": {
+              "$ref": "#/$defs/taskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.close"
+            },
+            "result": {
+              "$ref": "#/$defs/taskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.archive"
+            },
+            "result": {
+              "$ref": "#/$defs/taskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.unarchive"
+            },
+            "result": {
+              "$ref": "#/$defs/taskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.delete"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.clear"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.run"
+            },
+            "result": {
+              "$ref": "#/$defs/taskRunResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.run_all"
+            },
+            "result": {
+              "$ref": "#/$defs/taskRunAllResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.retry"
+            },
+            "result": {
+              "$ref": "#/$defs/taskRunResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.cancel"
+            },
+            "result": {
+              "$ref": "#/$defs/taskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "task.status"
+            },
+            "result": {
+              "$ref": "#/$defs/taskStatusResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.list"
+            },
+            "result": {
+              "$ref": "#/$defs/loopListResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.status"
+            },
+            "result": {
+              "$ref": "#/$defs/loopStatusResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.process"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.prune"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.retry"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.discard"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.stop"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.merge"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.merge_button_state"
+            },
+            "result": {
+              "$ref": "#/$defs/loopMergeButtonStateResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "loop.trigger_merge_task"
+            },
+            "result": {
+              "$ref": "#/$defs/loopTriggerMergeTaskResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.list"
+            },
+            "result": {
+              "$ref": "#/$defs/planningListResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.get"
+            },
+            "result": {
+              "$ref": "#/$defs/planningSessionResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.start"
+            },
+            "result": {
+              "$ref": "#/$defs/planningSessionResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.respond"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.resume"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.delete"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "planning.get_artifact"
+            },
+            "result": {
+              "$ref": "#/$defs/artifactResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "config.get"
+            },
+            "result": {
+              "$ref": "#/$defs/configGetResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "config.update"
+            },
+            "result": {
+              "$ref": "#/$defs/configUpdateResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "preset.list"
+            },
+            "result": {
+              "$ref": "#/$defs/presetListResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.list"
+            },
+            "result": {
+              "$ref": "#/$defs/collectionListResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.get"
+            },
+            "result": {
+              "$ref": "#/$defs/collectionResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.create"
+            },
+            "result": {
+              "$ref": "#/$defs/collectionResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.update"
+            },
+            "result": {
+              "$ref": "#/$defs/collectionResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.delete"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.import"
+            },
+            "result": {
+              "$ref": "#/$defs/collectionResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "collection.export"
+            },
+            "result": {
+              "$ref": "#/$defs/collectionExportResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "stream.subscribe"
+            },
+            "result": {
+              "$ref": "#/$defs/streamSubscribeResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "stream.unsubscribe"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "stream.ack"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.create"
+            },
+            "result": {
+              "$ref": "#/$defs/workspaceResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.list"
+            },
+            "result": {
+              "$ref": "#/$defs/workspaceListResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.get"
+            },
+            "result": {
+              "$ref": "#/$defs/workspaceResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.delete"
+            },
+            "result": {
+              "$ref": "#/$defs/successResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.update_status"
+            },
+            "result": {
+              "$ref": "#/$defs/workspaceResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "workspace.status"
+            },
+            "result": {
+              "$ref": "#/$defs/workspaceStatusResult"
+            }
+          },
+          "required": [
+            "method",
+            "result"
+          ]
+        }
       ]
     },
     "responseEnvelope": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "apiVersion": { "$ref": "#/$defs/apiVersion" },
-        "id": { "$ref": "#/$defs/requestId" },
-        "method": { "$ref": "#/$defs/methodName" },
-        "result": { "type": "object" },
-        "meta": { "$ref": "#/$defs/responseMeta" }
+        "apiVersion": {
+          "$ref": "#/$defs/apiVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "method": {
+          "$ref": "#/$defs/methodName"
+        },
+        "result": {
+          "type": "object"
+        },
+        "meta": {
+          "$ref": "#/$defs/responseMeta"
+        }
       },
       "required": [
         "apiVersion",
@@ -1163,7 +2897,9 @@
         "result"
       ],
       "allOf": [
-        { "$ref": "#/$defs/responseByMethod" }
+        {
+          "$ref": "#/$defs/responseByMethod"
+        }
       ]
     },
     "errorCode": {
@@ -1194,10 +2930,22 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "code": { "$ref": "#/$defs/errorCode" },
-        "message": { "type": "string", "minLength": 1 },
-        "retryable": { "type": "boolean" },
-        "details": { "type": ["object", "null"] }
+        "code": {
+          "$ref": "#/$defs/errorCode"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "details": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
       },
       "required": [
         "code",
@@ -1209,16 +2957,68 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "apiVersion": { "$ref": "#/$defs/apiVersion" },
-        "id": { "$ref": "#/$defs/requestId" },
-        "method": { "$ref": "#/$defs/methodName" },
-        "error": { "$ref": "#/$defs/rpcError" },
-        "meta": { "$ref": "#/$defs/responseMeta" }
+        "apiVersion": {
+          "$ref": "#/$defs/apiVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "method": {
+          "$ref": "#/$defs/methodName"
+        },
+        "error": {
+          "$ref": "#/$defs/rpcError"
+        },
+        "meta": {
+          "$ref": "#/$defs/responseMeta"
+        }
       },
       "required": [
         "apiVersion",
         "id",
         "error"
+      ]
+    },
+    "workspaceStatusResult": {
+      "type": "object",
+      "properties": {
+        "workspace": {
+          "$ref": "#/$defs/workspaceRecord"
+        },
+        "health": {
+          "$ref": "#/$defs/workspaceHealth"
+        }
+      },
+      "required": [
+        "workspace",
+        "health"
+      ]
+    },
+    "workspaceHealth": {
+      "type": "object",
+      "properties": {
+        "directoryExists": {
+          "type": "boolean"
+        },
+        "readable": {
+          "type": "boolean"
+        },
+        "writable": {
+          "type": "boolean"
+        },
+        "hasGitRepo": {
+          "type": "boolean"
+        },
+        "hasUlfConfig": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "directoryExists",
+        "readable",
+        "writable",
+        "hasGitRepo",
+        "hasUlfConfig"
       ]
     }
   }

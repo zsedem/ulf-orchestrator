@@ -311,6 +311,10 @@ pub struct UlfConfig {
     /// RObot (Ulf-Orchestrator bot) configuration for Telegram-based interaction.
     #[serde(default, rename = "RObot")]
     pub robot: RobotConfig,
+
+    /// Multi-workspace configuration.
+    #[serde(default)]
+    pub workspace: WorkspaceConfig,
 }
 
 fn default_true() -> bool {
@@ -358,6 +362,8 @@ impl Default for UlfConfig {
             features: FeaturesConfig::default(),
             // RObot (Ulf-Orchestrator bot)
             robot: RobotConfig::default(),
+            // Workspace
+            workspace: WorkspaceConfig::default(),
         }
     }
 }
@@ -2222,6 +2228,22 @@ pub enum ConfigError {
         "Hat '{hat}' has both 'aggregate' and 'concurrency > 1'. An aggregator hat cannot also be a concurrent worker.\nFix: remove 'aggregate' or set 'concurrency' to 1."
     )]
     AggregateOnConcurrentHat { hat: String },
+}
+
+/// Multi-workspace configuration for the installable, multi-project model.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceConfig {
+    /// Default setup prompt applied to new workspaces when no explicit prompt is given.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_setup_prompt: Option<String>,
+}
+
+impl Default for WorkspaceConfig {
+    fn default() -> Self {
+        Self {
+            default_setup_prompt: None,
+        }
+    }
 }
 
 #[cfg(test)]

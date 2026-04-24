@@ -17,7 +17,7 @@ pub fn daemon_url() -> String {
 
 /// Check whether the daemon is reachable.
 pub async fn is_daemon_running() -> bool {
-    let url = format!("{}/rpc", daemon_url());
+    let url = format!("{}/rpc/v1", daemon_url());
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(2))
         .build()
@@ -41,7 +41,7 @@ pub async fn rpc_call<T>(method: &str, params: Value) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
 {
-    let url = format!("{}/rpc", daemon_url());
+    let url = format!("{}/rpc/v1", daemon_url());
     let client = reqwest::Client::new();
 
     let body = json!({
@@ -94,7 +94,7 @@ pub async fn rpc_mutate<T>(method: &str, params: Value) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
 {
-    let url = format!("{}/rpc", daemon_url());
+    let url = format!("{}/rpc/v1", daemon_url());
     let client = reqwest::Client::new();
 
     let body = json!({
