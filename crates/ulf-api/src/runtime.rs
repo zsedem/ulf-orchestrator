@@ -106,7 +106,7 @@ impl RpcRuntime {
         idempotency: Arc<dyn IdempotencyStore>,
     ) -> Self {
         let streams = StreamDomain::new();
-        let workspaces = Arc::new(Mutex::new(WorkspaceDomain::new(&config.daemon_state_dir)));
+        let workspaces = Arc::new(Mutex::new(WorkspaceDomain::new(&config.daemon_state_dir, &config.workspace_root)));
         let workspace_runtimes = Arc::new(Mutex::new(std::collections::HashMap::new()));
 
         Self {

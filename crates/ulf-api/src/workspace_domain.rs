@@ -105,14 +105,20 @@ pub struct WorkspaceListResult {
 pub struct WorkspaceDomain {
     store_path: PathBuf,
     workspaces: HashMap<String, Workspace>,
+    /// All workspace paths must reside under this root for sandbox safety.
+    workspace_root: PathBuf,
 }
 
 impl WorkspaceDomain {
-    pub fn new(daemon_state_dir: impl AsRef<Path>) -> Self {
+    pub fn new(
+        daemon_state_dir: impl AsRef<Path>,
+        workspace_root: impl AsRef<Path>,
+    ) -> Self {
         let store_path = daemon_state_dir.as_ref().join("workspaces.json");
         let mut domain = Self {
             store_path,
             workspaces: HashMap::new(),
+            workspace_root: workspace_root.as_ref().to_path_buf(),
         };
         if let Err(e) = domain.load() {
             tracing::warn!(error = %e, "failed to load workspace registry, starting fresh");
@@ -141,10 +147,13 @@ impl WorkspaceDomain {
     ///
     /// This is a static method so it can be called without holding the registry
     /// mutex, avoiding blocking concurrent reads during `git clone`.
-    pub fn create_workspace_dir(params: &WorkspaceCreateParams) -> Result<Workspace, ApiError> {
+    pub fn create_workspace_dir(
+        params: &WorkspaceCreateParams,
+        workspace_root: &Path,
+    ) -> Result<Workspace, ApiError> {
         if !is_valid_workspace_id(&params.id) {
             return Err(ApiError::invalid_params(
-                "workspace id must be 1-64 characters of alphanumeric, hyphen, or underscore",
+                "workspace id must be 1-64 characters of alphanumeric, hyphen, underscore, or dot",
             ));
         }
 
@@ -155,7 +164,19 @@ impl WorkspaceDomain {
                         "workspace path cannot contain '..' components",
                     ));
                 }
-                PathBuf::from(p)
+                let pb = PathBuf::from(p);
+                let canonical = pb.canonicalize().unwrap_or_else(|_| pb.clone());
+                let canonical_root = workspace_root
+                    .canonicalize()
+                    .unwrap_or_else(|_| workspace_root.to_path_buf());
+                if !canonical.starts_with(&canonical_root) {
+                    return Err(ApiError::forbidden(format!(
+                        "workspace path '{}' is outside the workspace root '{}'",
+                        pb.display(),
+                        canonical_root.display()
+                    )));
+                }
+                pb
             }
             None => Self::default_workspace_path_static(&params.id),
         };
@@ -211,7 +232,7 @@ impl WorkspaceDomain {
 
     pub fn create(&mut self, params: WorkspaceCreateParams) -> Result<Workspace, ApiError> {
         self.validate_id(&params.id)?;
-        let workspace = Self::create_workspace_dir(&params)?;
+        let workspace = Self::create_workspace_dir(&params, &self.workspace_root)?;
         self.register(workspace.clone())?;
         Ok(workspace)
     }
@@ -295,8 +316,22 @@ impl WorkspaceDomain {
             .remove(&params.id)
             .ok_or_else(|| ApiError::not_found(format!("workspace '{}' not found", params.id)))?;
 
-        if params.remove_files
-            && let Err(e) = fs::remove_dir_all(&workspace.path) {
+        if params.remove_files {
+            let canonical_path = workspace
+                .path
+                .canonicalize()
+                .unwrap_or_else(|_| workspace.path.clone());
+            let canonical_root = self
+                .workspace_root
+                .canonicalize()
+                .unwrap_or_else(|_| self.workspace_root.clone());
+            if !canonical_path.starts_with(&canonical_root) {
+                tracing::warn!(
+                    workspace_id = %params.id,
+                    path = %workspace.path.display(),
+                    "refusing to remove workspace files outside sandbox"
+                );
+            } else if let Err(e) = fs::remove_dir_all(&workspace.path) {
                 tracing::warn!(
                     workspace_id = %params.id,
                     path = %workspace.path.display(),
@@ -304,6 +339,7 @@ impl WorkspaceDomain {
                     "failed to remove workspace files"
                 );
             }
+        }
 
         self.save()?;
         Ok(())
@@ -469,7 +505,7 @@ mod tests {
     #[test]
     fn test_create_and_list() {
         let tmp = TempDir::new().unwrap();
-        let mut domain = WorkspaceDomain::new(tmp.path());
+        let mut domain = WorkspaceDomain::new(tmp.path(), tmp.path());
 
         let w = domain
             .create(WorkspaceCreateParams {
@@ -492,7 +528,7 @@ mod tests {
     #[test]
     fn test_duplicate_id_fails() {
         let tmp = TempDir::new().unwrap();
-        let mut domain = WorkspaceDomain::new(tmp.path());
+        let mut domain = WorkspaceDomain::new(tmp.path(), tmp.path());
 
         domain
             .create(WorkspaceCreateParams {
@@ -520,7 +556,7 @@ mod tests {
         let tmp = TempDir::new().unwrap();
 
         {
-            let mut domain = WorkspaceDomain::new(tmp.path());
+            let mut domain = WorkspaceDomain::new(tmp.path(), tmp.path());
             domain
                 .create(WorkspaceCreateParams {
                     id: "persist".to_string(),
@@ -533,7 +569,7 @@ mod tests {
         }
 
         {
-            let domain = WorkspaceDomain::new(tmp.path());
+            let domain = WorkspaceDomain::new(tmp.path(), tmp.path());
             let list = domain.list();
             assert_eq!(list.len(), 1);
             assert_eq!(list[0].setup_prompt, Some("setup".to_string()));

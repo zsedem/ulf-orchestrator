@@ -97,13 +97,24 @@ where
     let url = format!("{}/rpc/v1", daemon_url());
     let client = reqwest::Client::new();
 
+    // Derive a deterministic idempotency key from the operation identity so
+    // retries are recognized as the same operation by the daemon.
+    let idempotency_key = {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        let mut hasher = DefaultHasher::new();
+        method.hash(&mut hasher);
+        serde_json::to_string(&params).unwrap_or_default().hash(&mut hasher);
+        format!("{:x}", hasher.finish())
+    };
+
     let body = json!({
         "apiVersion": "v1",
         "id": uuid::Uuid::new_v4().to_string(),
         "method": method,
         "params": params,
         "meta": {
-            "idempotencyKey": uuid::Uuid::new_v4().to_string(),
+            "idempotencyKey": idempotency_key,
         }
     });
 

@@ -127,9 +127,22 @@ struct WorkspaceHealth {
 }
 
 pub async fn execute(args: WorkspaceArgs) -> Result<()> {
+    let is_mutating = matches!(
+        args.command,
+        WorkspaceCommands::Create(_)
+            | WorkspaceCommands::Delete(_)
+            | WorkspaceCommands::Attach(_)
+    );
+
     if !is_daemon_running().await {
-        eprintln!("ulf daemon is not running — starting it now...");
-        start_daemon().await?;
+        if is_mutating {
+            eprintln!("ulf daemon is not running — starting it now...");
+            start_daemon().await?;
+        } else {
+            anyhow::bail!(
+                "ulf daemon is not running.\nStart it with: ulf daemon start"
+            );
+        }
     }
 
     match args.command {
@@ -322,7 +335,12 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
         .and_then(|name| user_config.workspace.backend_presets.get(name));
 
     // Build composable prompt: base template + user extensions.
-    let safe_path = ws.path.replace('"', "\\\"");
+    // Sanitize path for safe inclusion in prompt text.
+    let safe_path = ws.path
+        .replace('\\', "/")
+        .replace('"', "\\\"")
+        .replace('\n', " ")
+        .replace('\r', " ");
     let mut prompt = format!(
         "You are the Ulf Workspace Middle-Manager for workspace '{}' at {}.\n\n\
         Your role is to help the user plan and execute coding tasks. You run inside the workspace directory, so you can inspect files and run commands directly.\n\n\

@@ -351,7 +351,7 @@ impl RpcRuntime {
                     let workspaces = self.workspace_domain_mut()?;
                     workspaces.validate_id(&params.id)?;
                 }
-                let workspace = crate::workspace_domain::WorkspaceDomain::create_workspace_dir(&params)?;
+                let workspace = crate::workspace_domain::WorkspaceDomain::create_workspace_dir(&params, &self.config.workspace_root)?;
                 let workspace_id = workspace.id.clone();
                 let workspace_path = workspace.path.clone();
                 {
@@ -393,7 +393,12 @@ impl RpcRuntime {
             "workspace.delete" => {
                 let mut workspaces = self.workspace_domain_mut()?;
                 let params: WorkspaceDeleteParams = self.parse_params(request)?;
+                let id = params.id.clone();
                 workspaces.delete(params)?;
+                // Evict the runtime cache so a recreated workspace gets a fresh runtime.
+                if let Ok(mut runtimes) = self.workspace_runtimes.lock() {
+                    runtimes.remove(&id);
+                }
                 Ok(json!({ "success": true }))
             }
             "workspace.update_status" => {

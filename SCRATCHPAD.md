@@ -47,8 +47,8 @@
 
 | # | Issue | File | Fix |
 |---|-------|------|-----|
-| M1 | No backend preset system — `attach` hardcodes `ulf` command | `config.rs`, `workspace_cli.rs` | Add `BackendPresetConfig`, `MiddleManagerConfig`, `resolve_backend_preset()` |
-| M2 | Middle-manager prompt hardcoded in binary | `workspace_cli.rs:309-329` | Load from config `workspace.middle_manager.prompt_extensions` or prompt file |
+| M1 | No backend preset system — `attach` hardcodes `ulf` command | `config.rs`, `workspace_cli.rs` | ✅ Fixed: added `BackendPresetConfig`, `resolve_backend_preset()` |
+| M2 | Middle-manager prompt hardcoded in binary | `workspace_cli.rs` | ✅ Fixed: load from config `workspace.middle_manager.prompt_extensions` |
 | M3 | No `workspace.setup_status` / `workspace.cancel_setup` RPCs | `dispatch.rs` | Add observability and cancel for background setup tasks |
 | M4 | Daemon stop never escalates to SIGKILL | `daemon.rs:137-147` | Send SIGKILL after grace period |
 | M5 | `--wait` hardcodes 5-min timeout | `workspace_cli.rs:180` | Add `--timeout <seconds>` |
@@ -74,5 +74,6 @@
 
 1. **Security blockers**: B1, B2, B6, B7, B8
 2. **Reliability blockers**: B3, B4, B5, B9, B10, B11
-3. **Configurability**: M1, M2 — add `BackendPresetConfig`, `MiddleManagerConfig`, thread through `attach_workspace`
-4. **ACP feedback**: H7 — design loop-to-manager event stream
+3. **Configurability**: ✅ M1, M2 done
+4. **ACP feedback**: H7 — design loop-to-manager event stream (deferred to next phase)
+5. **Devil's Advocate Audit**: Run 5+ parallel critical review agents
