@@ -367,8 +367,8 @@ impl RpcRuntime {
                     });
                 } else {
                     // B5: No setup prompt — mark Ready immediately.
-                    let mut workspaces = self.workspace_domain_mut().expect("workspace domain lock");
-                    let _ = workspaces.update_status(&workspace_id, ulf_core::WorkspaceStatus::Ready, None);
+                    let mut workspaces = self.workspace_domain_mut()?;
+                    workspaces.update_status(&workspace_id, ulf_core::WorkspaceStatus::Ready, None)?;
                 }
 
                 Ok(json!({ "workspace": workspace }))
@@ -395,6 +395,7 @@ impl RpcRuntime {
                 let params: WorkspaceDeleteParams = self.parse_params(request)?;
                 let id = params.id.clone();
                 workspaces.delete(params)?;
+                drop(workspaces);
                 // Evict the runtime cache so a recreated workspace gets a fresh runtime.
                 if let Ok(mut runtimes) = self.workspace_runtimes.lock() {
                     runtimes.remove(&id);
