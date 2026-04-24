@@ -60,10 +60,10 @@ Middle-Manager:
 
 ## Completion Criteria
 
-- [ ] `cargo test` passes on `feat/multi-workspace-vibe-coding` branch
-- [ ] Workspace creation end-to-end works (create -> setup prompt -> Ready)
-- [ ] Workspace-scoped domains are fully isolated and tested
-- [ ] Daemon auto-starts on workspace command invocation
-- [ ] Middle-manager `ulf workspace attach` MVP exists
-- [ ] Frontend understands workspace context (or is deprecated)
-- [ ] All Ralph references removed/replaced with Ulf
+- [x] `cargo test` passes on `feat/multi-workspace-vibe-coding` branch
+- [x] Workspace creation end-to-end works (create -> setup prompt -> Ready)
+- [x] Workspace-scoped domains are fully isolated and tested
+- [x] Daemon auto-starts on workspace command invocation
+- [x] Middle-manager `ulf workspace attach` MVP exists
+- [x] Frontend understands workspace context (or is deprecated)
+- [x] All Ralph references removed/replaced with Ulf

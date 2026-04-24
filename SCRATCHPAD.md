@@ -67,20 +67,20 @@ All Phase 1 changes committed as `297ba81`:
 - ❌ ACP feedback loop from running loops back to manager not wired
 
 ### Phase 3: Frontend & Polish
-- Frontend still shows "RO" in top-left corner (needs "ULF")
-- Frontend npm build issues (`npm ci` fails with ENOENT on wrong path)
-- Frontend only capable of creating loops inside current repository
-- Frontend needs workspace context awareness or deprecation plan
+- ✅ Frontend deprecated — added deprecation banner to AppShell directing users to `ulf workspace` CLI
+- Frontend npm build works (`npm install && npm run build` passes)
+- Frontend tests pass (144 tests)
 
 ### Daemon Auto-Start
 - ✅ Auto-start on first workspace command — implemented in `workspace_cli.rs` `execute()`
 
 ## 🔥 Immediate Next Steps
 
-1. Run `cargo test` to verify current state after target/ rebuild
-2. Finish wiring default setup prompt from `~/.ulf/config.yml`
-3. Implement setup prompt background execution with status tracking
-4. Commit the uncommitted changes on `feat/multi-workspace-vibe-coding`
+1. ✅ Run `cargo test` to verify current state after target/ rebuild
+2. ✅ Finish wiring default setup prompt from `~/.ulf/config.yml`
+3. ✅ Implement setup prompt background execution with status tracking
+4. ✅ Commit the uncommitted changes on `feat/multi-workspace-vibe-coding`
 5. Decide and document backend consolidation (remove Node backend?)
-6. Implement daemon auto-start for `ulf workspace` commands
-7. Start Phase 2: `ulf workspace attach` MVP
+6. ✅ Implement daemon auto-start for `ulf workspace` commands
+7. ✅ Start Phase 2: `ulf workspace attach` MVP
+8. Next: ACP WebSocket transport for loop feedback to middle-manager

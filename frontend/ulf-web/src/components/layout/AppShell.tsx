@@ -17,6 +17,9 @@ export function AppShell() {
 
       {/* Main content area - renders active route via Outlet */}
       <main className="flex-1 overflow-auto">
+        <div className="bg-amber-500/10 text-amber-700 dark:text-amber-400 text-sm px-4 py-2 text-center border-b border-amber-500/20">
+          The web dashboard is deprecated. Use <code className="font-mono bg-amber-500/20 px-1 rounded">ulf workspace</code> CLI commands instead.
+        </div>
         <div className="p-6">
           <Outlet />
         </div>
