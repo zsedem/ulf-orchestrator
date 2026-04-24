@@ -25,18 +25,21 @@
 - Added workspace health check (dir exists, readable, writable)
 - Wrote `workspace_isolation.rs` test file (uncommitted)
 
-## 🔄 In Progress / Uncommitted
+## ✅ Committed (Phase 1 Complete)
 
-- `crates/ulf-api/data/rpc-v1-schema.json` (modified)
-- `crates/ulf-api/src/protocol.rs` (modified)
-- `crates/ulf-api/src/runtime.rs` (modified)
-- `crates/ulf-api/src/runtime/dispatch.rs` (modified)
-- `crates/ulf-api/src/workspace_domain.rs` (modified)
-- `crates/ulf-cli/src/daemon.rs` (modified)
-- `crates/ulf-cli/src/daemon_client.rs` (modified)
-- `crates/ulf-cli/src/workspace_cli.rs` (modified)
-- `crates/ulf-core/src/config.rs` (modified)
-- `crates/ulf-api/tests/workspace_isolation.rs` (untracked)
+All Phase 1 changes committed as `297ba81`:
+- `crates/ulf-api/data/rpc-v1-schema.json`
+- `crates/ulf-api/src/protocol.rs`
+- `crates/ulf-api/src/runtime.rs`
+- `crates/ulf-api/src/runtime/dispatch.rs`
+- `crates/ulf-api/src/workspace_domain.rs`
+- `crates/ulf-cli/src/daemon.rs`
+- `crates/ulf-cli/src/daemon_client.rs`
+- `crates/ulf-cli/src/workspace_cli.rs`
+- `crates/ulf-core/src/config.rs`
+- `crates/ulf-api/tests/workspace_isolation.rs`
+- `GOAL.md`
+- `SCRATCHPAD.md`
 
 ## ❌ Blocked / Not Started
 
@@ -46,8 +49,8 @@
 - Status transition: Creating -> Ready/Error after setup completes
 
 ### Cargo Test Verification
-- `cargo test` was interrupted due to disk space issues (18GB target/ folder consumed)
-- User removed target/ to free space; needs re-run
+- ✅ `cargo test` passes fully (all crates green)
+- target/ rebuilt successfully (~2.1GB, not 18GB)
 
 ### Architectural Decisions (Background Tasks Timed Out)
 - Backend consolidation pro/con analysis — agent timed out after 180s
