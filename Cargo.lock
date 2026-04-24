@@ -4406,6 +4406,7 @@ dependencies = [
  "ulf-proto",
  "ulf-telegram",
  "ulf-tui",
+ "uuid",
 ]
 
 [[package]]

@@ -16,6 +16,7 @@
 mod backend_support;
 mod bot;
 mod config_resolution;
+mod daemon_client;
 mod display;
 mod doctor;
 mod hats;
@@ -37,6 +38,7 @@ mod test_support;
 mod tools;
 mod wave;
 mod web;
+mod workspace_cli;
 
 use anyhow::{Context, Result};
 use clap::{ArgAction, CommandFactory, Parser, Subcommand, ValueEnum};
@@ -623,6 +625,9 @@ enum Commands {
 
     /// Generate shell completions
     Completions(CompletionsArgs),
+
+    /// Manage workspaces
+    Workspace(workspace_cli::WorkspaceArgs),
 }
 
 /// Arguments for the init subcommand.
@@ -1191,6 +1196,7 @@ async fn main() -> Result<()> {
             )
             .await
         }
+        Some(Commands::Workspace(args)) => workspace_cli::execute(args).await,
         Some(Commands::Completions(args)) => completions_command(args),
         None => {
             // Default to run with TUI enabled (new default behavior)
