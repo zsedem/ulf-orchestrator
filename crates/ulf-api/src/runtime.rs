@@ -29,6 +29,41 @@ use crate::stream_domain::StreamDomain;
 use crate::task_domain::TaskDomain;
 use crate::workspace_domain::WorkspaceDomain;
 
+/// Per-workspace container for all domains.
+#[derive(Clone)]
+pub struct WorkspaceRuntime {
+    pub tasks: Arc<Mutex<TaskDomain>>,
+    pub loops: Arc<Mutex<LoopDomain>>,
+    pub planning: Arc<Mutex<PlanningDomain>>,
+    pub collections: Arc<Mutex<CollectionDomain>>,
+    pub config_domain: ConfigDomain,
+    pub preset_domain: PresetDomain,
+}
+
+impl WorkspaceRuntime {
+    pub fn new(config: &ApiConfig, workspace_root: &std::path::Path) -> Self {
+        let tasks = Arc::new(Mutex::new(TaskDomain::new(workspace_root)));
+        let loops = Arc::new(Mutex::new(LoopDomain::new(
+            workspace_root,
+            config.loop_process_interval_ms,
+            config.ulf_command.clone(),
+        )));
+        let planning = Arc::new(Mutex::new(PlanningDomain::new(workspace_root)));
+        let collections = Arc::new(Mutex::new(CollectionDomain::new(workspace_root)));
+        let config_domain = ConfigDomain::new(workspace_root);
+        let preset_domain = PresetDomain::new(workspace_root);
+
+        Self {
+            tasks,
+            loops,
+            planning,
+            collections,
+            config_domain,
+            preset_domain,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct IdOnlyParams {
@@ -40,14 +75,12 @@ pub struct RpcRuntime {
     pub(crate) config: ApiConfig,
     auth: Arc<dyn Authenticator>,
     idempotency: Arc<dyn IdempotencyStore>,
-    tasks: Arc<Mutex<TaskDomain>>,
-    loops: Arc<Mutex<LoopDomain>>,
-    planning: Arc<Mutex<PlanningDomain>>,
-    collections: Arc<Mutex<CollectionDomain>>,
+    /// Global stream domain (events are tagged with workspaceId by callers).
     streams: StreamDomain,
-    config_domain: ConfigDomain,
-    preset_domain: PresetDomain,
+    /// Workspace registry (global daemon state).
     workspaces: Arc<Mutex<WorkspaceDomain>>,
+    /// Per-workspace runtimes, created on demand.
+    workspace_runtimes: Arc<Mutex<std::collections::HashMap<String, WorkspaceRuntime>>>,
 }
 
 enum ExecutionOutcome {
@@ -72,32 +105,75 @@ impl RpcRuntime {
         auth: Arc<dyn Authenticator>,
         idempotency: Arc<dyn IdempotencyStore>,
     ) -> Self {
-        let tasks = Arc::new(Mutex::new(TaskDomain::new(&config.workspace_root)));
-        let loops = Arc::new(Mutex::new(LoopDomain::new(
-            &config.workspace_root,
-            config.loop_process_interval_ms,
-            config.ulf_command.clone(),
-        )));
-        let planning = Arc::new(Mutex::new(PlanningDomain::new(&config.workspace_root)));
-        let collections = Arc::new(Mutex::new(CollectionDomain::new(&config.workspace_root)));
         let streams = StreamDomain::new();
-        let config_domain = ConfigDomain::new(&config.workspace_root);
-        let preset_domain = PresetDomain::new(&config.workspace_root);
         let workspaces = Arc::new(Mutex::new(WorkspaceDomain::new(&config.daemon_state_dir)));
+        let workspace_runtimes = Arc::new(Mutex::new(std::collections::HashMap::new()));
 
         Self {
             config,
             auth,
             idempotency,
-            tasks,
-            loops,
-            planning,
-            collections,
             streams,
-            config_domain,
-            preset_domain,
             workspaces,
+            workspace_runtimes,
         }
+    }
+
+    /// Get or create a `WorkspaceRuntime` for the given workspace ID.
+    ///
+    /// Falls back to the default workspace (from `config.workspace_root`) when `workspace_id` is None.
+    pub fn workspace_runtime(
+        &self,
+        workspace_id: Option<&str>,
+    ) -> Result<WorkspaceRuntime, ApiError> {
+        let id = match workspace_id {
+            Some(id) => id.to_string(),
+            None => {
+                // Backwards compatibility: use the default workspace root.
+                let default_path = &self.config.workspace_root;
+                let default_id = default_path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("default")
+                    .to_string();
+
+                // Ensure the default workspace is registered
+                let mut registry = self.workspaces.lock().map_err(|_| {
+                    ApiError::internal("workspace registry lock poisoned")
+                })?;
+
+                if registry.get(&default_id).is_err() {
+                    let _ = registry.create(crate::workspace_domain::WorkspaceCreateParams {
+                        id: default_id.clone(),
+                        name: default_id.clone(),
+                        path: Some(default_path.display().to_string()),
+                        setup_prompt: None,
+                    });
+                }
+                drop(registry);
+                default_id
+            }
+        };
+
+        let mut runtimes = self.workspace_runtimes.lock().map_err(|_| {
+            ApiError::internal("workspace runtimes lock poisoned")
+        })?;
+
+        if let Some(runtime) = runtimes.get(&id) {
+            return Ok(runtime.clone());
+        }
+
+        // Resolve workspace path from registry
+        let registry = self.workspaces.lock().map_err(|_| {
+            ApiError::internal("workspace registry lock poisoned")
+        })?;
+        let workspace = registry.get(&id)?;
+        let path = workspace.path.clone();
+        drop(registry);
+
+        let runtime = WorkspaceRuntime::new(&self.config, &path);
+        runtimes.insert(id, runtime.clone());
+        Ok(runtime)
     }
 
     pub fn health_payload(&self) -> Value {
@@ -206,48 +282,19 @@ impl RpcRuntime {
             .map_err(|error| error.with_context("ws-upgrade", Some("stream.subscribe".to_string())))
     }
 
-    pub(crate) fn task_domain_mut(&self) -> Result<MutexGuard<'_, TaskDomain>, ApiError> {
-        self.tasks
-            .lock()
-            .map_err(|_| ApiError::internal("task domain lock poisoned"))
-    }
-
-    pub(crate) fn loop_domain_mut(&self) -> Result<MutexGuard<'_, LoopDomain>, ApiError> {
-        self.loops
-            .lock()
-            .map_err(|_| ApiError::internal("loop domain lock poisoned"))
-    }
-
-    pub(crate) fn planning_domain_mut(&self) -> Result<MutexGuard<'_, PlanningDomain>, ApiError> {
-        self.planning
-            .lock()
-            .map_err(|_| ApiError::internal("planning domain lock poisoned"))
-    }
-
-    pub(crate) fn collection_domain_mut(
-        &self,
-    ) -> Result<MutexGuard<'_, CollectionDomain>, ApiError> {
-        self.collections
-            .lock()
-            .map_err(|_| ApiError::internal("collection domain lock poisoned"))
-    }
-
     pub(crate) fn stream_domain(&self) -> StreamDomain {
         self.streams.clone()
-    }
-
-    pub(crate) fn config_domain(&self) -> &ConfigDomain {
-        &self.config_domain
-    }
-
-    pub(crate) fn preset_domain(&self) -> &PresetDomain {
-        &self.preset_domain
     }
 
     pub(crate) fn workspace_domain_mut(&self) -> Result<MutexGuard<'_, WorkspaceDomain>, ApiError> {
         self.workspaces
             .lock()
             .map_err(|_| ApiError::internal("workspace domain lock poisoned"))
+    }
+
+    /// Extract `workspaceId` from request params, if present.
+    pub(crate) fn workspace_id_from_params(&self, request: &RpcRequestEnvelope) -> Option<String> {
+        request.params.get("workspaceId").and_then(|v| v.as_str()).map(String::from)
     }
 
     pub(crate) fn parse_params<T>(&self, request: &RpcRequestEnvelope) -> Result<T, ApiError>

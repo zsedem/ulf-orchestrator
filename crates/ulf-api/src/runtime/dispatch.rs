@@ -1,7 +1,7 @@
 use serde_json::{Value, json};
 use tracing::warn;
 
-use super::{IdOnlyParams, RpcRuntime};
+use super::{IdOnlyParams, RpcRuntime, WorkspaceRuntime};
 use crate::collection_domain::{
     CollectionCreateParams, CollectionImportParams, CollectionUpdateParams,
 };
@@ -62,282 +62,304 @@ impl RpcRuntime {
         result
     }
 
+    fn with_workspace<F, T>(&self, request: &RpcRequestEnvelope, f: F) -> Result<T, ApiError>
+    where
+        F: FnOnce(&WorkspaceRuntime) -> Result<T, ApiError>,
+    {
+        let workspace_id = self.workspace_id_from_params(request);
+        let runtime = self.workspace_runtime(workspace_id.as_deref())?;
+        f(&runtime)
+    }
+
     fn dispatch_task(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
-        match request.method.as_str() {
-            "task.list" => {
-                let params: TaskListParams = self.parse_params(request)?;
-                let tasks = self.task_domain_mut()?.list(params);
-                Ok(json!({ "tasks": tasks }))
+        self.with_workspace(request, |wr| {
+            let mut tasks = wr.tasks.lock().map_err(|_| ApiError::internal("task domain lock poisoned"))?;
+            match request.method.as_str() {
+                "task.list" => {
+                    let params: TaskListParams = self.parse_params(request)?;
+                    Ok(json!({ "tasks": tasks.list(params) }))
+                }
+                "task.get" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let task = tasks.get(&params.id)?;
+                    Ok(json!({ "task": task }))
+                }
+                "task.ready" => {
+                    Ok(json!({ "tasks": tasks.ready() }))
+                }
+                "task.create" => {
+                    let params: TaskCreateParams = self.parse_params(request)?;
+                    let task = tasks.create(params)?;
+                    Ok(json!({ "task": task }))
+                }
+                "task.update" => {
+                    let input = parse_task_update_input(request)?;
+                    let task = tasks.update(input)?;
+                    Ok(json!({ "task": task }))
+                }
+                "task.close" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let task = tasks.close(&params.id)?;
+                    Ok(json!({ "task": task }))
+                }
+                "task.archive" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let task = tasks.archive(&params.id)?;
+                    Ok(json!({ "task": task }))
+                }
+                "task.unarchive" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let task = tasks.unarchive(&params.id)?;
+                    Ok(json!({ "task": task }))
+                }
+                "task.delete" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    tasks.delete(&params.id)?;
+                    Ok(json!({ "success": true }))
+                }
+                "task.clear" => {
+                    tasks.clear()?;
+                    Ok(json!({ "success": true }))
+                }
+                "task.run" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let result = tasks.run(&params.id)?;
+                    Ok(json!(result))
+                }
+                "task.run_all" => {
+                    let result = tasks.run_all();
+                    Ok(json!(result))
+                }
+                "task.retry" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let result = tasks.retry(&params.id)?;
+                    Ok(json!(result))
+                }
+                "task.cancel" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let task = tasks.cancel(&params.id)?;
+                    Ok(json!({ "task": task }))
+                }
+                "task.status" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let status = tasks.status(&params.id);
+                    Ok(json!(status))
+                }
+                _ => Err(ApiError::service_unavailable(format!(
+                    "method '{}' is recognized but not implemented",
+                    request.method
+                ))),
             }
-            "task.get" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let task = self.task_domain_mut()?.get(&params.id)?;
-                Ok(json!({ "task": task }))
-            }
-            "task.ready" => {
-                let tasks = self.task_domain_mut()?.ready();
-                Ok(json!({ "tasks": tasks }))
-            }
-            "task.create" => {
-                let params: TaskCreateParams = self.parse_params(request)?;
-                let task = self.task_domain_mut()?.create(params)?;
-                Ok(json!({ "task": task }))
-            }
-            "task.update" => {
-                let input = parse_task_update_input(request)?;
-                let task = self.task_domain_mut()?.update(input)?;
-                Ok(json!({ "task": task }))
-            }
-            "task.close" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let task = self.task_domain_mut()?.close(&params.id)?;
-                Ok(json!({ "task": task }))
-            }
-            "task.archive" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let task = self.task_domain_mut()?.archive(&params.id)?;
-                Ok(json!({ "task": task }))
-            }
-            "task.unarchive" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let task = self.task_domain_mut()?.unarchive(&params.id)?;
-                Ok(json!({ "task": task }))
-            }
-            "task.delete" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                self.task_domain_mut()?.delete(&params.id)?;
-                Ok(json!({ "success": true }))
-            }
-            "task.clear" => {
-                self.task_domain_mut()?.clear()?;
-                Ok(json!({ "success": true }))
-            }
-            "task.run" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let result = self.task_domain_mut()?.run(&params.id)?;
-                Ok(json!(result))
-            }
-            "task.run_all" => {
-                let result = self.task_domain_mut()?.run_all();
-                Ok(json!(result))
-            }
-            "task.retry" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let result = self.task_domain_mut()?.retry(&params.id)?;
-                Ok(json!(result))
-            }
-            "task.cancel" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let task = self.task_domain_mut()?.cancel(&params.id)?;
-                Ok(json!({ "task": task }))
-            }
-            "task.status" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let status = self.task_domain_mut()?.status(&params.id);
-                Ok(json!(status))
-            }
-            _ => Err(ApiError::service_unavailable(format!(
-                "method '{}' is recognized but not implemented",
-                request.method
-            ))),
-        }
+        })
     }
 
     fn dispatch_loop(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
-        match request.method.as_str() {
-            "loop.list" => {
-                let params: LoopListParams = self.parse_params(request)?;
-                let loops = self.loop_domain_mut()?.list(params)?;
-                Ok(json!({ "loops": loops }))
+        self.with_workspace(request, |wr| {
+            let mut loops = wr.loops.lock().map_err(|_| ApiError::internal("loop domain lock poisoned"))?;
+            match request.method.as_str() {
+                "loop.list" => {
+                    let params: LoopListParams = self.parse_params(request)?;
+                    let loops_list = loops.list(params)?;
+                    Ok(json!({ "loops": loops_list }))
+                }
+                "loop.status" => {
+                    let status = loops.status();
+                    Ok(json!(status))
+                }
+                "loop.process" => {
+                    loops.process()?;
+                    Ok(json!({ "success": true }))
+                }
+                "loop.prune" => {
+                    loops.prune()?;
+                    Ok(json!({ "success": true }))
+                }
+                "loop.retry" => {
+                    let params: LoopRetryParams = self.parse_params(request)?;
+                    loops.retry(params)?;
+                    Ok(json!({ "success": true }))
+                }
+                "loop.discard" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    loops.discard(&params.id)?;
+                    Ok(json!({ "success": true }))
+                }
+                "loop.stop" => {
+                    let params: LoopStopMergeParams = self.parse_params(request)?;
+                    loops.stop(params)?;
+                    Ok(json!({ "success": true }))
+                }
+                "loop.merge" => {
+                    let params: LoopStopMergeParams = self.parse_params(request)?;
+                    loops.merge(params)?;
+                    Ok(json!({ "success": true }))
+                }
+                "loop.merge_button_state" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let state = loops.merge_button_state(&params.id)?;
+                    Ok(json!(state))
+                }
+                "loop.trigger_merge_task" => {
+                    let params: LoopTriggerMergeTaskParams = self.parse_params(request)?;
+                    let mut tasks = wr.tasks.lock().map_err(|_| ApiError::internal("task domain lock poisoned"))?;
+                    let result = loops.trigger_merge_task(params, &mut tasks)?;
+                    Ok(json!(result))
+                }
+                _ => Err(ApiError::service_unavailable(format!(
+                    "method '{}' is recognized but not implemented",
+                    request.method
+                ))),
             }
-            "loop.status" => {
-                let status = self.loop_domain_mut()?.status();
-                Ok(json!(status))
-            }
-            "loop.process" => {
-                self.loop_domain_mut()?.process()?;
-                Ok(json!({ "success": true }))
-            }
-            "loop.prune" => {
-                self.loop_domain_mut()?.prune()?;
-                Ok(json!({ "success": true }))
-            }
-            "loop.retry" => {
-                let params: LoopRetryParams = self.parse_params(request)?;
-                self.loop_domain_mut()?.retry(params)?;
-                Ok(json!({ "success": true }))
-            }
-            "loop.discard" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                self.loop_domain_mut()?.discard(&params.id)?;
-                Ok(json!({ "success": true }))
-            }
-            "loop.stop" => {
-                let params: LoopStopMergeParams = self.parse_params(request)?;
-                self.loop_domain_mut()?.stop(params)?;
-                Ok(json!({ "success": true }))
-            }
-            "loop.merge" => {
-                let params: LoopStopMergeParams = self.parse_params(request)?;
-                self.loop_domain_mut()?.merge(params)?;
-                Ok(json!({ "success": true }))
-            }
-            "loop.merge_button_state" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let state = self.loop_domain_mut()?.merge_button_state(&params.id)?;
-                Ok(json!(state))
-            }
-            "loop.trigger_merge_task" => {
-                let params: LoopTriggerMergeTaskParams = self.parse_params(request)?;
-                let loops = self.loop_domain_mut()?;
-                let mut tasks = self.task_domain_mut()?;
-                let result = loops.trigger_merge_task(params, &mut tasks)?;
-                Ok(json!(result))
-            }
-            _ => Err(ApiError::service_unavailable(format!(
-                "method '{}' is recognized but not implemented",
-                request.method
-            ))),
-        }
+        })
     }
 
     fn dispatch_planning(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
-        match request.method.as_str() {
-            "planning.list" => {
-                let sessions = self.planning_domain_mut()?.list()?;
-                Ok(json!({ "sessions": sessions }))
+        self.with_workspace(request, |wr| {
+            let mut planning = wr.planning.lock().map_err(|_| ApiError::internal("planning domain lock poisoned"))?;
+            match request.method.as_str() {
+                "planning.list" => {
+                    let sessions = planning.list()?;
+                    Ok(json!({ "sessions": sessions }))
+                }
+                "planning.get" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let session = planning.get(&params.id)?;
+                    Ok(json!({ "session": session }))
+                }
+                "planning.start" => {
+                    let params: PlanningStartParams = self.parse_params(request)?;
+                    let session = planning.start(params)?;
+                    Ok(json!({ "session": session }))
+                }
+                "planning.respond" => {
+                    let params: PlanningRespondParams = self.parse_params(request)?;
+                    planning.respond(params)?;
+                    Ok(json!({ "success": true }))
+                }
+                "planning.resume" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    planning.resume(&params.id)?;
+                    Ok(json!({ "success": true }))
+                }
+                "planning.delete" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    planning.delete(&params.id)?;
+                    Ok(json!({ "success": true }))
+                }
+                "planning.get_artifact" => {
+                    let params: PlanningGetArtifactParams = self.parse_params(request)?;
+                    let artifact = planning.get_artifact(params)?;
+                    Ok(json!(artifact))
+                }
+                _ => Err(ApiError::service_unavailable(format!(
+                    "method '{}' is recognized but not implemented",
+                    request.method
+                ))),
             }
-            "planning.get" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let session = self.planning_domain_mut()?.get(&params.id)?;
-                Ok(json!({ "session": session }))
-            }
-            "planning.start" => {
-                let params: PlanningStartParams = self.parse_params(request)?;
-                let session = self.planning_domain_mut()?.start(params)?;
-                Ok(json!({ "session": session }))
-            }
-            "planning.respond" => {
-                let params: PlanningRespondParams = self.parse_params(request)?;
-                self.planning_domain_mut()?.respond(params)?;
-                Ok(json!({ "success": true }))
-            }
-            "planning.resume" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                self.planning_domain_mut()?.resume(&params.id)?;
-                Ok(json!({ "success": true }))
-            }
-            "planning.delete" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                self.planning_domain_mut()?.delete(&params.id)?;
-                Ok(json!({ "success": true }))
-            }
-            "planning.get_artifact" => {
-                let params: PlanningGetArtifactParams = self.parse_params(request)?;
-                let artifact = self.planning_domain_mut()?.get_artifact(params)?;
-                Ok(json!(artifact))
-            }
-            _ => Err(ApiError::service_unavailable(format!(
-                "method '{}' is recognized but not implemented",
-                request.method
-            ))),
-        }
+        })
     }
 
     fn dispatch_config(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
-        match request.method.as_str() {
-            "config.get" => {
-                let config = self.config_domain().get()?;
-                Ok(json!(config))
+        self.with_workspace(request, |wr| {
+            match request.method.as_str() {
+                "config.get" => {
+                    let config = wr.config_domain.get()?;
+                    Ok(json!(config))
+                }
+                "config.update" => {
+                    let params: ConfigUpdateParams = self.parse_params(request)?;
+                    let result = wr.config_domain.update(params)?;
+                    Ok(json!(result))
+                }
+                _ => Err(ApiError::service_unavailable(format!(
+                    "method '{}' is recognized but not implemented",
+                    request.method
+                ))),
             }
-            "config.update" => {
-                let params: ConfigUpdateParams = self.parse_params(request)?;
-                let result = self.config_domain().update(params)?;
-                Ok(json!(result))
-            }
-            _ => Err(ApiError::service_unavailable(format!(
-                "method '{}' is recognized but not implemented",
-                request.method
-            ))),
-        }
+        })
     }
 
     fn dispatch_preset(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
-        match request.method.as_str() {
-            "preset.list" => {
-                let collections = self.collection_domain_mut()?.list();
-                let presets = self.preset_domain().list(&collections);
-                Ok(json!({ "presets": presets }))
+        self.with_workspace(request, |wr| {
+            match request.method.as_str() {
+                "preset.list" => {
+                    let collections = wr.collections.lock().map_err(|_| ApiError::internal("collection domain lock poisoned"))?.list();
+                    let presets = wr.preset_domain.list(&collections);
+                    Ok(json!({ "presets": presets }))
+                }
+                _ => Err(ApiError::service_unavailable(format!(
+                    "method '{}' is recognized but not implemented",
+                    request.method
+                ))),
             }
-            _ => Err(ApiError::service_unavailable(format!(
-                "method '{}' is recognized but not implemented",
-                request.method
-            ))),
-        }
+        })
     }
 
     fn dispatch_collection(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
-        match request.method.as_str() {
-            "collection.list" => {
-                let collections = self.collection_domain_mut()?.list();
-                Ok(json!({ "collections": collections }))
+        self.with_workspace(request, |wr| {
+            let mut collections = wr.collections.lock().map_err(|_| ApiError::internal("collection domain lock poisoned"))?;
+            match request.method.as_str() {
+                "collection.list" => {
+                    Ok(json!({ "collections": collections.list() }))
+                }
+                "collection.get" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let collection = collections.get(&params.id)?;
+                    Ok(json!({ "collection": collection }))
+                }
+                "collection.create" => {
+                    let params: CollectionCreateParams = self.parse_params(request)?;
+                    let collection = collections.create(params)?;
+                    Ok(json!({ "collection": collection }))
+                }
+                "collection.update" => {
+                    let params: CollectionUpdateParams = self.parse_params(request)?;
+                    let collection = collections.update(params)?;
+                    Ok(json!({ "collection": collection }))
+                }
+                "collection.delete" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    collections.delete(&params.id)?;
+                    Ok(json!({ "success": true }))
+                }
+                "collection.import" => {
+                    let params: CollectionImportParams = self.parse_params(request)?;
+                    let collection = collections.import(params)?;
+                    Ok(json!({ "collection": collection }))
+                }
+                "collection.export" => {
+                    let params: IdOnlyParams = self.parse_params(request)?;
+                    let yaml = collections.export(&params.id)?;
+                    Ok(json!({ "yaml": yaml }))
+                }
+                _ => Err(ApiError::service_unavailable(format!(
+                    "method '{}' is recognized but not implemented",
+                    request.method
+                ))),
             }
-            "collection.get" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let collection = self.collection_domain_mut()?.get(&params.id)?;
-                Ok(json!({ "collection": collection }))
-            }
-            "collection.create" => {
-                let params: CollectionCreateParams = self.parse_params(request)?;
-                let collection = self.collection_domain_mut()?.create(params)?;
-                Ok(json!({ "collection": collection }))
-            }
-            "collection.update" => {
-                let params: CollectionUpdateParams = self.parse_params(request)?;
-                let collection = self.collection_domain_mut()?.update(params)?;
-                Ok(json!({ "collection": collection }))
-            }
-            "collection.delete" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                self.collection_domain_mut()?.delete(&params.id)?;
-                Ok(json!({ "success": true }))
-            }
-            "collection.import" => {
-                let params: CollectionImportParams = self.parse_params(request)?;
-                let collection = self.collection_domain_mut()?.import(params)?;
-                Ok(json!({ "collection": collection }))
-            }
-            "collection.export" => {
-                let params: IdOnlyParams = self.parse_params(request)?;
-                let yaml = self.collection_domain_mut()?.export(&params.id)?;
-                Ok(json!({ "yaml": yaml }))
-            }
-            _ => Err(ApiError::service_unavailable(format!(
-                "method '{}' is recognized but not implemented",
-                request.method
-            ))),
-        }
+        })
     }
 
     fn dispatch_workspace(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
+        let mut workspaces = self.workspace_domain_mut()?;
         match request.method.as_str() {
             "workspace.create" => {
                 let params: WorkspaceCreateParams = self.parse_params(request)?;
-                let workspace = self.workspace_domain_mut()?.create(params)?;
+                let workspace = workspaces.create(params)?;
                 Ok(json!({ "workspace": workspace }))
             }
             "workspace.list" => {
-                let workspaces = self.workspace_domain_mut()?.list();
-                Ok(json!({ "workspaces": workspaces }))
+                let workspaces_list = workspaces.list();
+                Ok(json!({ "workspaces": workspaces_list }))
             }
             "workspace.get" => {
                 let params: IdOnlyParams = self.parse_params(request)?;
-                let workspace = self.workspace_domain_mut()?.get(&params.id)?;
+                let workspace = workspaces.get(&params.id)?;
                 Ok(json!({ "workspace": workspace }))
             }
             "workspace.delete" => {
                 let params: WorkspaceDeleteParams = self.parse_params(request)?;
-                self.workspace_domain_mut()?.delete(params)?;
+                workspaces.delete(params)?;
                 Ok(json!({ "success": true }))
             }
             "workspace.update_status" => {
@@ -365,7 +387,7 @@ impl RpcRuntime {
                     }
                 };
                 let error_message = object.get("errorMessage").and_then(Value::as_str).map(String::from);
-                let workspace = self.workspace_domain_mut()?.update_status(id, status, error_message)?;
+                let workspace = workspaces.update_status(id, status, error_message)?;
                 Ok(json!({ "workspace": workspace }))
             }
             _ => Err(ApiError::service_unavailable(format!(
