@@ -16,6 +16,7 @@
 mod backend_support;
 mod bot;
 mod config_resolution;
+mod daemon;
 mod daemon_client;
 mod display;
 mod doctor;
@@ -623,6 +624,9 @@ enum Commands {
     /// Manage Telegram bot setup and testing
     Bot(bot::BotArgs),
 
+    /// Manage the central daemon
+    Daemon(daemon::DaemonArgs),
+
     /// Generate shell completions
     Completions(CompletionsArgs),
 
@@ -1197,6 +1201,7 @@ async fn main() -> Result<()> {
             .await
         }
         Some(Commands::Workspace(args)) => workspace_cli::execute(args).await,
+        Some(Commands::Daemon(args)) => daemon::execute(args).await,
         Some(Commands::Completions(args)) => completions_command(args),
         None => {
             // Default to run with TUI enabled (new default behavior)
