@@ -16,6 +16,7 @@ use crate::planning_domain::{
 use crate::protocol::{API_VERSION, RpcRequestEnvelope};
 use crate::stream_domain::{StreamAckParams, StreamSubscribeParams, StreamUnsubscribeParams};
 use crate::task_domain::{TaskCreateParams, TaskListParams, TaskUpdateInput};
+use crate::workspace_domain::{WorkspaceCreateParams, WorkspaceDeleteParams};
 
 impl RpcRuntime {
     pub(super) fn dispatch(
@@ -36,6 +37,7 @@ impl RpcRuntime {
             method if method.starts_with("config.") => self.dispatch_config(request),
             method if method.starts_with("preset.") => self.dispatch_preset(request),
             method if method.starts_with("collection.") => self.dispatch_collection(request),
+            method if method.starts_with("workspace.") => self.dispatch_workspace(request),
             method if method.starts_with("stream.") => self.dispatch_stream(request, principal),
             "_internal.publish" => self.dispatch_internal_publish(request),
             _ => {
@@ -309,6 +311,62 @@ impl RpcRuntime {
                 let params: IdOnlyParams = self.parse_params(request)?;
                 let yaml = self.collection_domain_mut()?.export(&params.id)?;
                 Ok(json!({ "yaml": yaml }))
+            }
+            _ => Err(ApiError::service_unavailable(format!(
+                "method '{}' is recognized but not implemented",
+                request.method
+            ))),
+        }
+    }
+
+    fn dispatch_workspace(&self, request: &RpcRequestEnvelope) -> Result<Value, ApiError> {
+        match request.method.as_str() {
+            "workspace.create" => {
+                let params: WorkspaceCreateParams = self.parse_params(request)?;
+                let workspace = self.workspace_domain_mut()?.create(params)?;
+                Ok(json!({ "workspace": workspace }))
+            }
+            "workspace.list" => {
+                let workspaces = self.workspace_domain_mut()?.list();
+                Ok(json!({ "workspaces": workspaces }))
+            }
+            "workspace.get" => {
+                let params: IdOnlyParams = self.parse_params(request)?;
+                let workspace = self.workspace_domain_mut()?.get(&params.id)?;
+                Ok(json!({ "workspace": workspace }))
+            }
+            "workspace.delete" => {
+                let params: WorkspaceDeleteParams = self.parse_params(request)?;
+                self.workspace_domain_mut()?.delete(params)?;
+                Ok(json!({ "success": true }))
+            }
+            "workspace.update_status" => {
+                let object = request.params.as_object().ok_or_else(|| {
+                    ApiError::invalid_params("workspace.update_status params must be an object")
+                })?;
+                let id = object
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| ApiError::invalid_params("workspace.update_status requires 'id'"))?;
+                let status_str = object
+                    .get("status")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| ApiError::invalid_params("workspace.update_status requires 'status'"))?;
+                let status = match status_str {
+                    "creating" => ulf_core::WorkspaceStatus::Creating,
+                    "ready" => ulf_core::WorkspaceStatus::Ready,
+                    "error" => ulf_core::WorkspaceStatus::Error,
+                    "archived" => ulf_core::WorkspaceStatus::Archived,
+                    _ => {
+                        return Err(ApiError::invalid_params(format!(
+                            "invalid workspace status '{}'",
+                            status_str
+                        )))
+                    }
+                };
+                let error_message = object.get("errorMessage").and_then(Value::as_str).map(String::from);
+                let workspace = self.workspace_domain_mut()?.update_status(id, status, error_message)?;
+                Ok(json!({ "workspace": workspace }))
             }
             _ => Err(ApiError::service_unavailable(format!(
                 "method '{}' is recognized but not implemented",

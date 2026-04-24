@@ -63,7 +63,12 @@
         "collection.export",
         "stream.subscribe",
         "stream.unsubscribe",
-        "stream.ack"
+        "stream.ack",
+        "workspace.create",
+        "workspace.list",
+        "workspace.get",
+        "workspace.delete",
+        "workspace.update_status"
       ]
     },
     "mutatingMethodName": {
@@ -95,7 +100,10 @@
         "collection.create",
         "collection.update",
         "collection.delete",
-        "collection.import"
+        "collection.import",
+        "workspace.create",
+        "workspace.delete",
+        "workspace.update_status"
       ]
     },
     "authMeta": {
@@ -370,6 +378,67 @@
       "required": [
         "id"
       ]
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["creating", "ready", "error", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "setupPrompt": { "type": ["string", "null"] },
+        "errorMessage": { "type": ["string", "null"] }
+      },
+      "required": ["id", "name", "path", "status", "createdAt", "updatedAt"]
+    },
+    "workspaceCreateParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "path": { "type": "string" },
+        "setupPrompt": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "workspaceDeleteParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "removeFiles": { "type": "boolean" }
+      },
+      "required": ["id"]
+    },
+    "workspaceUpdateStatusParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["creating", "ready", "error", "archived"] },
+        "errorMessage": { "type": "string" }
+      },
+      "required": ["id", "status"]
+    },
+    "workspaceListResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace" } }
+      },
+      "required": ["workspaces"]
+    },
+    "workspaceResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspace": { "$ref": "#/$defs/workspace" }
+      },
+      "required": ["workspace"]
     },
     "taskListParams": {
       "type": "object",
@@ -752,7 +821,12 @@
 
         { "properties": { "method": { "const": "stream.subscribe" }, "params": { "$ref": "#/$defs/streamSubscribeParams" } }, "required": ["method", "params"] },
         { "properties": { "method": { "const": "stream.unsubscribe" }, "params": { "$ref": "#/$defs/streamUnsubscribeParams" } }, "required": ["method", "params"] },
-        { "properties": { "method": { "const": "stream.ack" }, "params": { "$ref": "#/$defs/streamAckParams" } }, "required": ["method", "params"] }
+        { "properties": { "method": { "const": "stream.ack" }, "params": { "$ref": "#/$defs/streamAckParams" } }, "required": ["method", "params"] },
+        { "properties": { "method": { "const": "workspace.create" }, "params": { "$ref": "#/$defs/workspaceCreateParams" } }, "required": ["method", "params"] },
+        { "properties": { "method": { "const": "workspace.list" }, "params": { "$ref": "#/$defs/emptyParams" } }, "required": ["method", "params"] },
+        { "properties": { "method": { "const": "workspace.get" }, "params": { "$ref": "#/$defs/idOnlyParams" } }, "required": ["method", "params"] },
+        { "properties": { "method": { "const": "workspace.delete" }, "params": { "$ref": "#/$defs/workspaceDeleteParams" } }, "required": ["method", "params"] },
+        { "properties": { "method": { "const": "workspace.update_status" }, "params": { "$ref": "#/$defs/workspaceUpdateStatusParams" } }, "required": ["method", "params"] }
       ]
     },
     "requestEnvelope": {
@@ -1064,7 +1138,12 @@
 
         { "properties": { "method": { "const": "stream.subscribe" }, "result": { "$ref": "#/$defs/streamSubscribeResult" } }, "required": ["method", "result"] },
         { "properties": { "method": { "const": "stream.unsubscribe" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
-        { "properties": { "method": { "const": "stream.ack" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] }
+        { "properties": { "method": { "const": "stream.ack" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
+        { "properties": { "method": { "const": "workspace.create" }, "result": { "$ref": "#/$defs/workspaceResult" } }, "required": ["method", "result"] },
+        { "properties": { "method": { "const": "workspace.list" }, "result": { "$ref": "#/$defs/workspaceListResult" } }, "required": ["method", "result"] },
+        { "properties": { "method": { "const": "workspace.get" }, "result": { "$ref": "#/$defs/workspaceResult" } }, "required": ["method", "result"] },
+        { "properties": { "method": { "const": "workspace.delete" }, "result": { "$ref": "#/$defs/successResult" } }, "required": ["method", "result"] },
+        { "properties": { "method": { "const": "workspace.update_status" }, "result": { "$ref": "#/$defs/workspaceResult" } }, "required": ["method", "result"] }
       ]
     },
     "responseEnvelope": {

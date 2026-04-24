@@ -59,6 +59,11 @@ pub const KNOWN_METHODS: &[&str] = &[
     "stream.subscribe",
     "stream.unsubscribe",
     "stream.ack",
+    "workspace.create",
+    "workspace.list",
+    "workspace.get",
+    "workspace.delete",
+    "workspace.update_status",
 ];
 
 pub const MUTATING_METHODS: &[&str] = &[
@@ -89,6 +94,9 @@ pub const MUTATING_METHODS: &[&str] = &[
     "collection.update",
     "collection.delete",
     "collection.import",
+    "workspace.create",
+    "workspace.delete",
+    "workspace.update_status",
 ];
 
 pub const STREAM_TOPICS: &[&str] = &[

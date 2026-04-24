@@ -27,6 +27,7 @@ use crate::protocol::{
 };
 use crate::stream_domain::StreamDomain;
 use crate::task_domain::TaskDomain;
+use crate::workspace_domain::WorkspaceDomain;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,6 +47,7 @@ pub struct RpcRuntime {
     streams: StreamDomain,
     config_domain: ConfigDomain,
     preset_domain: PresetDomain,
+    workspaces: Arc<Mutex<WorkspaceDomain>>,
 }
 
 enum ExecutionOutcome {
@@ -81,6 +83,7 @@ impl RpcRuntime {
         let streams = StreamDomain::new();
         let config_domain = ConfigDomain::new(&config.workspace_root);
         let preset_domain = PresetDomain::new(&config.workspace_root);
+        let workspaces = Arc::new(Mutex::new(WorkspaceDomain::new(&config.daemon_state_dir)));
 
         Self {
             config,
@@ -93,6 +96,7 @@ impl RpcRuntime {
             streams,
             config_domain,
             preset_domain,
+            workspaces,
         }
     }
 
@@ -238,6 +242,12 @@ impl RpcRuntime {
 
     pub(crate) fn preset_domain(&self) -> &PresetDomain {
         &self.preset_domain
+    }
+
+    pub(crate) fn workspace_domain_mut(&self) -> Result<MutexGuard<'_, WorkspaceDomain>, ApiError> {
+        self.workspaces
+            .lock()
+            .map_err(|_| ApiError::internal("workspace domain lock poisoned"))
     }
 
     pub(crate) fn parse_params<T>(&self, request: &RpcRequestEnvelope) -> Result<T, ApiError>

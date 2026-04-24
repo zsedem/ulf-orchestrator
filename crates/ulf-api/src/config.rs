@@ -42,6 +42,7 @@ pub struct ApiConfig {
     pub token: Option<String>,
     pub idempotency_ttl_secs: u64,
     pub workspace_root: PathBuf,
+    pub daemon_state_dir: PathBuf,
     pub loop_process_interval_ms: u64,
     pub ulf_command: String,
 }
@@ -58,6 +59,7 @@ impl Default for ApiConfig {
             token: None,
             idempotency_ttl_secs: 60 * 60,
             workspace_root,
+            daemon_state_dir: home_dir().join(".ulf").join("daemon"),
             loop_process_interval_ms: 30_000,
             ulf_command: "ulf".to_string(),
         }
@@ -102,6 +104,10 @@ impl ApiConfig {
             config.workspace_root = PathBuf::from(workspace_root);
         }
 
+        if let Ok(daemon_state_dir) = env::var("ULF_DAEMON_STATE_DIR") {
+            config.daemon_state_dir = PathBuf::from(daemon_state_dir);
+        }
+
         if let Ok(interval_ms) = env::var("ULF_API_LOOP_PROCESS_INTERVAL_MS") {
             config.loop_process_interval_ms = interval_ms.parse::<u64>().with_context(|| {
                 format!("failed parsing ULF_API_LOOP_PROCESS_INTERVAL_MS='{interval_ms}' as u64")
@@ -136,6 +142,12 @@ impl ApiConfig {
 
         Ok(())
     }
+}
+
+fn home_dir() -> PathBuf {
+    std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("."))
 }
 
 fn is_loopback_host(host: &str) -> bool {
