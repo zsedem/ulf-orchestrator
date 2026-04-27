@@ -196,7 +196,7 @@ Ulf stops when one of these occurs:
 - Maximum runtime exceeded (default: 4 hours)
 - You quit the TUI
 
-When it finishes, review the generated files in your project directory and `.agent/` run logs.
+When it finishes, review the generated files in your project directory and `.ulf/` run logs.
 
 ## Command-Line Options
 

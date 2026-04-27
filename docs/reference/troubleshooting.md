@@ -249,7 +249,7 @@ hats:
 1. Check iteration progress and logs:
 
    ```bash
-   ulf status
+   ulf daemon status
    ```
 
 2. Break down complex tasks:
@@ -268,7 +268,7 @@ hats:
 
    ```bash
    ulf run --max-iterations 200
-   ulf run --agent gemini
+   ulf run --backend gemini
    ```
 
 #### Agent Timeout
@@ -306,7 +306,7 @@ hats:
 1. Check error pattern:
 
    ```bash
-   cat .agent/metrics/state_*.json | jq '.errors'
+   cat .ulf/metrics/state_*.json | jq '.errors'
    ```
 
 2. Clear workspace and retry:
@@ -340,8 +340,8 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
 
    ```bash
    # Review recent outputs
-   ls -lt .agent/prompts/ | head -10
-   diff .agent/prompts/prompt_N.md .agent/prompts/prompt_N-1.md
+   ls -lt .ulf/prompts/ | head -10
+   diff .ulf/prompts/prompt_N.md .ulf/prompts/prompt_N-1.md
    ```
 
 2. **Improve prompt to encourage variety**:
@@ -365,7 +365,7 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
 
 #### Completion Marker Not Detected
 
-**Problem**: Ulf continues running despite `TASK_COMPLETE` marker
+**Problem**: Ulf continues running despite `LOOP_COMPLETE` marker
 
 **Possible Causes**:
 
@@ -380,20 +380,20 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
    ```markdown
    # Correct formats:
 
-   - [x] TASK_COMPLETE
-         [x] TASK_COMPLETE
+   - [x] LOOP_COMPLETE
+         [x] LOOP_COMPLETE
 
    # Incorrect (won't trigger):
 
-   - [ ] TASK_COMPLETE # Not checked
-         TASK_COMPLETE # No checkbox
-   - [x] TASK_COMPLETE # Capital X
+   - [ ] LOOP_COMPLETE # Not checked
+         LOOP_COMPLETE # No checkbox
+   - [x] LOOP_COMPLETE # Capital X
    ```
 
 2. **Check for hidden characters**:
 
    ```bash
-   cat -A PROMPT.md | grep TASK_COMPLETE
+   cat -A PROMPT.md | grep LOOP_COMPLETE
    ```
 
 3. **Ensure marker is on its own line**:
@@ -401,12 +401,12 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
    ````markdown
    # Good - on its own line
 
-   - [x] TASK_COMPLETE
+   - [x] LOOP_COMPLETE
 
    # Bad - inside code block
 
    ```markdown
-   - [x] TASK_COMPLETE # Inside code block - won't work
+   - [x] LOOP_COMPLETE # Inside code block - won't work
    ```
    ````
 
@@ -463,7 +463,7 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
 2. Start or restart the daemon:
 
    ```bash
-   ulf daemon restart
+   ulf daemon stop && ulf daemon start
    ```
 
 3. Check daemon logs:
@@ -609,7 +609,7 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
 4. Clear iteration history:
 
    ```bash
-   rm .agent/prompts/prompt_*.md
+   rm .ulf/prompts/prompt_*.md
    ```
 
 ### Performance Issues
@@ -636,7 +636,7 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
 
    ```bash
    # Q is typically faster
-   ulf run --agent q
+   ulf run --backend kiro
    ```
 
 #### High Memory Usage
@@ -648,7 +648,7 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
 1. Set resource limits:
 
    ```python
-   # In ulf.json
+   # In ulf.yml
    {
      "resource_limits": {
        "memory_mb": 2048
@@ -680,13 +680,13 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
 1. Remove corrupted file:
 
    ```bash
-   rm .agent/metrics/state_latest.json
+   rm .ulf/metrics/state_latest.json
    ```
 
 2. Restore from backup:
 
    ```bash
-   cp .agent/metrics/state_*.json .agent/metrics/state_latest.json
+   cp .ulf/metrics/state_*.json .ulf/metrics/state_latest.json
    ```
 
 3. Reset state:
@@ -704,19 +704,19 @@ Ulf's loop detection triggers when agent output is ≥90% similar to any of the 
 1. Check metrics directory:
 
    ```bash
-   ls -la .agent/metrics/
+   ls -la .ulf/metrics/
    ```
 
 2. Create directory if missing:
 
    ```bash
-   mkdir -p .agent/metrics
+   mkdir -p .ulf/metrics
    ```
 
 3. Check permissions:
 
    ```bash
-   chmod 755 .agent/metrics
+   chmod 755 .ulf/metrics
    ```
 
 ## Error Messages
@@ -813,7 +813,7 @@ python -m cProfile ulf_orchestrator.py
 2. **Analyze failure**:
 
    ```bash
-   tail -n 100 .agent/logs/ulf.log
+   tail -n 100 .ulf/logs/ulf.log
    ```
 
 3. **Fix issue**:
@@ -870,7 +870,7 @@ echo "Git status:"
 git status --short 2>/dev/null || echo "  Not a git repository"
 echo ""
 echo "Recent errors:"
-grep ERROR .agent/logs/*.log 2>/dev/null | tail -5
+grep ERROR .ulf/logs/*.log 2>/dev/null | tail -5
 echo ""
 echo "Daemon logs:"
 tail -5 ~/.ulf/daemon/daemon.log 2>/dev/null || echo "  No daemon logs"

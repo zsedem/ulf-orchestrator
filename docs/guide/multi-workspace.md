@@ -160,8 +160,8 @@ workspace:
 Reference a preset when attaching:
 
 ```bash
-# Uses the preset from ~/.ulf/config.yml
-ulf workspace attach jira-007 --backend-preset claude-thorough
+# The preset is read from ~/.ulf/config.yml automatically
+ulf workspace attach jira-007
 ```
 
 ### Middle-Manager Configuration
@@ -197,10 +197,10 @@ ulf daemon status
 ulf daemon stop
 
 # Restart the daemon
-ulf daemon restart
+ulf daemon stop && ulf daemon start
 
 # View daemon logs
-ulf daemon logs
+tail -f ~/.ulf/daemon/daemon.log
 ```
 
 The daemon logs to `~/.ulf/daemon/daemon.log`.
@@ -313,7 +313,7 @@ ulf workspace create <id> --wait
 ulf daemon status
 
 # Restart it
-ulf daemon restart
+ulf daemon stop && ulf daemon start
 
 # Check logs for errors
 tail -f ~/.ulf/daemon/daemon.log
@@ -328,8 +328,8 @@ ulf workspace get <id>
 # Check daemon health
 ulf daemon status
 
-# Try with explicit backend
-ulf workspace attach <id> --backend claude
+# The backend is determined by the preset configured in ~/.ulf/config.yml
+ulf workspace attach <id>
 ```
 
 ## Comparison: Traditional vs Multi-Workspace

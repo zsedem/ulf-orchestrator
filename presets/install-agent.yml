@@ -165,7 +165,7 @@ hats:
       "Do you want to set up Telegram integration for human-in-the-loop? (y/n)
        This lets the AI ask you questions and receive guidance during tasks."
       
-      If yes, say: "Set ULF_TELEGRAM_BOT_TOKEN in your environment, then run: ulf bot onboard --telegram"
+      If yes, say: "Set ULF_TELEGRAM_BOT_TOKEN in your environment, then run: ulf bot onboard"
 
       ### Question 6: Hooks
       "Do you want to set up lifecycle hooks? (y/n)

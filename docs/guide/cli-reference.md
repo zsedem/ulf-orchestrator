@@ -286,7 +286,6 @@ ulf loops [OPTIONS] [COMMAND]
 **Subcommands:**
 
 - `list [--json] [--all]`
-- `logs <loop-id> [--follow]`
 - `history <loop-id> [--json]`
 - `retry <loop-id>`
 - `discard <loop-id> [--yes]`
@@ -432,8 +431,7 @@ ulf daemon <COMMAND>
 | `start` | Start the daemon |
 | `stop` | Stop the daemon |
 | `status` | Check daemon status |
-| `restart` | Restart the daemon |
-| `logs` | View daemon logs |
+| `logs` | *(not yet implemented)* View logs with `tail -f ~/.ulf/daemon/daemon.log` |
 
 ### ulf wave
 
