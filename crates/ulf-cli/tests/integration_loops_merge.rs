@@ -356,10 +356,11 @@ fn test_spawn_merge_ulf_uses_exclusive_flag() -> Result<()> {
     // contains the expected flag. This is a meta-test that ensures the implementation
     // matches the spec.
     let source = include_str!("../src/loop_runner.rs");
+    let merges_source = include_str!("../src/loop_runner/merges.rs");
 
     // Verify --exclusive is used in the merge-ulf spawn path
     assert!(
-        source.contains(r#""--exclusive""#),
+        source.contains(r#""--exclusive""#) || merges_source.contains(r#""--exclusive""#),
         "loop_runner.rs should use --exclusive flag for merge-ulf spawns.\n\
          Per spec: 'Auto-spawned merge loops use --exclusive to wait for the primary lock'"
     );

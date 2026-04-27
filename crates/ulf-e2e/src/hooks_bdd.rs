@@ -1043,6 +1043,20 @@ fn assert_workspace_source_contains(
     assert_required_source_snippets(relative_path, &source_content, required_snippets)
 }
 
+fn assert_workspace_source_contains_any(
+    relative_paths: &[&str],
+    required_snippets: &[(&str, &str)],
+) -> Result<(), String> {
+    let mut combined = String::new();
+    for path in relative_paths {
+        match load_workspace_source_file(path) {
+            Ok(content) => combined.push_str(&content),
+            Err(_) => continue,
+        }
+    }
+    assert_required_source_snippets(&relative_paths.join(" | "), &combined, required_snippets)
+}
+
 // =============================================================================
 // AC-01: Per-project scope only
 // =============================================================================
@@ -1535,8 +1549,22 @@ fn evaluate_ac_08(
                 ],
             )?;
 
-            assert_workspace_source_contains(
-                "crates/ulf-cli/src/loop_runner.rs",
+            assert_workspace_source_contains_any(
+                &[
+                    "crates/ulf-cli/src/loop_runner.rs",
+                    "crates/ulf-cli/src/loop_runner/hooks.rs",
+                    "crates/ulf-cli/src/loop_runner/tests.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_mutations.rs",
+                    "crates/ulf-cli/src/loop_runner/lifecycle.rs",
+                    "crates/ulf-cli/src/loop_runner/recovery.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_payloads.rs",
+                    "crates/ulf-cli/src/loop_runner/output.rs",
+                    "crates/ulf-cli/src/loop_runner/merges.rs",
+                    "crates/ulf-cli/src/loop_runner/planning.rs",
+                    "crates/ulf-cli/src/loop_runner/telemetry.rs",
+                    "crates/ulf-cli/src/loop_runner/waves.rs",
+                    "crates/ulf-cli/src/loop_runner/core.rs",
+                ],
                 &[
                     (
                         "warn policy maps to warn disposition",
@@ -1596,8 +1624,22 @@ fn evaluate_ac_09(
                 ],
             )?;
 
-            assert_workspace_source_contains(
-                "crates/ulf-cli/src/loop_runner.rs",
+            assert_workspace_source_contains_any(
+                &[
+                    "crates/ulf-cli/src/loop_runner.rs",
+                    "crates/ulf-cli/src/loop_runner/hooks.rs",
+                    "crates/ulf-cli/src/loop_runner/tests.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_mutations.rs",
+                    "crates/ulf-cli/src/loop_runner/lifecycle.rs",
+                    "crates/ulf-cli/src/loop_runner/recovery.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_payloads.rs",
+                    "crates/ulf-cli/src/loop_runner/output.rs",
+                    "crates/ulf-cli/src/loop_runner/merges.rs",
+                    "crates/ulf-cli/src/loop_runner/planning.rs",
+                    "crates/ulf-cli/src/loop_runner/telemetry.rs",
+                    "crates/ulf-cli/src/loop_runner/waves.rs",
+                    "crates/ulf-cli/src/loop_runner/core.rs",
+                ],
                 &[
                     (
                         "block policy maps to block disposition",
@@ -1803,8 +1845,22 @@ fn evaluate_ac_13(
         ci_safe_mode,
         validate_acceptance_context,
         |_harness| {
-            assert_workspace_source_contains(
-                "crates/ulf-cli/src/loop_runner.rs",
+            assert_workspace_source_contains_any(
+                &[
+                    "crates/ulf-cli/src/loop_runner.rs",
+                    "crates/ulf-cli/src/loop_runner/hooks.rs",
+                    "crates/ulf-cli/src/loop_runner/tests.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_mutations.rs",
+                    "crates/ulf-cli/src/loop_runner/lifecycle.rs",
+                    "crates/ulf-cli/src/loop_runner/recovery.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_payloads.rs",
+                    "crates/ulf-cli/src/loop_runner/output.rs",
+                    "crates/ulf-cli/src/loop_runner/merges.rs",
+                    "crates/ulf-cli/src/loop_runner/planning.rs",
+                    "crates/ulf-cli/src/loop_runner/telemetry.rs",
+                    "crates/ulf-cli/src/loop_runner/waves.rs",
+                    "crates/ulf-cli/src/loop_runner/core.rs",
+                ],
                 &[
                     (
                         "mutation parser short-circuits when mutate.enabled is false",
@@ -1857,8 +1913,22 @@ fn evaluate_ac_14(
         ci_safe_mode,
         validate_acceptance_context,
         |_harness| {
-            assert_workspace_source_contains(
-                "crates/ulf-cli/src/loop_runner.rs",
+            assert_workspace_source_contains_any(
+                &[
+                    "crates/ulf-cli/src/loop_runner.rs",
+                    "crates/ulf-cli/src/loop_runner/hooks.rs",
+                    "crates/ulf-cli/src/loop_runner/tests.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_mutations.rs",
+                    "crates/ulf-cli/src/loop_runner/lifecycle.rs",
+                    "crates/ulf-cli/src/loop_runner/recovery.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_payloads.rs",
+                    "crates/ulf-cli/src/loop_runner/output.rs",
+                    "crates/ulf-cli/src/loop_runner/merges.rs",
+                    "crates/ulf-cli/src/loop_runner/planning.rs",
+                    "crates/ulf-cli/src/loop_runner/telemetry.rs",
+                    "crates/ulf-cli/src/loop_runner/waves.rs",
+                    "crates/ulf-cli/src/loop_runner/core.rs",
+                ],
                 &[
                     (
                         "mutation payload parser enforces metadata-only top-level schema",
@@ -1915,8 +1985,22 @@ fn evaluate_ac_15(
         ci_safe_mode,
         validate_acceptance_context,
         |_harness| {
-            assert_workspace_source_contains(
-                "crates/ulf-cli/src/loop_runner.rs",
+            assert_workspace_source_contains_any(
+                &[
+                    "crates/ulf-cli/src/loop_runner.rs",
+                    "crates/ulf-cli/src/loop_runner/hooks.rs",
+                    "crates/ulf-cli/src/loop_runner/tests.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_mutations.rs",
+                    "crates/ulf-cli/src/loop_runner/lifecycle.rs",
+                    "crates/ulf-cli/src/loop_runner/recovery.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_payloads.rs",
+                    "crates/ulf-cli/src/loop_runner/output.rs",
+                    "crates/ulf-cli/src/loop_runner/merges.rs",
+                    "crates/ulf-cli/src/loop_runner/planning.rs",
+                    "crates/ulf-cli/src/loop_runner/telemetry.rs",
+                    "crates/ulf-cli/src/loop_runner/waves.rs",
+                    "crates/ulf-cli/src/loop_runner/core.rs",
+                ],
                 &[
                     (
                         "mutation parser attempts JSON decode of hook stdout",
@@ -2056,8 +2140,22 @@ fn evaluate_ac_16(
                 ],
             )?;
 
-            assert_workspace_source_contains(
-                "crates/ulf-cli/src/loop_runner.rs",
+            assert_workspace_source_contains_any(
+                &[
+                    "crates/ulf-cli/src/loop_runner.rs",
+                    "crates/ulf-cli/src/loop_runner/hooks.rs",
+                    "crates/ulf-cli/src/loop_runner/tests.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_mutations.rs",
+                    "crates/ulf-cli/src/loop_runner/lifecycle.rs",
+                    "crates/ulf-cli/src/loop_runner/recovery.rs",
+                    "crates/ulf-cli/src/loop_runner/hook_payloads.rs",
+                    "crates/ulf-cli/src/loop_runner/output.rs",
+                    "crates/ulf-cli/src/loop_runner/merges.rs",
+                    "crates/ulf-cli/src/loop_runner/planning.rs",
+                    "crates/ulf-cli/src/loop_runner/telemetry.rs",
+                    "crates/ulf-cli/src/loop_runner/waves.rs",
+                    "crates/ulf-cli/src/loop_runner/core.rs",
+                ],
                 &[
                     (
                         "loop runner emits hook-run telemetry after each attempt",
