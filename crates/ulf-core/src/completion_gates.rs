@@ -15,7 +15,7 @@
 //!       timeout_seconds: 120
 //! ```
 
-use crate::config::{CheckpointGateConfig, CheckpointTrigger, CompletionGateConfig};
+use crate::config::{CheckpointGateConfig, CompletionGateConfig};
 use std::io::Read;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -440,7 +440,7 @@ mod tests {
                 assert_eq!(name, "false-gate");
                 assert_eq!(exit_code, Some(1));
             }
-            _ => panic!("Expected Failed"),
+            GateRunResult::AllPassed => panic!("Expected Failed"),
         }
     }
 
@@ -456,7 +456,7 @@ mod tests {
             GateRunResult::Failed { name, .. } => {
                 assert_eq!(name, "false-gate");
             }
-            _ => panic!("Expected first gate to fail"),
+            GateRunResult::AllPassed => panic!("Expected first gate to fail"),
         }
     }
 
@@ -469,7 +469,7 @@ mod tests {
             GateRunResult::Failed { stdout, .. } => {
                 assert!(stdout.contains("hello"));
             }
-            _ => panic!("Expected Failed"),
+            GateRunResult::AllPassed => panic!("Expected Failed"),
         }
     }
 
@@ -491,7 +491,7 @@ mod tests {
             GateRunResult::Failed { timed_out, .. } => {
                 assert!(timed_out);
             }
-            _ => panic!("Expected timeout"),
+            GateRunResult::AllPassed => panic!("Expected timeout"),
         }
     }
 
@@ -590,7 +590,7 @@ mod tests {
             GateRunResult::Failed { name, .. } => {
                 assert_eq!(name, "false-gate");
             }
-            _ => panic!("Expected checkpoint gate to fail"),
+            GateRunResult::AllPassed => panic!("Expected checkpoint gate to fail"),
         }
     }
 

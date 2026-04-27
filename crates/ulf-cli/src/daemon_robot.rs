@@ -10,7 +10,7 @@ use std::time::Duration;
 
 use serde::Deserialize;
 use serde_json::json;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 use ulf_proto::RobotService;
 
@@ -64,7 +64,7 @@ impl RobotService for DaemonRobotClient {
         let rt = tokio::runtime::Handle::try_current()
             .map_err(|e| anyhow::anyhow!("no tokio runtime: {e}"))?;
 
-        let result: serde_json::Value = rt.block_on(async {
+        let _result: serde_json::Value = rt.block_on(async {
             daemon_client::rpc_mutate(
                 "human.ask",
                 json!({
@@ -117,7 +117,7 @@ impl RobotService for DaemonRobotClient {
                 info!("human response received via daemon");
                 Ok(result.response)
             }
-            "pending" | _ => {
+            _ => {
                 info!("human response still pending or timed out");
                 Ok(None)
             }

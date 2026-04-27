@@ -9,11 +9,11 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use teloxide::prelude::Requester;
 use tracing::{debug, info, warn};
 
-use ulf_telegram::{StateManager, TelegramState};
+use ulf_telegram::StateManager;
 
 /// A pending question awaiting human response.
 #[derive(Debug, Clone)]
@@ -97,8 +97,8 @@ impl HumanDomain {
         let mut message_id = 0;
 
         // Send the question via Telegram if we have a bot and chat_id
-        if let Some(ref bot) = self.bot {
-            if let Ok(state) = self.state_manager.load_or_default() {
+        if let Some(ref bot) = self.bot
+            && let Ok(state) = self.state_manager.load_or_default() {
                 if let Some(chat_id) = state.chat_id {
                     let result = tokio::task::block_in_place(|| {
                         tokio::runtime::Handle::current().block_on(async {
@@ -118,7 +118,6 @@ impl HumanDomain {
                     warn!("no chat_id known — question queued but not sent to Telegram");
                 }
             }
-        }
 
         let mut state = self
             .state_manager

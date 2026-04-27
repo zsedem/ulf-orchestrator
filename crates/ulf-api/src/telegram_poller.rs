@@ -105,8 +105,8 @@ async fn run_poller(
                     }
 
                     // Route reply to pending question
-                    if let Some(reply_id) = reply_to {
-                        if let Some((workspace_id, loop_id)) = human_domain.find_by_reply(reply_id) {
+                    if let Some(reply_id) = reply_to
+                        && let Some((workspace_id, loop_id)) = human_domain.find_by_reply(reply_id) {
                             let _ = human_domain.resolve_response(&workspace_id, &loop_id, text);
 
                             // Acknowledge
@@ -121,11 +121,10 @@ async fn run_poller(
                                 .await;
                             continue;
                         }
-                    }
 
                     // Check @workspace-id prefix for guidance
-                    if let Some(rest) = text.strip_prefix('@') {
-                        if let Some(ws_id) = rest.split_whitespace().next() {
+                    if let Some(rest) = text.strip_prefix('@')
+                        && let Some(ws_id) = rest.split_whitespace().next() {
                             let guidance = rest[ws_id.len()..].trim();
                             if write_guidance_event(&workspace_domain, ws_id, guidance).is_ok() {
                                 let _ = bot
@@ -137,7 +136,6 @@ async fn run_poller(
                             }
                             continue;
                         }
-                    }
 
                     // Default: if exactly one pending question globally, treat as response
                     let pending = human_domain.list_pending();

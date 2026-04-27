@@ -599,11 +599,10 @@ async fn run_workspace_setup(
 
     // Write the prompt into a file so the `ulf` invocation can reference it.
     let prompt_file = workspace_path.join(".ulf").join("setup-prompt.txt");
-    if let Some(parent) = prompt_file.parent() {
-        if let Err(e) = tokio::fs::create_dir_all(parent).await {
+    if let Some(parent) = prompt_file.parent()
+        && let Err(e) = tokio::fs::create_dir_all(parent).await {
             warn!(workspace_id, error = %e, "failed to create .ulf directory for setup prompt");
         }
-    }
     if let Err(e) = tokio::fs::write(&prompt_file, prompt).await {
         warn!(workspace_id, error = %e, "failed to write setup prompt file");
     }

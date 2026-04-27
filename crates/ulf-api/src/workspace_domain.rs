@@ -446,6 +446,7 @@ impl WorkspaceDomain {
         Ok(())
     }
 
+    #[allow(dead_code)]
     fn default_workspace_path(&self, id: &str) -> PathBuf {
         Self::default_workspace_path_static(id)
     }
@@ -474,11 +475,10 @@ impl WorkspaceDomain {
                 changed = true;
             }
         }
-        if changed {
-            if let Err(e) = self.save() {
+        if changed
+            && let Err(e) = self.save() {
                 tracing::warn!(error = ?e, "failed to save registry after stale workspace recovery");
             }
-        }
     }
 }
 

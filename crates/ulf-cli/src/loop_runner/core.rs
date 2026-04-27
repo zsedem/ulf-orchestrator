@@ -191,7 +191,7 @@ pub async fn run_loop_impl(
     // Inject robot service for human-in-the-loop communication.
     // Workspace-attached loops use the daemon's RObot (no local Telegram polling).
     // Standalone loops use the local TelegramService.
-    let robot_service = if let Some(workspace_id) = std::env::var("ULF_WORKSPACE_ID").ok() {
+    let robot_service = if let Ok(workspace_id) = std::env::var("ULF_WORKSPACE_ID") {
         // Workspace mode: try daemon-backed RObot
         match create_daemon_robot_service(&workspace_id, &ctx, &config).await {
             Some(service) => {

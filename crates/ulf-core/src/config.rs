@@ -206,7 +206,7 @@ impl CheckpointTrigger {
     pub fn should_fire(&self, iteration: u32, last_iteration_topics: &[String]) -> bool {
         match self {
             CheckpointTrigger::EveryNIterations { every_n } => {
-                *every_n > 0 && iteration > 0 && iteration % *every_n == 0
+                *every_n > 0 && iteration > 0 && iteration.is_multiple_of(*every_n)
             }
             CheckpointTrigger::AfterEvent { after_event } => {
                 last_iteration_topics.contains(after_event)
@@ -2381,6 +2381,7 @@ pub enum ConfigError {
 
 /// Multi-workspace configuration for the installable, multi-project model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct WorkspaceConfig {
     /// Default setup prompt applied to new workspaces when no explicit prompt is given.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2397,15 +2398,6 @@ pub struct WorkspaceConfig {
     pub middle_manager: MiddleManagerConfig,
 }
 
-impl Default for WorkspaceConfig {
-    fn default() -> Self {
-        Self {
-            default_setup_prompt: None,
-            backend_presets: HashMap::new(),
-            middle_manager: MiddleManagerConfig::default(),
-        }
-    }
-}
 
 /// A reusable backend preset that can be selected per-workspace or per-session.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -2465,6 +2457,7 @@ impl Default for BackendPresetConfig {
 
 /// Middle-manager configuration for composable prompts and backend selection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct MiddleManagerConfig {
     /// Name of the backend preset to use for middle-manager sessions.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2479,15 +2472,6 @@ pub struct MiddleManagerConfig {
     pub workflow_preset: Option<String>,
 }
 
-impl Default for MiddleManagerConfig {
-    fn default() -> Self {
-        Self {
-            backend_preset: None,
-            prompt_extensions: Vec::new(),
-            workflow_preset: None,
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

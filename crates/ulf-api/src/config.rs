@@ -131,10 +131,10 @@ impl ApiConfig {
 
         // Load RObot config from user config file (~/.ulf/config.yml) if present.
         let user_config_path = home_dir().join(".ulf").join("config.yml");
-        if user_config_path.exists() {
-            if let Ok(user_config_str) = std::fs::read_to_string(&user_config_path) {
-                if let Ok(user_config) = serde_yaml::from_str::<serde_yaml::Value>(&user_config_str) {
-                    if let Some(robot) = user_config.get("RObot") {
+        if user_config_path.exists()
+            && let Ok(user_config_str) = std::fs::read_to_string(&user_config_path)
+                && let Ok(user_config) = serde_yaml::from_str::<serde_yaml::Value>(&user_config_str)
+                    && let Some(robot) = user_config.get("RObot") {
                         config.robot_enabled = robot
                             .get("enabled")
                             .and_then(|v| v.as_bool())
@@ -158,9 +158,6 @@ impl ApiConfig {
                                 .or_else(|| env::var("ULF_TELEGRAM_API_URL").ok());
                         }
                     }
-                }
-            }
-        }
 
         // Fallback to env vars for bot token if not loaded from config
         if config.robot_bot_token.is_none() {

@@ -1,0 +1,107 @@
+# Developer / Reviewer Cycle for Daemon Manager + Middle-Manager Implementation
+#
+# Usage:
+#   ulf run -c presets/dev-review-cycle.yml -H presets/dev-review-cycle.yml -p ".ulf/specs/daemon-manager-and-middle-manager.spec.md"
+
+event_loop:
+  prompt_file: "PROMPT.md"
+  completion_promise: "LOOP_COMPLETE"
+  required_events: ["review.passed"]
+  starting_event: "dev.start"
+  max_iterations: 50
+  max_runtime_seconds: 14400
+
+  # Run these scripts at iteration boundaries (mid-session backpressure)
+  checkpoint_gates:
+    - name: cargo-test
+      trigger: after_event
+      after_event: dev.done
+      command: ["cargo", "test"]
+      timeout_seconds: 300
+      env:
+        RUSTFLAGS: "-D warnings"
+    - name: cargo-clippy-fix
+      trigger: after_event
+      after_event: dev.done
+      command: ["cargo", "clippy", "--fix", "--all-targets", "--all-features", "--allow-dirty", "--allow-staged"]
+      timeout_seconds: 300
+    - name: cargo-clean
+      trigger: every_n_iterations
+      every_n: 10
+      command: ["cargo", "clean"]
+      timeout_seconds: 60
+
+cli:
+  backend: "opencode"
+  custom_args:
+    - "--model"
+    - "kimi-for-coding/k2p6"
+    - "--format"
+    - "json"
+
+core:
+  specs_dir: ".ulf/specs/"
+  guardrails:
+    - "Read the spec before implementing."
+    - "Make atomic commits with descriptive messages."
+    - "Run `cargo test` after each change."
+    - "Run `cargo clippy --all-targets --all-features -- -D warnings` before declaring done."
+
+hats:
+  developer:
+    name: "🔨 Developer"
+    description: "Implements the next task from the spec."
+    triggers: ["dev.start", "review.failed"]
+    publishes: ["dev.done"]
+    default_publishes: "dev.done"
+    instructions: |
+      ## DEVELOPER MODE
+
+      You are implementing features for the Ulf CLI.
+
+      Current spec: `.ulf/specs/daemon-manager-and-middle-manager.spec.md`
+
+      ### Your job
+      1. Read the spec to understand what needs to be built.
+      2. Check what has already been implemented by looking at the current code.
+      3. Pick the next unimplemented item from the spec.
+      4. Implement it with the smallest possible change.
+      5. Run `cargo test` and `cargo clippy` to verify.
+      6. Commit your changes with a descriptive message.
+      7. Emit `dev.done` with a summary of what you changed.
+
+      ### Rules
+      - Do NOT implement multiple items at once. One commit per item.
+      - If tests fail, fix them before emitting `dev.done`.
+      - If you're unsure, emit `dev.done` with your uncertainty noted.
+
+  reviewer:
+    name: "🔍 Reviewer"
+    description: "Reviews the developer's work against the spec."
+    triggers: ["dev.done"]
+    publishes: ["review.passed", "review.failed"]
+    default_publishes: "review.failed"
+    instructions: |
+      ## REVIEWER MODE
+
+      You are reviewing code changes against the spec.
+
+      Current spec: `.ulf/specs/daemon-manager-and-middle-manager.spec.md`
+
+      ### Your job
+      1. Read the spec acceptance criteria.
+      2. Read the code changes the developer just committed.
+      3. Check if the changes actually satisfy the spec.
+      4. Run `cargo test` and `cargo clippy` independently to verify.
+      5. Look for:
+         - Missing functionality
+         - Bugs or edge cases not handled
+         - Code quality issues
+         - Test coverage gaps
+         - Compiler warnings
+
+      ### Decision
+      - If everything looks good and passes tests/clippy: emit `review.passed`
+      - If anything is wrong or missing: emit `review.failed` with specific, actionable feedback
+
+      Be thorough but constructive. Point to specific lines of code when critiquing.

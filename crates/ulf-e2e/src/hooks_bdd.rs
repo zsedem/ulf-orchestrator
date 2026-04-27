@@ -914,7 +914,7 @@ fn assert_runtime_integration_coverage(
             &workspace_root,
             Path::new("cargo"),
             &args,
-            Duration::from_secs(180),
+            Duration::from_mins(3),
         )?;
 
         if artifact.timed_out {
@@ -1049,9 +1049,8 @@ fn assert_workspace_source_contains_any(
 ) -> Result<(), String> {
     let mut combined = String::new();
     for path in relative_paths {
-        match load_workspace_source_file(path) {
-            Ok(content) => combined.push_str(&content),
-            Err(_) => continue,
+        if let Ok(content) = load_workspace_source_file(path) {
+            combined.push_str(&content);
         }
     }
     assert_required_source_snippets(&relative_paths.join(" | "), &combined, required_snippets)
