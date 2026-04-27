@@ -15,7 +15,7 @@
 //!       timeout_seconds: 120
 //! ```
 
-use crate::config::CompletionGateConfig;
+use crate::config::{CheckpointGateConfig, CheckpointTrigger, CompletionGateConfig};
 use std::io::Read;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -146,13 +146,127 @@ impl CompletionGateRunner {
     }
 }
 
+/// Runner for checkpoint gates.
+///
+/// Checkpoint gates fire at iteration boundaries (e.g. every N iterations
+/// or after specific events) to catch regressions early.
+#[derive(Debug, Clone, Default)]
+pub struct CheckpointGateRunner;
+
+impl CheckpointGateRunner {
+    /// Creates a new runner.
+    pub fn new() -> Self {
+        Self
+    }
+
+    /// Runs checkpoint gates whose trigger conditions are met.
+    ///
+    /// Only gates that should fire for the current iteration are executed.
+    /// Returns `AllPassed` if no gates fired or all fired gates passed.
+    /// On the first failure, returns `Failed` immediately.
+    pub fn run_gates(
+        &self,
+        gates: &[CheckpointGateConfig],
+        workspace_root: &Path,
+        iteration: u32,
+        last_iteration_topics: &[String],
+    ) -> CompletionGateResult {
+        for gate in gates {
+            let should_run = match &gate.trigger {
+                CheckpointTrigger::EveryNIterations { every_n } => {
+                    *every_n > 0 && iteration > 0 && iteration % *every_n == 0
+                }
+                CheckpointTrigger::AfterEvent { after_event } => {
+                    last_iteration_topics.contains(after_event)
+                }
+            };
+
+            if !should_run {
+                continue;
+            }
+
+            debug!(gate = %gate.name, command = ?gate.command, "Running checkpoint gate");
+            let start = Instant::now();
+
+            // Convert checkpoint gate execution fields to completion gate for reuse
+            let proxy = CompletionGateConfig {
+                name: gate.name.clone(),
+                command: gate.command.clone(),
+                cwd: gate.cwd.clone(),
+                env: gate.env.clone(),
+                timeout_seconds: gate.timeout_seconds,
+                max_output_bytes: gate.max_output_bytes,
+            };
+
+            let result = run_single_gate(&proxy, workspace_root);
+
+            match result {
+                Ok((exit_code, stdout, stderr)) => {
+                    if exit_code == 0 {
+                        debug!(
+                            gate = %gate.name,
+                            duration_ms = start.elapsed().as_millis(),
+                            "Checkpoint gate passed"
+                        );
+                        continue;
+                    }
+
+                    warn!(
+                        gate = %gate.name,
+                        exit_code,
+                        duration_ms = start.elapsed().as_millis(),
+                        "Checkpoint gate failed"
+                    );
+                    return CompletionGateResult::Failed {
+                        name: gate.name.clone(),
+                        exit_code: Some(exit_code),
+                        stdout,
+                        stderr,
+                        timed_out: false,
+                    };
+                }
+                Err(GateRunError::TimedOut) => {
+                    warn!(
+                        gate = %gate.name,
+                        timeout = gate.timeout_seconds,
+                        "Checkpoint gate timed out"
+                    );
+                    return CompletionGateResult::Failed {
+                        name: gate.name.clone(),
+                        exit_code: None,
+                        stdout: String::new(),
+                        stderr: format!("Gate timed out after {} seconds", gate.timeout_seconds),
+                        timed_out: true,
+                    };
+                }
+                Err(GateRunError::Io { source }) => {
+                    warn!(
+                        gate = %gate.name,
+                        error = %source,
+                        "Checkpoint gate spawn failed"
+                    );
+                    return CompletionGateResult::Failed {
+                        name: gate.name.clone(),
+                        exit_code: None,
+                        stdout: String::new(),
+                        stderr: format!("Gate spawn error: {source}"),
+                        timed_out: false,
+                    };
+                }
+            }
+        }
+
+        CompletionGateResult::AllPassed
+    }
+}
+
 #[derive(Debug)]
-enum GateRunError {
+pub(crate) enum GateRunError {
     TimedOut,
     Io { source: std::io::Error },
 }
 
-fn run_single_gate(
+pub(crate) fn run_single_gate(
     gate: &CompletionGateConfig,
     workspace_root: &Path,
 ) -> Result<(i32, String, String), GateRunError> {
@@ -252,6 +366,32 @@ pub fn build_gate_backpressure_payload(
     stderr: &str,
     timed_out: bool,
 ) -> String {
+    let mut payload = build_backpressure_payload("Completion", name, exit_code, stdout, stderr, timed_out);
+    payload.push_str("\nFix the issue and emit LOOP_COMPLETE again.");
+    payload
+}
+
+/// Builds the backpressure payload for a checkpoint gate failure.
+pub fn build_checkpoint_backpressure_payload(
+    name: &str,
+    exit_code: Option<i32>,
+    stdout: &str,
+    stderr: &str,
+    timed_out: bool,
+) -> String {
+    let mut payload = build_backpressure_payload("Checkpoint", name, exit_code, stdout, stderr, timed_out);
+    payload.push_str("\nFix the issue and continue working.");
+    payload
+}
+
+fn build_backpressure_payload(
+    kind: &str,
+    name: &str,
+    exit_code: Option<i32>,
+    stdout: &str,
+    stderr: &str,
+    timed_out: bool,
+) -> String {
     let status = if timed_out {
         "timed out".to_string()
     } else {
@@ -259,8 +399,8 @@ pub fn build_gate_backpressure_payload(
     };
 
     let mut payload = format!(
-        "Completion gate '{}' {}.\n\n",
-        name, status
+        "{} gate '{}' {}.\n\n",
+        kind, name, status
     );
 
     if !stdout.trim().is_empty() {
@@ -275,7 +415,6 @@ pub fn build_gate_backpressure_payload(
         payload.push('\n');
     }
 
-    payload.push_str("\nFix the issue and emit LOOP_COMPLETE again.");
     payload
 }
 
@@ -389,5 +528,92 @@ mod tests {
     fn test_backpressure_payload_timeout() {
         let payload = build_gate_backpressure_payload("slow-gate", None, "", "", true);
         assert!(payload.contains("timed out"));
+    }
+
+    #[test]
+    fn test_checkpoint_gate_every_n_fires() {
+        let runner = CheckpointGateRunner::new();
+        let gates = vec![crate::config::CheckpointGateConfig {
+            name: "true-gate".to_string(),
+            trigger: crate::config::CheckpointTrigger::EveryNIterations { every_n: 5 },
+            command: vec!["true".to_string()],
+            cwd: None,
+            env: HashMap::new(),
+            timeout_seconds: 30,
+            max_output_bytes: 1024,
+        }];
+
+        // Should not fire on iteration 4
+        let result = runner.run_gates(&gates, Path::new("."), 4, &[]);
+        assert!(result.all_passed(), "Gate should not fire on iteration 4");
+
+        // Should fire on iteration 5
+        let result = runner.run_gates(&gates, Path::new("."), 5, &[]);
+        assert!(result.all_passed(), "Gate should fire and pass on iteration 5");
+
+        // Should not fire on iteration 0
+        let result = runner.run_gates(&gates, Path::new("."), 0, &[]);
+        assert!(result.all_passed(), "Gate should not fire on iteration 0");
+    }
+
+    #[test]
+    fn test_checkpoint_gate_after_event_fires() {
+        let runner = CheckpointGateRunner::new();
+        let gates = vec![crate::config::CheckpointGateConfig {
+            name: "true-gate".to_string(),
+            trigger: crate::config::CheckpointTrigger::AfterEvent {
+                after_event: "dev.done".to_string(),
+            },
+            command: vec!["true".to_string()],
+            cwd: None,
+            env: HashMap::new(),
+            timeout_seconds: 30,
+            max_output_bytes: 1024,
+        }];
+
+        let result = runner.run_gates(&gates, Path::new("."), 1, &["dev.done".to_string()]);
+        assert!(result.all_passed(), "Gate should fire when event is seen");
+
+        let result = runner.run_gates(&gates, Path::new("."), 1, &["other.event".to_string()]);
+        assert!(result.all_passed(), "Gate should not fire for unrelated event");
+    }
+
+    #[test]
+    fn test_checkpoint_gate_failure() {
+        let runner = CheckpointGateRunner::new();
+        let gates = vec![crate::config::CheckpointGateConfig {
+            name: "false-gate".to_string(),
+            trigger: crate::config::CheckpointTrigger::EveryNIterations { every_n: 1 },
+            command: vec!["false".to_string()],
+            cwd: None,
+            env: HashMap::new(),
+            timeout_seconds: 30,
+            max_output_bytes: 1024,
+        }];
+
+        let result = runner.run_gates(&gates, Path::new("."), 1, &[]);
+        assert!(!result.all_passed());
+        match result {
+            CompletionGateResult::Failed { name, .. } => {
+                assert_eq!(name, "false-gate");
+            }
+            _ => panic!("Expected checkpoint gate to fail"),
+        }
+    }
+
+    #[test]
+    fn test_checkpoint_backpressure_payload_format() {
+        let payload = build_checkpoint_backpressure_payload(
+            "lint-check",
+            Some(1),
+            "error: unused import\n",
+            "clippy exited with 1\n",
+            false,
+        );
+        assert!(payload.contains("Checkpoint gate 'lint-check' failed"));
+        assert!(payload.contains("exit code 1"));
+        assert!(payload.contains("## stdout"));
+        assert!(payload.contains("## stderr"));
+        assert!(payload.contains("Fix the issue and continue working."));
     }
 }

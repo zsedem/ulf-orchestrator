@@ -14,12 +14,13 @@ use ulf_adapters::{
 };
 use ulf_core::diagnostics::{HookDisposition, HookRunTelemetryEntry};
 use ulf_core::{
-    CompletionAction, EventLogger, EventLoop, EventParser, EventRecord, HookEngine, HookExecutor,
-    HookExecutorContract, HookMutationConfig, HookOnError, HookPayloadBuilderInput,
-    HookPayloadContextInput, HookPhaseEvent, HookRunRequest, HookRunResult, HookSuspendMode,
-    LoopCompletionHandler, LoopContext, LoopHistory, LoopRegistry, MergeQueue, UlfConfig, Record,
-    SessionRecorder, SummaryWriter, SuspendStateRecord, SuspendStateStore, TerminationReason,
-    UrgentSteerStore,
+    CheckpointGateRunner, CompletionAction, CompletionGateResult, EventLogger, EventLoop,
+    EventParser, EventRecord, HookEngine, HookExecutor, HookExecutorContract, HookMutationConfig,
+    HookOnError, HookPayloadBuilderInput, HookPayloadContextInput, HookPhaseEvent, HookRunRequest,
+    HookRunResult, HookSuspendMode, LoopCompletionHandler, LoopContext, LoopHistory, LoopRegistry,
+    MergeQueue, UlfConfig, Record, SessionRecorder, SummaryWriter, SuspendStateRecord,
+    SuspendStateStore, TerminationReason, UrgentSteerStore,
+    build_checkpoint_backpressure_payload,
 };
 use ulf_proto::{Event, GuidanceTarget, HatId, RpcEvent, RpcState, RpcTaskCounts};
 use ulf_tui::Tui;
@@ -2630,6 +2631,42 @@ pub async fn run_loop_impl(
                  Expected one of: {:?}. Loop will terminate on next iteration.",
                 expected
             );
+        }
+
+        // Run checkpoint gates at iteration boundaries
+        if !config.event_loop.checkpoint_gates.is_empty() {
+            let runner = CheckpointGateRunner::new();
+            let workspace = config.core.workspace_root.clone();
+            let iteration = event_loop.state().iteration;
+            let last_topics: Vec<String> = event_loop.state().last_iteration_topics.clone();
+            let result = runner.run_gates(
+                &config.event_loop.checkpoint_gates,
+                &workspace,
+                iteration,
+                &last_topics,
+            );
+
+            match result {
+                CompletionGateResult::AllPassed => {}
+                CompletionGateResult::Failed {
+                    name,
+                    exit_code,
+                    stdout,
+                    stderr,
+                    timed_out,
+                } => {
+                    warn!(
+                        gate = %name,
+                        exit_code = ?exit_code,
+                        timed_out,
+                        "Checkpoint gate failed — injecting backpressure"
+                    );
+                    let payload = build_checkpoint_backpressure_payload(
+                        &name, exit_code, &stdout, &stderr, timed_out,
+                    );
+                    event_loop.bus().publish(Event::new("task.resume", payload));
+                }
+            }
         }
 
         // Cooldown delay between iterations (skip for human events)

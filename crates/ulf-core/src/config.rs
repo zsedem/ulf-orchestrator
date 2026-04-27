@@ -176,6 +176,62 @@ pub struct CompletionGateConfig {
     pub max_output_bytes: u64,
 }
 
+/// Trigger condition for a checkpoint gate.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "trigger", rename_all = "snake_case")]
+pub enum CheckpointTrigger {
+    /// Run every N iterations.
+    EveryNIterations {
+        /// Interval between runs (e.g., 5 means run on iterations 5, 10, 15...).
+        #[serde(default = "default_checkpoint_every_n")]
+        every_n: u32,
+    },
+    /// Run after a specific event topic is seen.
+    AfterEvent {
+        /// Event topic that triggers the gate (e.g., "dev.done").
+        after_event: String,
+    },
+}
+
+fn default_checkpoint_every_n() -> u32 {
+    5
+}
+
+/// Configuration for a single checkpoint gate.
+///
+/// Checkpoint gates run at iteration boundaries to catch issues early,
+/// rather than letting them compound through dozens more iterations.
+/// If a gate exits non-zero, its output is injected as backpressure
+/// (task.resume) and the loop continues.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CheckpointGateConfig {
+    /// Stable identifier for this gate (used in backpressure messages).
+    pub name: String,
+
+    /// When the gate should fire.
+    #[serde(flatten)]
+    pub trigger: CheckpointTrigger,
+
+    /// Command argv (`command[0]` executable + args).
+    pub command: Vec<String>,
+
+    /// Optional working directory override.
+    #[serde(default)]
+    pub cwd: Option<std::path::PathBuf>,
+
+    /// Optional environment variable overrides.
+    #[serde(default)]
+    pub env: HashMap<String, String>,
+
+    /// Maximum execution time in seconds (default: 60).
+    #[serde(default = "default_gate_timeout_seconds")]
+    pub timeout_seconds: u64,
+
+    /// Maximum stdout/stderr bytes stored per stream (default: 8192).
+    #[serde(default = "default_gate_max_output_bytes")]
+    pub max_output_bytes: u64,
+}
+
 fn default_gate_timeout_seconds() -> u64 {
     60
 }
@@ -639,6 +695,9 @@ impl UlfConfig {
         // Validate completion gates
         self.validate_completion_gates()?;
 
+        // Validate checkpoint gates
+        self.validate_checkpoint_gates()?;
+
         // Check for required description field on all hats
         for (hat_id, hat_config) in &self.hats {
             if hat_config
@@ -817,6 +876,66 @@ impl UlfConfig {
                     field: format!("{gate_field_base}.max_output_bytes"),
                     message: "must be greater than 0".to_string(),
                 });
+            }
+        }
+
+        Ok(())
+    }
+
+    fn validate_checkpoint_gates(&self) -> Result<(), ConfigError> {
+        for (index, gate) in self.event_loop.checkpoint_gates.iter().enumerate() {
+            let gate_field_base = format!("event_loop.checkpoint_gates[{index}]");
+
+            if gate.name.trim().is_empty() {
+                return Err(ConfigError::HookValidation {
+                    field: format!("{gate_field_base}.name"),
+                    message: "is required and must be non-empty".to_string(),
+                });
+            }
+
+            if gate
+                .command
+                .first()
+                .is_none_or(|command| command.trim().is_empty())
+            {
+                return Err(ConfigError::HookValidation {
+                    field: format!("{gate_field_base}.command"),
+                    message: "is required and must include an executable at command[0]"
+                        .to_string(),
+                });
+            }
+
+            if gate.timeout_seconds == 0 {
+                return Err(ConfigError::HookValidation {
+                    field: format!("{gate_field_base}.timeout_seconds"),
+                    message: "must be greater than 0".to_string(),
+                });
+            }
+
+            if gate.max_output_bytes == 0 {
+                return Err(ConfigError::HookValidation {
+                    field: format!("{gate_field_base}.max_output_bytes"),
+                    message: "must be greater than 0".to_string(),
+                });
+            }
+
+            match &gate.trigger {
+                CheckpointTrigger::EveryNIterations { every_n } => {
+                    if *every_n == 0 {
+                        return Err(ConfigError::HookValidation {
+                            field: format!("{gate_field_base}.every_n"),
+                            message: "must be greater than 0".to_string(),
+                        });
+                    }
+                }
+                CheckpointTrigger::AfterEvent { after_event } => {
+                    if after_event.trim().is_empty() {
+                        return Err(ConfigError::HookValidation {
+                            field: format!("{gate_field_base}.after_event"),
+                            message: "must be a non-empty event topic".to_string(),
+                        });
+                    }
+                }
             }
         }
 
@@ -1036,6 +1155,15 @@ pub struct EventLoopConfig {
     /// and the loop continues for another iteration.
     #[serde(default)]
     pub completion_gates: Vec<CompletionGateConfig>,
+
+    /// Checkpoint gates that run at iteration boundaries.
+    ///
+    /// Unlike completion gates, checkpoint gates fire mid-session (e.g., every
+    /// N iterations or after a specific event) to catch regressions early.
+    /// If any gate exits non-zero, its output is injected as backpressure
+    /// and the loop continues for another iteration.
+    #[serde(default)]
+    pub checkpoint_gates: Vec<CheckpointGateConfig>,
 }
 
 fn default_prompt_file() -> String {
@@ -1077,6 +1205,7 @@ impl Default for EventLoopConfig {
             cancellation_promise: String::new(),
             enforce_hat_scope: false,
             completion_gates: Vec::new(),
+            checkpoint_gates: Vec::new(),
         }
     }
 }
