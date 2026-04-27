@@ -4,6 +4,7 @@
 //! human replies to the correct workspace loop via HumanDomain, and
 //! writes guidance events to workspace events files.
 
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -47,7 +48,15 @@ async fn run_poller(
     use teloxide::requests::Requester;
 
     let bot = ulf_telegram::apply_api_url(teloxide::Bot::new(&bot_token), api_url.as_deref());
-    let mut offset: i32 = 0;
+
+    // Load last_update_id from state if available
+    let mut offset: i32 = human_domain
+        .state_manager()
+        .load()
+        .ok()
+        .flatten()
+        .and_then(|s| s.last_update_id)
+        .unwrap_or(0);
 
     // Register bot commands
     let commands = vec![
@@ -65,10 +74,10 @@ async fn run_poller(
         match request.await {
             Ok(updates) => {
                 for update in updates {
-                    #[allow(clippy::cast_possible_wrap)]
-                    {
-                        offset = update.id.0 as i32 + 1;
-                    }
+                    offset = update.id.0 as i32 + 1;
+
+                    // Persist update ID so we resume correctly after restart
+                    let _ = human_domain.state_manager().set_last_update_id(offset);
 
                     let msg = match update.kind {
                         teloxide::types::UpdateKind::Message(msg) => msg,
@@ -82,6 +91,9 @@ async fn run_poller(
 
                     let chat_id = msg.chat.id.0;
                     let reply_to: Option<i32> = msg.reply_to_message().map(|r| r.id.0);
+
+                    // Persist chat_id if we haven't seen one yet
+                    human_domain.maybe_persist_chat_id(chat_id);
 
                     // Handle slash commands
                     if text.starts_with('/') {
@@ -115,7 +127,7 @@ async fn run_poller(
                     if let Some(rest) = text.strip_prefix('@') {
                         if let Some(ws_id) = rest.split_whitespace().next() {
                             let guidance = rest[ws_id.len()..].trim();
-                            if write_guidance_event(ws_id, guidance).is_ok() {
+                            if write_guidance_event(&workspace_domain, ws_id, guidance).is_ok() {
                                 let _ = bot
                                     .send_message(
                                         teloxide::types::ChatId(chat_id),
@@ -201,15 +213,30 @@ fn handle_command(
 }
 
 /// Write a human.guidance event to a workspace's events file.
-fn write_guidance_event(workspace_id: &str, guidance: &str) -> std::io::Result<()> {
+fn write_guidance_event(
+    workspace_domain: &Arc<std::sync::Mutex<WorkspaceDomain>>,
+    workspace_id: &str,
+    guidance: &str,
+) -> std::io::Result<()> {
     use std::io::Write;
 
-    let workspace_path = std::env::var("HOME")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|_| std::path::PathBuf::from("."))
-        .join(".ulf")
-        .join("workspaces")
-        .join(workspace_id);
+    let workspace_path = match workspace_domain.lock() {
+        Ok(domain) => match domain.get(workspace_id) {
+            Ok(ws) => PathBuf::from(&ws.path),
+            Err(_) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    format!("workspace '{}' not found", workspace_id),
+                ));
+            }
+        },
+        Err(_) => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "workspace domain lock poisoned",
+            ));
+        }
+    };
 
     let events_path = workspace_path.join(".ulf").join("events.jsonl");
 

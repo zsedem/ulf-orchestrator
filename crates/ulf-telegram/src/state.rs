@@ -39,6 +39,10 @@ pub struct PendingQuestion {
 
     /// The Telegram message ID, used to match reply-to routing.
     pub message_id: i32,
+
+    /// The question text (persisted so it survives daemon restarts).
+    #[serde(default)]
+    pub question_text: Option<String>,
 }
 
 /// Manages persistence of Telegram bot state to disk.
@@ -87,6 +91,20 @@ impl StateManager {
         }))
     }
 
+    /// Set the chat ID and persist immediately.
+    pub fn set_chat_id(&self, chat_id: i64) -> TelegramResult<()> {
+        let mut state = self.load_or_default()?;
+        state.chat_id = Some(chat_id);
+        self.save(&state)
+    }
+
+    /// Set the last update ID and persist immediately.
+    pub fn set_last_update_id(&self, update_id: i32) -> TelegramResult<()> {
+        let mut state = self.load_or_default()?;
+        state.last_update_id = Some(update_id);
+        self.save(&state)
+    }
+
     /// Add a pending question for a given loop.
     pub fn add_pending_question(
         &self,
@@ -99,6 +117,7 @@ impl StateManager {
             PendingQuestion {
                 asked_at: Utc::now(),
                 message_id,
+                question_text: None,
             },
         );
         self.save(state)
@@ -150,6 +169,7 @@ impl StateManager {
         workspace_id: &str,
         loop_id: &str,
         message_id: i32,
+        question_text: Option<&str>,
     ) -> TelegramResult<()> {
         state
             .workspace_pending_questions
@@ -160,6 +180,7 @@ impl StateManager {
                 PendingQuestion {
                     asked_at: Utc::now(),
                     message_id,
+                    question_text: question_text.map(|s| s.to_string()),
                 },
             );
         self.save(state)

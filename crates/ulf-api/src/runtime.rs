@@ -112,7 +112,11 @@ impl RpcRuntime {
         let streams = StreamDomain::new();
         let workspaces = Arc::new(Mutex::new(WorkspaceDomain::new(&config.daemon_state_dir, &config.workspace_root)));
         let workspace_runtimes = Arc::new(Mutex::new(std::collections::HashMap::new()));
-        let human_domain = Arc::new(HumanDomain::new(&config.daemon_state_dir));
+        let human_domain = Arc::new(HumanDomain::new(
+            &config.daemon_state_dir,
+            config.robot_bot_token.clone(),
+            config.robot_api_url.clone(),
+        ));
 
         Self {
             config,

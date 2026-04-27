@@ -226,6 +226,7 @@ mod tests {
             crate::state::PendingQuestion {
                 asked_at: chrono::Utc::now(),
                 message_id: 42,
+                question_text: None,
             },
         );
 

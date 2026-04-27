@@ -6,9 +6,8 @@
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-use anyhow::Result;
 use serde::Deserialize;
 use serde_json::json;
 use tracing::{debug, info, warn};
@@ -23,12 +22,6 @@ pub struct DaemonRobotClient {
     loop_id: String,
     timeout_secs: u64,
     shutdown: Arc<AtomicBool>,
-}
-
-#[derive(Debug, Deserialize)]
-struct AskResult {
-    question_id: String,
-    status: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -71,7 +64,7 @@ impl RobotService for DaemonRobotClient {
         let rt = tokio::runtime::Handle::try_current()
             .map_err(|e| anyhow::anyhow!("no tokio runtime: {e}"))?;
 
-        let result: AskResult = rt.block_on(async {
+        let result: serde_json::Value = rt.block_on(async {
             daemon_client::rpc_mutate(
                 "human.ask",
                 json!({
@@ -83,39 +76,29 @@ impl RobotService for DaemonRobotClient {
             .await
         })?;
 
-        info!(
-            question_id = %result.question_id,
-            "human question sent via daemon"
-        );
+        info!("human question sent via daemon");
 
         // Return a synthetic message ID (question hash)
-        Ok(result.question_id.len() as i32)
+        Ok(payload.len() as i32)
     }
 
     fn wait_for_response(&self, _events_path: &Path) -> anyhow::Result<Option<String>> {
         let rt = tokio::runtime::Handle::try_current()
             .map_err(|e| anyhow::anyhow!("no tokio runtime: {e}"))?;
 
-        let deadline = Instant::now() + Duration::from_secs(self.timeout_secs);
-        let poll_interval = Duration::from_secs(1);
-
         info!(
             timeout_secs = self.timeout_secs,
-            "waiting for human response via daemon"
+            "waiting for human response via daemon (long-polling)"
         );
 
-        loop {
-            if Instant::now() >= deadline {
-                warn!("timed out waiting for human response via daemon");
-                return Ok(None);
-            }
+        // Single long-polling call. The server holds the connection open
+        // until a response arrives or its own timeout elapses.
+        // We add a small client-side buffer (timeout + 5s) so the server
+        // always times out first and returns cleanly.
+        let client_timeout = Duration::from_secs(self.timeout_secs + 5);
 
-            if self.shutdown.load(Ordering::Relaxed) {
-                info!("shutdown while waiting for human response");
-                return Ok(None);
-            }
-
-            let result: ResponseResult = match rt.block_on(async {
+        let result: ResponseResult = rt.block_on(async {
+            tokio::time::timeout(client_timeout, async {
                 daemon_client::rpc_call(
                     "human.get_response",
                     json!({
@@ -125,29 +108,18 @@ impl RobotService for DaemonRobotClient {
                     }),
                 )
                 .await
-            }) {
-                Ok(r) => r,
-                Err(e) => {
-                    warn!(error = %e, "daemon human.get_response failed");
-                    std::thread::sleep(poll_interval);
-                    continue;
-                }
-            };
+            })
+            .await
+        }).map_err(|_| anyhow::anyhow!("client-side timeout waiting for daemon response"))??;
 
-            match result.status.as_str() {
-                "answered" => {
-                    info!("human response received via daemon");
-                    return Ok(result.response);
-                }
-                "pending" => {
-                    std::thread::sleep(poll_interval);
-                    continue;
-                }
-                other => {
-                    warn!(status = other, "unexpected human.get_response status");
-                    std::thread::sleep(poll_interval);
-                    continue;
-                }
+        match result.status.as_str() {
+            "answered" => {
+                info!("human response received via daemon");
+                Ok(result.response)
+            }
+            "pending" | _ => {
+                info!("human response still pending or timed out");
+                Ok(None)
             }
         }
     }
@@ -155,11 +127,10 @@ impl RobotService for DaemonRobotClient {
     fn send_checkin(
         &self,
         iteration: u32,
-        elapsed: Duration,
-        context: Option<&ulf_proto::CheckinContext>,
+        _elapsed: Duration,
+        _context: Option<&ulf_proto::CheckinContext>,
     ) -> anyhow::Result<i32> {
         // Check-ins are not implemented for daemon mode yet.
-        // The daemon could support this via a separate endpoint.
         debug!(iteration, "check-in skipped in daemon robot mode");
         Ok(0)
     }
