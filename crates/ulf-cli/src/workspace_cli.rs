@@ -3,6 +3,7 @@
 //! Manage multi-workspace environments via the central daemon.
 
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -112,12 +113,14 @@ struct WorkspaceOutput {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct WorkspaceStatusResult {
     workspace: WorkspaceOutput,
     health: WorkspaceHealth,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct WorkspaceHealth {
     directory_exists: bool,
     readable: bool,
@@ -190,7 +193,7 @@ async fn create_workspace(args: WorkspaceCreateArgs) -> Result<()> {
     if args.wait && ws.status == "creating" {
         println!("Waiting for setup to complete...");
         let mut interval = tokio::time::interval(std::time::Duration::from_secs(2));
-        let timeout = std::time::Duration::from_secs(300);
+        let timeout = std::time::Duration::from_mins(5);
         let start = std::time::Instant::now();
 
         loop {
@@ -296,8 +299,8 @@ async fn workspace_status() -> Result<()> {
         println!();
         println!("  {} — {}", ws.id, ws.status);
         println!("    path: {}", ws.path);
-        if ws.error_message.is_some() {
-            println!("    error: {}", ws.error_message.unwrap());
+        if let Some(ref msg) = ws.error_message {
+            println!("    error: {}", msg);
         }
     }
 
@@ -339,8 +342,7 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
     let safe_path = ws.path
         .replace('\\', "/")
         .replace('"', "\\\"")
-        .replace('\n', " ")
-        .replace('\r', " ");
+        .replace(['\n', '\r'], " ");
     let mut prompt = format!(
         "You are the Ulf Workspace Middle-Manager for workspace '{}' at {}.\n\n\
         Your role is to help the user plan and execute coding tasks. You run inside the workspace directory, so you can inspect files and run commands directly.\n\n\
@@ -376,55 +378,72 @@ async fn attach_workspace(args: WorkspaceAttachArgs) -> Result<()> {
 
     prompt.push_str("Start by asking the user what they'd like to work on.");
 
-    // Write prompt to a file so we can use -P instead of -p (avoids shell escaping issues).
-    let prompt_file = PathBuf::from(&ws.path).join(".ulf").join("manager-prompt.txt");
-    if let Some(parent) = prompt_file.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
-    std::fs::write(&prompt_file, &prompt)
-        .with_context(|| format!("failed to write manager prompt file: {}", prompt_file.display()))?;
+    // Resolve backend: preset > config default > auto-detect
+    let backend_name = if let Some(p) = preset {
+        p.backend.clone()
+    } else if let Some(ref config) = load_user_config()
+        && config.cli.backend != "auto"
+    {
+        config.cli.backend.clone()
+    } else {
+        ulf_adapters::detect_backend_default()
+            .with_context(|| "no supported backend found. Install one of: claude, kiro, gemini, codex, amp, copilot, opencode, pi")?
+    };
 
-    // Build the ulf command using the resolved backend preset (if any).
-    let mut cmd = std::process::Command::new(
-        preset
-            .and_then(|p| p.command.as_deref())
-            .unwrap_or("ulf"),
-    );
-    cmd.arg("run").arg("-P").arg(&prompt_file).current_dir(&ws.path);
-    cmd.env("ULF_WORKSPACE_ID", &ws.id);
+    // Get interactive backend configuration
+    let cli_backend = if let Some(p) = preset {
+        // Use preset configuration for interactive mode
+        let command = p.command.clone().unwrap_or_else(|| backend_name.clone());
+        let prompt_mode = match p.prompt_mode.as_str() {
+            "stdin" => ulf_adapters::PromptMode::Stdin,
+            _ => ulf_adapters::PromptMode::Arg,
+        };
+        let prompt_flag = p.prompt_flag.clone().or_else(|| {
+            // Default prompt flags for common backends in interactive mode
+            match backend_name.as_str() {
+                "claude" => Some("-p".to_string()),
+                "kiro" => None, // positional
+                "gemini" => Some("-i".to_string()),
+                "codex" => None, // positional
+                "amp" => Some("-x".to_string()),
+                "copilot" => Some("-p".to_string()),
+                "opencode" => Some("--prompt".to_string()),
+                "pi" => None, // positional
+                "roo" => None, // positional
+                _ => Some("-p".to_string()),
+            }
+        });
 
-    // Apply preset args before the -P argument.
-    if let Some(p) = preset {
-        if !p.args.is_empty() {
-            // Insert preset args after "run" but before -P
-            let preset_args: Vec<String> = p.args.clone();
-            let mut new_args: Vec<std::ffi::OsString> = vec!["run".into()];
-            for a in &preset_args {
-                new_args.push(a.into());
-            }
-            new_args.push("-P".into());
-            new_args.push(prompt_file.as_os_str().to_os_string());
-            let mut cleared = false;
-            for arg in new_args {
-                if !cleared {
-                    cmd = std::process::Command::new(
-                        p.command.as_deref().unwrap_or("ulf"),
-                    );
-                    cleared = true;
-                }
-                cmd.arg(arg);
-            }
-            cmd.current_dir(&ws.path);
+        ulf_adapters::CliBackend {
+            command,
+            args: p.args.clone(),
+            prompt_mode,
+            prompt_flag,
+            output_format: ulf_adapters::OutputFormat::Text,
+            env_vars: vec![("ULF_WORKSPACE_ID".to_string(), ws.id.clone())],
         }
-    }
+    } else {
+        ulf_adapters::CliBackend::for_interactive_prompt(&backend_name)
+            .with_context(|| format!("failed to create interactive backend for '{}'", backend_name))?
+    };
 
-    let status = cmd
-        .status()
-        .with_context(|| format!("failed to spawn ulf in workspace directory '{}'", ws.path))?;
+    // Spawn interactive session
+    let (command, args, _stdin_input, _temp_file) = cli_backend.build_command(&prompt, true);
 
-    if !status.success() {
-        anyhow::bail!("ulf session exited with status: {:?}", status.code());
-    }
+    let mut cmd = Command::new(&command);
+    cmd.args(&args)
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .current_dir(&ws.path);
+
+    cmd.envs(cli_backend.env_vars.iter().map(|(k, v)| (k, v)));
+
+    let mut child = cmd.spawn()
+        .with_context(|| format!("failed to spawn backend process: {}", command))?;
+
+    child.wait()
+        .with_context(|| "backend process exited unexpectedly")?;
 
     Ok(())
 }
