@@ -4481,11 +4481,13 @@ fn test_completion_gate_pass_allows_termination() {
     let mut config = UlfConfig::default();
     config.event_loop.completion_gates = vec![crate::config::CompletionGateConfig {
         name: "true-gate".to_string(),
-        command: vec!["true".to_string()],
-        cwd: None,
-        env: std::collections::HashMap::new(),
-        timeout_seconds: 30,
-        max_output_bytes: 1024,
+        execution: crate::config::GateExecutionConfig {
+            command: vec!["true".to_string()],
+            cwd: None,
+            env: std::collections::HashMap::new(),
+            timeout_seconds: 30,
+            max_output_bytes: 1024,
+        },
     }];
 
     let mut event_loop = EventLoop::new(config);
@@ -4512,11 +4514,13 @@ fn test_completion_gate_failure_injects_task_resume() {
     let mut config = UlfConfig::default();
     config.event_loop.completion_gates = vec![crate::config::CompletionGateConfig {
         name: "false-gate".to_string(),
-        command: vec!["false".to_string()],
-        cwd: None,
-        env: std::collections::HashMap::new(),
-        timeout_seconds: 30,
-        max_output_bytes: 1024,
+        execution: crate::config::GateExecutionConfig {
+            command: vec!["false".to_string()],
+            cwd: None,
+            env: std::collections::HashMap::new(),
+            timeout_seconds: 30,
+            max_output_bytes: 1024,
+        },
     }];
 
     let mut event_loop = EventLoop::new(config);
@@ -4563,11 +4567,13 @@ fn test_completion_gate_failure_resets_completion_requested() {
     let mut config = UlfConfig::default();
     config.event_loop.completion_gates = vec![crate::config::CompletionGateConfig {
         name: "false-gate".to_string(),
-        command: vec!["false".to_string()],
-        cwd: None,
-        env: std::collections::HashMap::new(),
-        timeout_seconds: 30,
-        max_output_bytes: 1024,
+        execution: crate::config::GateExecutionConfig {
+            command: vec!["false".to_string()],
+            cwd: None,
+            env: std::collections::HashMap::new(),
+            timeout_seconds: 30,
+            max_output_bytes: 1024,
+        },
     }];
 
     let mut event_loop = EventLoop::new(config);
@@ -4600,19 +4606,23 @@ fn test_completion_gate_short_circuits_on_first_failure() {
     config.event_loop.completion_gates = vec![
         crate::config::CompletionGateConfig {
             name: "false-gate".to_string(),
-            command: vec!["false".to_string()],
-            cwd: None,
-            env: std::collections::HashMap::new(),
-            timeout_seconds: 30,
-            max_output_bytes: 1024,
+            execution: crate::config::GateExecutionConfig {
+                command: vec!["false".to_string()],
+                cwd: None,
+                env: std::collections::HashMap::new(),
+                timeout_seconds: 30,
+                max_output_bytes: 1024,
+            },
         },
         crate::config::CompletionGateConfig {
             name: "true-gate".to_string(),
-            command: vec!["true".to_string()],
-            cwd: None,
-            env: std::collections::HashMap::new(),
-            timeout_seconds: 30,
-            max_output_bytes: 1024,
+            execution: crate::config::GateExecutionConfig {
+                command: vec!["true".to_string()],
+                cwd: None,
+                env: std::collections::HashMap::new(),
+                timeout_seconds: 30,
+                max_output_bytes: 1024,
+            },
         },
     ];
 

@@ -64,6 +64,8 @@ frontend/      → Web dashboard (@ulf-web/dashboard) - React + Vite + TailwindC
 - **Lock coordination**: `crates/ulf-core/src/worktree.rs`
 - **Loop registry**: `crates/ulf-core/src/loop_registry.rs`
 - **Merge queue**: `crates/ulf-core/src/merge_queue.rs`
+- **Completion gates**: `crates/ulf-core/src/completion_gates.rs`
+- **Checkpoint gates**: `crates/ulf-core/src/completion_gates.rs` (`CheckpointGateRunner`)
 - **CLI commands**: `crates/ulf-cli/src/loops.rs`, `task_cli.rs`
 - **Telegram integration**: `crates/ulf-telegram/src/` (bot, service, state, handler)
 - **RObot config**: `crates/ulf-core/src/config.rs` (`RobotConfig`, `TelegramBotConfig`)
@@ -93,9 +95,9 @@ frontend/      → Web dashboard (@ulf-web/dashboard) - React + Vite + TailwindC
 - ❌ Detailed step-by-step instructions (use backpressure instead)
 - ❌ Scoping work at task selection time (scope at plan creation instead)
 
-### Completion Gates
+### Completion Gates & Checkpoint Gates
 
-Automated backpressure scripts that run when the agent emits `LOOP_COMPLETE`:
+**Completion gates** run when the agent emits `LOOP_COMPLETE`:
 
 ```yaml
 event_loop:
@@ -104,7 +106,22 @@ event_loop:
       command: ["cargo", "test"]
 ```
 
-If a gate exits non-zero, its output is injected as `task.resume` backpressure and the loop continues. See `docs/concepts/backpressure.md` for details.
+**Checkpoint gates** run at iteration boundaries (mid-session):
+
+```yaml
+event_loop:
+  checkpoint_gates:
+    - name: lint-check
+      trigger: every_n_iterations
+      every_n: 5
+      command: ["cargo", "clippy"]
+    - name: tests-after-build
+      trigger: after_event
+      after_event: dev.done
+      command: ["cargo", "test"]
+```
+
+Both gate types inject `task.resume` backpressure on failure. See `docs/concepts/backpressure.md` for details.
 - ❌ Assuming functionality is missing without code verification
 
 ## Specs & Tasks

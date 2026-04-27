@@ -63,13 +63,14 @@ pub mod worktree;
 #[cfg(feature = "recording")]
 pub use cli_capture::{CliCapture, CliCapturePair};
 pub use completion_gates::{
-    CheckpointGateRunner, CompletionGateFailed, CompletionGateResult, CompletionGateRunner,
+    CheckpointGateRunner, CompletionGateFailed, GateRunResult, CompletionGateRunner,
     build_checkpoint_backpressure_payload, build_gate_backpressure_payload,
 };
 pub use config::{
     CheckpointGateConfig, CheckpointTrigger, CliConfig, CompletionGateConfig, ConfigError,
-    CoreConfig, EventLoopConfig, EventMetadata, FeaturesConfig, HatBackend, HatConfig, InjectMode,
-    MemoriesConfig, MemoriesFilter, UlfConfig, ScratchpadConfig, SkillOverride, SkillsConfig,
+    CoreConfig, EventLoopConfig, EventMetadata, FeaturesConfig, GateExecutionConfig, HatBackend,
+    HatConfig, InjectMode, MemoriesConfig, MemoriesFilter, UlfConfig, ScratchpadConfig,
+    SkillOverride, SkillsConfig,
 };
 // Re-export loop_name types (also available via FeaturesConfig.loop_naming)
 pub use diagnostics::DiagnosticsCollector;

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Checkpoint Gates**: Mid-session backpressure scripts that run at iteration boundaries
+  - `every_n_iterations` trigger: run every N iterations (e.g., every 5)
+  - `after_event` trigger: run when a specific event topic is emitted (e.g., `dev.done`)
+  - On failure, injects `task.resume` backpressure so the agent can fix issues early
+  - Configured under `event_loop.checkpoint_gates` in `ulf.yml`
+  - See `presets/checkpoint-lint.yml` for an example preset
+
+### Fixed
+
+- **Migration Docs**: Removed fictional `checkpoint_interval` field from v1→v2 migration guide
+- **Configuration Guide**: Added `completion_gates` and `checkpoint_gates` to the event_loop reference
+
 ## [2.1.0] - 2026-01-20
 
 ### Added

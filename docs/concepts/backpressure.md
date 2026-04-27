@@ -250,6 +250,56 @@ Gate rules:
 
 This is **hard corrective backpressure**: instead of trusting the agent to run checks, Ulf enforces them automatically at the boundary of loop completion.
 
+### Checkpoint Gates (Automated)
+
+Checkpoint gates are like completion gates, but they fire **mid-session** at iteration boundaries — catching regressions early instead of letting them compound through dozens more iterations.
+
+```yaml
+event_loop:
+  checkpoint_gates:
+    - name: lint-check
+      trigger: every_n_iterations
+      every_n: 5
+      command: ["cargo", "clippy"]
+      timeout_seconds: 60
+    - name: tests-after-build
+      trigger: after_event
+      after_event: dev.done
+      command: ["cargo", "test"]
+```
+
+**Trigger types:**
+
+| Trigger | When It Fires |
+|---------|--------------|
+| `every_n_iterations` | Every N iterations (e.g., `every_n: 5` fires on iterations 5, 10, 15...) |
+| `after_event` | When the specified event topic is emitted during an iteration (e.g., after `dev.done`) |
+
+**Checkpoint gate rules:**
+- Only gates whose trigger condition is met run on a given iteration.
+- Matched gates run **sequentially** in declaration order.
+- First failure short-circuits; its output becomes backpressure.
+- Exit code 0 = pass. Any non-zero exit = failure.
+- `timeout_seconds` defaults to 60, `max_output_bytes` defaults to 8192.
+- Gate output is formatted as:
+  ```
+  Checkpoint gate '{name}' failed (exit code {code}).
+
+  ## stdout
+  {stdout}
+
+  ## stderr
+  {stderr}
+
+  Fix the issue and continue working.
+  ```
+
+**Differences from completion gates:**
+- Completion gates run once at `LOOP_COMPLETE`; checkpoint gates can run multiple times mid-session.
+- Completion gate backpressure says "emit LOOP_COMPLETE again"; checkpoint gate backpressure says "continue working" because the loop isn't trying to finish yet.
+- Checkpoint gates consume iterations — if `max_iterations` is 100 and a checkpoint gate fails on iteration 100, the agent has no iterations left to fix the issue. Size your `max_iterations` accordingly.
+- Checkpoint gates run **after** wave workers finish, so they see all events from the current iteration.
+
 ## Backpressure Flow
 
 ```mermaid

@@ -146,16 +146,9 @@ where
     deserializer.deserialize_any(OptionalScratchpadConfigVisitor)
 }
 
-/// Configuration for a single completion gate.
-///
-/// Completion gates run when the agent emits the completion promise.
-/// If any gate exits non-zero, its output is injected as backpressure
-/// and the loop continues for another iteration.
+/// Shared execution configuration for any gate (completion or checkpoint).
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CompletionGateConfig {
-    /// Stable identifier for this gate (used in backpressure messages).
-    pub name: String,
-
+pub struct GateExecutionConfig {
     /// Command argv (`command[0]` executable + args).
     pub command: Vec<String>,
 
@@ -176,6 +169,21 @@ pub struct CompletionGateConfig {
     pub max_output_bytes: u64,
 }
 
+/// Configuration for a single completion gate.
+///
+/// Completion gates run when the agent emits the completion promise.
+/// If any gate exits non-zero, its output is injected as backpressure
+/// and the loop continues for another iteration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompletionGateConfig {
+    /// Stable identifier for this gate (used in backpressure messages).
+    pub name: String,
+
+    /// Execution parameters for this gate.
+    #[serde(flatten)]
+    pub execution: GateExecutionConfig,
+}
+
 /// Trigger condition for a checkpoint gate.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "trigger", rename_all = "snake_case")]
@@ -191,6 +199,20 @@ pub enum CheckpointTrigger {
         /// Event topic that triggers the gate (e.g., "dev.done").
         after_event: String,
     },
+}
+
+impl CheckpointTrigger {
+    /// Returns true if this trigger should fire for the given iteration state.
+    pub fn should_fire(&self, iteration: u32, last_iteration_topics: &[String]) -> bool {
+        match self {
+            CheckpointTrigger::EveryNIterations { every_n } => {
+                *every_n > 0 && iteration > 0 && iteration % *every_n == 0
+            }
+            CheckpointTrigger::AfterEvent { after_event } => {
+                last_iteration_topics.contains(after_event)
+            }
+        }
+    }
 }
 
 fn default_checkpoint_every_n() -> u32 {
@@ -212,24 +234,9 @@ pub struct CheckpointGateConfig {
     #[serde(flatten)]
     pub trigger: CheckpointTrigger,
 
-    /// Command argv (`command[0]` executable + args).
-    pub command: Vec<String>,
-
-    /// Optional working directory override.
-    #[serde(default)]
-    pub cwd: Option<std::path::PathBuf>,
-
-    /// Optional environment variable overrides.
-    #[serde(default)]
-    pub env: HashMap<String, String>,
-
-    /// Maximum execution time in seconds (default: 60).
-    #[serde(default = "default_gate_timeout_seconds")]
-    pub timeout_seconds: u64,
-
-    /// Maximum stdout/stderr bytes stored per stream (default: 8192).
-    #[serde(default = "default_gate_max_output_bytes")]
-    pub max_output_bytes: u64,
+    /// Execution parameters for this gate.
+    #[serde(flatten)]
+    pub execution: GateExecutionConfig,
 }
 
 fn default_gate_timeout_seconds() -> u64 {
@@ -853,6 +860,7 @@ impl UlfConfig {
             }
 
             if gate
+                .execution
                 .command
                 .first()
                 .is_none_or(|command| command.trim().is_empty())
@@ -864,14 +872,14 @@ impl UlfConfig {
                 });
             }
 
-            if gate.timeout_seconds == 0 {
+            if gate.execution.timeout_seconds == 0 {
                 return Err(ConfigError::HookValidation {
                     field: format!("{gate_field_base}.timeout_seconds"),
                     message: "must be greater than 0".to_string(),
                 });
             }
 
-            if gate.max_output_bytes == 0 {
+            if gate.execution.max_output_bytes == 0 {
                 return Err(ConfigError::HookValidation {
                     field: format!("{gate_field_base}.max_output_bytes"),
                     message: "must be greater than 0".to_string(),
@@ -883,8 +891,19 @@ impl UlfConfig {
     }
 
     fn validate_checkpoint_gates(&self) -> Result<(), ConfigError> {
+        let mut seen_names = std::collections::HashSet::new();
         for (index, gate) in self.event_loop.checkpoint_gates.iter().enumerate() {
             let gate_field_base = format!("event_loop.checkpoint_gates[{index}]");
+
+            if !seen_names.insert(gate.name.trim().to_lowercase()) {
+                return Err(ConfigError::HookValidation {
+                    field: format!("{gate_field_base}.name"),
+                    message: format!(
+                        "checkpoint gate name '{}' is duplicated; names must be unique",
+                        gate.name
+                    ),
+                });
+            }
 
             if gate.name.trim().is_empty() {
                 return Err(ConfigError::HookValidation {
@@ -894,6 +913,7 @@ impl UlfConfig {
             }
 
             if gate
+                .execution
                 .command
                 .first()
                 .is_none_or(|command| command.trim().is_empty())
@@ -905,14 +925,14 @@ impl UlfConfig {
                 });
             }
 
-            if gate.timeout_seconds == 0 {
+            if gate.execution.timeout_seconds == 0 {
                 return Err(ConfigError::HookValidation {
                     field: format!("{gate_field_base}.timeout_seconds"),
                     message: "must be greater than 0".to_string(),
                 });
             }
 
-            if gate.max_output_bytes == 0 {
+            if gate.execution.max_output_bytes == 0 {
                 return Err(ConfigError::HookValidation {
                     field: format!("{gate_field_base}.max_output_bytes"),
                     message: "must be greater than 0".to_string(),

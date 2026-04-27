@@ -14,7 +14,7 @@ use ulf_adapters::{
 };
 use ulf_core::diagnostics::{HookDisposition, HookRunTelemetryEntry};
 use ulf_core::{
-    CheckpointGateRunner, CompletionAction, CompletionGateResult, EventLogger, EventLoop,
+    CheckpointGateRunner, CompletionAction, GateRunResult, EventLogger, EventLoop,
     EventParser, EventRecord, HookEngine, HookExecutor, HookExecutorContract, HookMutationConfig,
     HookOnError, HookPayloadBuilderInput, HookPayloadContextInput, HookPhaseEvent, HookRunRequest,
     HookRunResult, HookSuspendMode, LoopCompletionHandler, LoopContext, LoopHistory, LoopRegistry,
@@ -2647,8 +2647,17 @@ pub async fn run_loop_impl(
             );
 
             match result {
-                CompletionGateResult::AllPassed => {}
-                CompletionGateResult::Failed {
+                GateRunResult::AllPassed => {
+                    event_loop.log_gate_run(
+                        iteration,
+                        "all_checkpoint_gates",
+                        "checkpoint",
+                        true,
+                        Some(0),
+                        false,
+                    );
+                }
+                GateRunResult::Failed {
                     name,
                     exit_code,
                     stdout,
@@ -2665,6 +2674,14 @@ pub async fn run_loop_impl(
                         &name, exit_code, &stdout, &stderr, timed_out,
                     );
                     event_loop.bus().publish(Event::new("task.resume", payload));
+                    event_loop.log_gate_run(
+                        iteration,
+                        &name,
+                        "checkpoint",
+                        false,
+                        exit_code,
+                        timed_out,
+                    );
                 }
             }
         }

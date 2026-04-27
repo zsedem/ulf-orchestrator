@@ -25,6 +25,13 @@ pub enum OrchestrationEvent {
     BackpressureTriggered {
         reason: String,
     },
+    GateRun {
+        name: String,
+        gate_type: String, // "completion" or "checkpoint"
+        passed: bool,
+        exit_code: Option<i32>,
+        timed_out: bool,
+    },
     LoopTerminated {
         reason: String,
     },

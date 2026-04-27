@@ -9,7 +9,7 @@ mod tests;
 pub use loop_state::LoopState;
 
 use crate::completion_gates::{
-    CompletionGateResult, CompletionGateRunner, build_gate_backpressure_payload,
+    GateRunResult, CompletionGateRunner, build_gate_backpressure_payload,
 };
 use crate::config::{HatBackend, InjectMode, UlfConfig, ScratchpadConfig};
 use crate::event_parser::{EventParser, MutationEvidence, MutationStatus};
@@ -549,6 +549,40 @@ impl EventLoop {
         self.diagnostics.log_prompt(iteration, hat, prompt);
     }
 
+    /// Logs a backpressure trigger event to diagnostics.
+    pub fn log_backpressure_triggered(&self, iteration: u32, reason: &str) {
+        self.diagnostics.log_orchestration(
+            iteration,
+            "loop",
+            crate::diagnostics::OrchestrationEvent::BackpressureTriggered {
+                reason: reason.to_string(),
+            },
+        );
+    }
+
+    /// Logs a gate run event to diagnostics.
+    pub fn log_gate_run(
+        &self,
+        iteration: u32,
+        name: &str,
+        gate_type: &str,
+        passed: bool,
+        exit_code: Option<i32>,
+        timed_out: bool,
+    ) {
+        self.diagnostics.log_orchestration(
+            iteration,
+            "loop",
+            crate::diagnostics::OrchestrationEvent::GateRun {
+                name: name.to_string(),
+                gate_type: gate_type.to_string(),
+                passed,
+                exit_code,
+                timed_out,
+            },
+        );
+    }
+
     /// Gets the backend configuration for a hat.
     ///
     /// If the hat has a backend configured, returns that.
@@ -760,10 +794,10 @@ impl EventLoop {
             let result = runner.run_gates(&self.config.event_loop.completion_gates, &workspace);
 
             match result {
-                CompletionGateResult::AllPassed => {
+                GateRunResult::AllPassed => {
                     debug!("All completion gates passed");
                 }
-                CompletionGateResult::Failed {
+                GateRunResult::Failed {
                     name,
                     exit_code,
                     stdout,
@@ -783,12 +817,13 @@ impl EventLoop {
                     );
                     self.bus.publish(Event::new("task.resume", payload));
 
-                    self.diagnostics.log_orchestration(
+                    self.log_gate_run(
                         self.state.iteration,
-                        "loop",
-                        crate::diagnostics::OrchestrationEvent::LoopTerminated {
-                            reason: format!("completion_gate_failed:{name}"),
-                        },
+                        &name,
+                        "completion",
+                        false,
+                        exit_code,
+                        timed_out,
                     );
 
                     return None;

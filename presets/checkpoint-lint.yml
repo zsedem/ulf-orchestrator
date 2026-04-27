@@ -1,0 +1,70 @@
+# Checkpoint Lint Preset
+#
+# Demonstrates checkpoint gates — mid-session backpressure that catches
+# issues early instead of letting them compound through 50+ iterations.
+#
+# This preset runs clippy every 5 iterations and tests after dev.done.
+# Use it as a starting point for your own checkpoint gate configurations.
+#
+# Usage:
+#   ulf run --config presets/checkpoint-lint.yml --prompt "Implement a feature"
+
+event_loop:
+  prompt_file: "PROMPT.md"
+  completion_promise: "LOOP_COMPLETE"
+  max_iterations: 50
+  max_runtime_seconds: 3600
+  starting_event: "task.start"
+
+  # Run these scripts when LOOP_COMPLETE is emitted
+  completion_gates:
+    - name: tests-pass
+      command: ["cargo", "test"]
+      timeout_seconds: 120
+    - name: clean-working-tree
+      command: ["git", "diff", "--quiet", "--exit-code"]
+
+  # Run these scripts at iteration boundaries (mid-session)
+  checkpoint_gates:
+    - name: lint-check
+      trigger: every_n_iterations
+      every_n: 5
+      command: ["cargo", "clippy", "--", "-D", "warnings"]
+      timeout_seconds: 60
+    - name: tests-after-build
+      trigger: after_event
+      after_event: dev.done
+      command: ["cargo", "test"]
+      timeout_seconds: 120
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+hats:
+  planner:
+    name: "Planner"
+    triggers: ["task.start", "task.resume"]
+    publishes: ["plan.created"]
+    instructions: |
+      Analyze the task and create a plan.
+      Emit plan.created when done.
+
+  builder:
+    name: "Builder"
+    triggers: ["plan.created"]
+    publishes: ["dev.done"]
+    instructions: |
+      Implement the plan.
+      Run cargo check before declaring done.
+      Emit dev.done when implementation is complete.
+
+  reviewer:
+    name: "Reviewer"
+    triggers: ["dev.done"]
+    publishes: ["review.approved", "review.rejected"]
+    instructions: |
+      Review the implementation for correctness and quality.
+      Emit review.approved if good, review.rejected with feedback if not.

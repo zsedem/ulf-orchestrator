@@ -59,7 +59,6 @@ config = {
     "max_iterations": 100,
     "agent": "claude",
     "cost_limit": 10.0,
-    "checkpoint_interval": 10,
 }
 ```
 
@@ -73,8 +72,14 @@ cli:
 event_loop:
   completion_promise: "LOOP_COMPLETE"
   max_iterations: 100
-  checkpoint_interval: 10
+  checkpoint_gates:
+    - name: periodic-check
+      trigger: every_n_iterations
+      every_n: 10
+      command: ["cargo", "test"]
 ```
+
+**Note:** `checkpoint_interval` from v1 is replaced by the more flexible `checkpoint_gates` system in v2. Instead of a single interval, you define gates with explicit triggers and commands.
 
 ## Command Changes
 

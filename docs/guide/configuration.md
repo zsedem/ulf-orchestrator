@@ -119,8 +119,24 @@ event_loop:
   max_runtime_seconds: 14400            # 4 hours max runtime
   idle_timeout_secs: 1800               # 30 min idle timeout
   starting_event: "task.start"          # First event published (hat mode)
-  checkpoint_interval: 5                # Git checkpoint frequency
   prompt_file: "PROMPT.md"              # Default prompt file
+
+  # Completion gates run when LOOP_COMPLETE is emitted
+  completion_gates:
+    - name: tests-pass
+      command: ["cargo", "test"]
+      timeout_seconds: 120
+
+  # Checkpoint gates run mid-session at iteration boundaries
+  checkpoint_gates:
+    - name: lint-check
+      trigger: every_n_iterations
+      every_n: 5
+      command: ["cargo", "clippy"]
+    - name: tests-after-build
+      trigger: after_event
+      after_event: dev.done
+      command: ["cargo", "test"]
 
 # CLI backend settings
 cli:
@@ -205,8 +221,9 @@ Controls the orchestration loop behavior.
 | `max_runtime_seconds` | integer | `14400` | Maximum runtime (4 hours) |
 | `idle_timeout_secs` | integer | `1800` | Idle timeout (30 minutes) |
 | `starting_event` | string | `null` | First event (enables hat mode) |
-| `checkpoint_interval` | integer | `5` | Git checkpoint frequency |
 | `prompt_file` | string | `"PROMPT.md"` | Default prompt file |
+| `completion_gates` | array | `[]` | Scripts run at LOOP_COMPLETE |
+| `checkpoint_gates` | array | `[]` | Scripts run at iteration boundaries |
 
 ### cli
 

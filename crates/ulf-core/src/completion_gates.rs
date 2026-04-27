@@ -25,7 +25,7 @@ use tracing::{debug, warn};
 
 /// Result of running a set of completion gates.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum CompletionGateResult {
+pub enum GateRunResult {
     /// All gates exited with code 0.
     AllPassed,
     /// The first failing gate and its captured output.
@@ -52,7 +52,7 @@ pub struct CompletionGateFailed {
     pub timed_out: bool,
 }
 
-impl CompletionGateResult {
+impl GateRunResult {
     /// Returns true if all gates passed.
     pub fn all_passed(&self) -> bool {
         matches!(self, Self::AllPassed)
@@ -79,12 +79,12 @@ impl CompletionGateRunner {
         &self,
         gates: &[CompletionGateConfig],
         workspace_root: &Path,
-    ) -> CompletionGateResult {
+    ) -> GateRunResult {
         for gate in gates {
-            debug!(gate = %gate.name, command = ?gate.command, "Running completion gate");
+            debug!(gate = %gate.name, command = ?gate.execution.command, "Running completion gate");
             let start = Instant::now();
 
-            let result = run_single_gate(gate, workspace_root);
+            let result = run_single_gate(&gate.execution, workspace_root);
 
             match result {
                 Ok((exit_code, stdout, stderr)) => {
@@ -103,7 +103,7 @@ impl CompletionGateRunner {
                         duration_ms = start.elapsed().as_millis(),
                         "Completion gate failed"
                     );
-                    return CompletionGateResult::Failed {
+                    return GateRunResult::Failed {
                         name: gate.name.clone(),
                         exit_code: Some(exit_code),
                         stdout,
@@ -114,14 +114,14 @@ impl CompletionGateRunner {
                 Err(GateRunError::TimedOut) => {
                     warn!(
                         gate = %gate.name,
-                        timeout = gate.timeout_seconds,
+                        timeout = gate.execution.timeout_seconds,
                         "Completion gate timed out"
                     );
-                    return CompletionGateResult::Failed {
+                    return GateRunResult::Failed {
                         name: gate.name.clone(),
                         exit_code: None,
                         stdout: String::new(),
-                        stderr: format!("Gate timed out after {} seconds", gate.timeout_seconds),
+                        stderr: format!("Gate timed out after {} seconds", gate.execution.timeout_seconds),
                         timed_out: true,
                     };
                 }
@@ -131,7 +131,7 @@ impl CompletionGateRunner {
                         error = %source,
                         "Completion gate spawn failed"
                     );
-                    return CompletionGateResult::Failed {
+                    return GateRunResult::Failed {
                         name: gate.name.clone(),
                         exit_code: None,
                         stdout: String::new(),
@@ -142,7 +142,7 @@ impl CompletionGateRunner {
             }
         }
 
-        CompletionGateResult::AllPassed
+        GateRunResult::AllPassed
     }
 }
 
@@ -170,35 +170,16 @@ impl CheckpointGateRunner {
         workspace_root: &Path,
         iteration: u32,
         last_iteration_topics: &[String],
-    ) -> CompletionGateResult {
+    ) -> GateRunResult {
         for gate in gates {
-            let should_run = match &gate.trigger {
-                CheckpointTrigger::EveryNIterations { every_n } => {
-                    *every_n > 0 && iteration > 0 && iteration % *every_n == 0
-                }
-                CheckpointTrigger::AfterEvent { after_event } => {
-                    last_iteration_topics.contains(after_event)
-                }
-            };
-
-            if !should_run {
+            if !gate.trigger.should_fire(iteration, last_iteration_topics) {
                 continue;
             }
 
-            debug!(gate = %gate.name, command = ?gate.command, "Running checkpoint gate");
+            debug!(gate = %gate.name, command = ?gate.execution.command, "Running checkpoint gate");
             let start = Instant::now();
 
-            // Convert checkpoint gate execution fields to completion gate for reuse
-            let proxy = CompletionGateConfig {
-                name: gate.name.clone(),
-                command: gate.command.clone(),
-                cwd: gate.cwd.clone(),
-                env: gate.env.clone(),
-                timeout_seconds: gate.timeout_seconds,
-                max_output_bytes: gate.max_output_bytes,
-            };
-
-            let result = run_single_gate(&proxy, workspace_root);
+            let result = run_single_gate(&gate.execution, workspace_root);
 
             match result {
                 Ok((exit_code, stdout, stderr)) => {
@@ -217,7 +198,7 @@ impl CheckpointGateRunner {
                         duration_ms = start.elapsed().as_millis(),
                         "Checkpoint gate failed"
                     );
-                    return CompletionGateResult::Failed {
+                    return GateRunResult::Failed {
                         name: gate.name.clone(),
                         exit_code: Some(exit_code),
                         stdout,
@@ -228,14 +209,14 @@ impl CheckpointGateRunner {
                 Err(GateRunError::TimedOut) => {
                     warn!(
                         gate = %gate.name,
-                        timeout = gate.timeout_seconds,
+                        timeout = gate.execution.timeout_seconds,
                         "Checkpoint gate timed out"
                     );
-                    return CompletionGateResult::Failed {
+                    return GateRunResult::Failed {
                         name: gate.name.clone(),
                         exit_code: None,
                         stdout: String::new(),
-                        stderr: format!("Gate timed out after {} seconds", gate.timeout_seconds),
+                        stderr: format!("Gate timed out after {} seconds", gate.execution.timeout_seconds),
                         timed_out: true,
                     };
                 }
@@ -245,7 +226,7 @@ impl CheckpointGateRunner {
                         error = %source,
                         "Checkpoint gate spawn failed"
                     );
-                    return CompletionGateResult::Failed {
+                    return GateRunResult::Failed {
                         name: gate.name.clone(),
                         exit_code: None,
                         stdout: String::new(),
@@ -256,7 +237,7 @@ impl CheckpointGateRunner {
             }
         }
 
-        CompletionGateResult::AllPassed
+        GateRunResult::AllPassed
     }
 }
 
@@ -267,7 +248,7 @@ pub(crate) enum GateRunError {
 }
 
 pub(crate) fn run_single_gate(
-    gate: &CompletionGateConfig,
+    gate: &crate::config::GateExecutionConfig,
     workspace_root: &Path,
 ) -> Result<(i32, String, String), GateRunError> {
     let executable = gate
@@ -366,9 +347,10 @@ pub fn build_gate_backpressure_payload(
     stderr: &str,
     timed_out: bool,
 ) -> String {
-    let mut payload = build_backpressure_payload("Completion", name, exit_code, stdout, stderr, timed_out);
-    payload.push_str("\nFix the issue and emit LOOP_COMPLETE again.");
-    payload
+    build_backpressure_payload_with_suffix(
+        "Completion", name, exit_code, stdout, stderr, timed_out,
+        "Fix the issue and emit LOOP_COMPLETE again.",
+    )
 }
 
 /// Builds the backpressure payload for a checkpoint gate failure.
@@ -379,18 +361,20 @@ pub fn build_checkpoint_backpressure_payload(
     stderr: &str,
     timed_out: bool,
 ) -> String {
-    let mut payload = build_backpressure_payload("Checkpoint", name, exit_code, stdout, stderr, timed_out);
-    payload.push_str("\nFix the issue and continue working.");
-    payload
+    build_backpressure_payload_with_suffix(
+        "Checkpoint", name, exit_code, stdout, stderr, timed_out,
+        "Fix the issue and continue working.",
+    )
 }
 
-fn build_backpressure_payload(
+fn build_backpressure_payload_with_suffix(
     kind: &str,
     name: &str,
     exit_code: Option<i32>,
     stdout: &str,
     stderr: &str,
     timed_out: bool,
+    suffix: &str,
 ) -> String {
     let status = if timed_out {
         "timed out".to_string()
@@ -415,6 +399,7 @@ fn build_backpressure_payload(
         payload.push('\n');
     }
 
+    payload.push_str(suffix);
     payload
 }
 
@@ -426,11 +411,13 @@ mod tests {
     fn gate_config(name: &str, command: &[&str]) -> CompletionGateConfig {
         CompletionGateConfig {
             name: name.to_string(),
-            command: command.iter().map(|s| s.to_string()).collect(),
-            cwd: None,
-            env: HashMap::new(),
-            timeout_seconds: 30,
-            max_output_bytes: 1024,
+            execution: crate::config::GateExecutionConfig {
+                command: command.iter().map(|s| s.to_string()).collect(),
+                cwd: None,
+                env: HashMap::new(),
+                timeout_seconds: 30,
+                max_output_bytes: 1024,
+            },
         }
     }
 
@@ -449,7 +436,7 @@ mod tests {
         let result = runner.run_gates(&gates, Path::new("."));
         assert!(!result.all_passed());
         match result {
-            CompletionGateResult::Failed { name, exit_code, .. } => {
+            GateRunResult::Failed { name, exit_code, .. } => {
                 assert_eq!(name, "false-gate");
                 assert_eq!(exit_code, Some(1));
             }
@@ -466,7 +453,7 @@ mod tests {
         ];
         let result = runner.run_gates(&gates, Path::new("."));
         match result {
-            CompletionGateResult::Failed { name, .. } => {
+            GateRunResult::Failed { name, .. } => {
                 assert_eq!(name, "false-gate");
             }
             _ => panic!("Expected first gate to fail"),
@@ -479,7 +466,7 @@ mod tests {
         let gates = vec![gate_config("echo-gate", &["sh", "-c", "echo hello; exit 1"])];
         let result = runner.run_gates(&gates, Path::new("."));
         match result {
-            CompletionGateResult::Failed { stdout, .. } => {
+            GateRunResult::Failed { stdout, .. } => {
                 assert!(stdout.contains("hello"));
             }
             _ => panic!("Expected Failed"),
@@ -490,7 +477,7 @@ mod tests {
     fn test_gate_timeout() {
         let runner = CompletionGateRunner::new();
         let mut gate = gate_config("sleep-gate", &["sleep", "10"]);
-        gate.timeout_seconds = 1;
+        gate.execution.timeout_seconds = 1;
         let gates = vec![gate];
         let start = Instant::now();
         let result = runner.run_gates(&gates, Path::new("."));
@@ -501,7 +488,7 @@ mod tests {
             elapsed
         );
         match result {
-            CompletionGateResult::Failed { timed_out, .. } => {
+            GateRunResult::Failed { timed_out, .. } => {
                 assert!(timed_out);
             }
             _ => panic!("Expected timeout"),
@@ -536,11 +523,13 @@ mod tests {
         let gates = vec![crate::config::CheckpointGateConfig {
             name: "true-gate".to_string(),
             trigger: crate::config::CheckpointTrigger::EveryNIterations { every_n: 5 },
-            command: vec!["true".to_string()],
-            cwd: None,
-            env: HashMap::new(),
-            timeout_seconds: 30,
-            max_output_bytes: 1024,
+            execution: crate::config::GateExecutionConfig {
+                command: vec!["true".to_string()],
+                cwd: None,
+                env: HashMap::new(),
+                timeout_seconds: 30,
+                max_output_bytes: 1024,
+            },
         }];
 
         // Should not fire on iteration 4
@@ -564,11 +553,13 @@ mod tests {
             trigger: crate::config::CheckpointTrigger::AfterEvent {
                 after_event: "dev.done".to_string(),
             },
-            command: vec!["true".to_string()],
-            cwd: None,
-            env: HashMap::new(),
-            timeout_seconds: 30,
-            max_output_bytes: 1024,
+            execution: crate::config::GateExecutionConfig {
+                command: vec!["true".to_string()],
+                cwd: None,
+                env: HashMap::new(),
+                timeout_seconds: 30,
+                max_output_bytes: 1024,
+            },
         }];
 
         let result = runner.run_gates(&gates, Path::new("."), 1, &["dev.done".to_string()]);
@@ -584,17 +575,19 @@ mod tests {
         let gates = vec![crate::config::CheckpointGateConfig {
             name: "false-gate".to_string(),
             trigger: crate::config::CheckpointTrigger::EveryNIterations { every_n: 1 },
-            command: vec!["false".to_string()],
-            cwd: None,
-            env: HashMap::new(),
-            timeout_seconds: 30,
-            max_output_bytes: 1024,
+            execution: crate::config::GateExecutionConfig {
+                command: vec!["false".to_string()],
+                cwd: None,
+                env: HashMap::new(),
+                timeout_seconds: 30,
+                max_output_bytes: 1024,
+            },
         }];
 
         let result = runner.run_gates(&gates, Path::new("."), 1, &[]);
         assert!(!result.all_passed());
         match result {
-            CompletionGateResult::Failed { name, .. } => {
+            GateRunResult::Failed { name, .. } => {
                 assert_eq!(name, "false-gate");
             }
             _ => panic!("Expected checkpoint gate to fail"),
